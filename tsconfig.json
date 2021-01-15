@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "outFile": "src/compiled/pogboard.js",
+        "lib": [
+            "ES5",
+            "ES2015.Promise",
+            "ES2016.Array.Include",
+            "ES2017",
+            "dom"
+        ],
+    },
+    "files": [
+        "src/vendor/smooth.ts",
+        "src/scripts/whiteboard.ts"
+    ]
+}
