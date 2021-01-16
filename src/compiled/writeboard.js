@@ -388,8 +388,9 @@ function startDrawTouch(e) {
     stroke = [[e.touches[0].pageX, e.touches[0].pageY]];
 }
 function drawEventMouse(e) {
+    if (e.buttons === 0)
+        mouseDrawing = false;
     if (mouseDrawing) {
-        e.preventDefault();
         stroke.push([e.offsetX, e.offsetY]);
         if (stroke.length >= 5)
             stroke.splice(0, 1);
@@ -401,13 +402,16 @@ function startDrawMouse(e) {
     stroke = [[e.offsetX, e.offsetY]];
 }
 function endDrawMouse(e) {
-    drawEventMouse(e);
-    mouseDrawing = false;
-    update();
-    stroke = [];
+    if (mouseDrawing) {
+        drawEventMouse(e);
+        mouseDrawing = false;
+        update();
+        stroke = [];
+    }
 }
 canvas.addEventListener("touchstart", startDrawTouch);
 canvas.addEventListener("touchmove", drawEventTouch);
 canvas.addEventListener("mousedown", startDrawMouse);
 canvas.addEventListener("mousemove", drawEventMouse);
 canvas.addEventListener("mouseup", endDrawMouse);
+canvas.addEventListener("mouseout", endDrawMouse);

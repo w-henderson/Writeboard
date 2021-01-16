@@ -1,5 +1,5 @@
 {
-  "name": "pogboard",
+  "name": "writeboard",
   "version": "0.0.1",
   "description": "A simple whiteboard system to help with remote learning.",
   "scripts": {
@@ -9,7 +9,7 @@
     "build-sass": "sass src/styles:src/compiled --no-source-map --style compressed",
     "build-ts": "tsc",
     "host": "python -m http.server 80 --directory src",
-    "dev-deploy": "surge src https://pogboard-dev.surge.sh"
+    "dev-deploy": "surge src https://writeboard-dev.surge.sh"
   },
   "devDependencies": {
     "typescript": "^4.1.3",

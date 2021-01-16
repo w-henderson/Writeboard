@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "outFile": "src/compiled/pogboard.js",
+        "outFile": "src/compiled/writeboard.js",
         "lib": [
             "ES5",
             "ES2015.Promise",
