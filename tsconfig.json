@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "outFile": "src/compiled/writeboard.js",
+        "outDir": "src/compiled",
         "lib": [
             "ES5",
             "ES2015.Promise",
@@ -11,6 +11,8 @@
     },
     "files": [
         "src/vendor/smooth.ts",
+        "src/scripts/clientAPI.ts",
+        "src/scripts/hostAPI.ts",
         "src/scripts/whiteboard.ts"
     ]
 }

@@ -7,7 +7,8 @@ var whiteboardHistory: string[] = [];
 
 ctx.lineWidth = 5;
 ctx.lineCap = "round";
-ctx.fillStyle = "#eee";
+ctx.fillStyle = "#1f2324";
+ctx.strokeStyle = "#fff";
 
 ctx.fillRect(0, 0, canvas.width, canvas.height);
 whiteboardHistory.push(canvas.toDataURL());
@@ -40,19 +41,26 @@ namespace Functionality {
       imageToDraw.onload = () => { ctx.drawImage(imageToDraw, 0, 0) }
     }
   }
+
+  export function getCoords(...screenCoords: number[]): number[] {
+    return [
+      (screenCoords[0] - canvas.getBoundingClientRect().x) * (canvas.width / canvas.getBoundingClientRect().width),
+      (screenCoords[1] - canvas.getBoundingClientRect().y) * (canvas.height / canvas.getBoundingClientRect().height)
+    ]
+  }
 }
 
 namespace Events {
   export function drawEventTouch(e) {
     e.preventDefault();
-    stroke.push([e.touches[0].pageX, e.touches[0].pageY]);
+    stroke.push(Functionality.getCoords(e.touches[0].pageX, e.touches[0].pageY));
     if (stroke.length >= 5) stroke.splice(0, 1);
     Graphics.update();
   }
 
   export function startDrawTouch(e) {
     e.preventDefault();
-    stroke = [[e.touches[0].pageX, e.touches[0].pageY]];
+    stroke = [Functionality.getCoords(e.touches[0].pageX, e.touches[0].pageY)];
   }
 
   export function endDrawTouch(e) {
