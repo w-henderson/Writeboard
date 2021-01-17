@@ -46,6 +46,8 @@ namespace Host {
   function removeWhiteboard(e) {
     let userNode = document.querySelector(`div.whiteboards div#${snakeCase(e.val().name)}`);
     userNode.remove();
+
+    console.log("Removed whiteboard");
   }
 
   const snakeCase = string => {

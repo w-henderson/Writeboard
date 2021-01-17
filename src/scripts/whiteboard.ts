@@ -9,7 +9,7 @@ var lineWidth = 5;
 ctx.lineWidth = lineWidth;
 ctx.lineCap = "round";
 ctx.fillStyle = "#1f2324";
-ctx.strokeStyle = "#fff";
+ctx.strokeStyle = "#ffffff";
 
 ctx.fillRect(0, 0, canvas.width, canvas.height);
 whiteboardHistory.push(canvas.toDataURL());
@@ -63,6 +63,45 @@ namespace Functionality {
       (screenCoords[1] - canvas.getBoundingClientRect().y) * (canvas.height / canvas.getBoundingClientRect().height)
     ]
   }
+
+  export function selectColor() {
+    (<HTMLInputElement>document.querySelector("input[type='color']")).click();
+  }
+
+  export function updateStrokeStyle() {
+    let input = (<HTMLInputElement>document.querySelector("input[type='color']"));
+    (<HTMLElement>document.querySelector("#colorIcon")).style.color = input.value;
+    ctx.strokeStyle = input.value;
+  }
+
+  export function placeToolbar() {
+    let toolbar = <HTMLDivElement>document.querySelector("div.toolbar");
+    let colorInput = <HTMLInputElement>document.querySelector("input[type='color']");
+    let canvasRect = canvas.getBoundingClientRect();
+
+    if (window.matchMedia("(orientation: landscape)").matches) {
+      toolbar.style.top = `${canvasRect.y + 40}px`;
+      colorInput.style.top = `${canvasRect.y + 40}px`;
+      toolbar.style.left = `${canvasRect.x + canvasRect.width}px`;
+      colorInput.style.left = `${canvasRect.x + canvasRect.width}px`;
+      toolbar.style.height = "unset";
+      toolbar.style.width = "50px";
+      toolbar.style.borderRadius = "0 5px 5px 0";
+      toolbar.style.paddingTop = "unset";
+    } else {
+      toolbar.style.top = `${canvasRect.y + canvasRect.height}px`;
+      colorInput.style.top = `${canvasRect.y + canvasRect.height}px`;
+      toolbar.style.left = `${canvasRect.x + 40}px`;
+      colorInput.style.left = `${canvasRect.x + 40}px`;
+      toolbar.style.height = "35px";
+      toolbar.style.width = `${canvasRect.width - 80}px`;
+      toolbar.style.borderRadius = "0 0 10px 10px";
+      toolbar.style.paddingTop = "8px";
+    }
+  }
+
+  window.addEventListener("load", placeToolbar);
+  window.addEventListener("resize", placeToolbar);
 }
 
 namespace Events {

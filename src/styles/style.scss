@@ -11,7 +11,7 @@ body {
     --alternate-accent: #e4b363;
     --background: #1c1f20;
     --canvas: #1f2324;
-    --background-lighter: #272b2c;
+    --background-lighter: #333636;
     --navbar-background: #313638;
     --unselected-navbar: #888;
     --light-line: #666;
@@ -33,6 +33,7 @@ div.main {
     flex-direction: column;
     place-items: center;
     place-content: center;
+    text-align: center;
     font-family: Inter;
 
     h1 {
@@ -41,16 +42,39 @@ div.main {
     }
 
     canvas {
+        position: relative;
         max-width: 800px;
         max-height: 600px;
         height: min(90vw * 0.75, 80vh);
         width: min(90vw, 80vh * (4 / 3));
+        z-index: 1;
 
-        border-radius: 50px;
+        border-radius: 40px;
         background: var(--canvas);
         box-shadow:  12px 12px 40px #181a1b, -12px -12px 40px #1e2122;
 
         touch-action: none;
+    }
+
+    div.toolbar {
+        position: absolute;
+        width: 50px;
+        background-color: var(--background-lighter);
+        text-align: center;
+        padding: 5px 0;
+        border-radius: 0 5px 5px 0;
+        box-shadow: var(--shadow);
+        user-select: none;
+        
+        i {
+            font-size: 32px;
+            cursor: pointer;
+            transition: transform 250ms;
+
+            &:active {
+                transform: scale(0.75);
+            }
+        }
     }
 
     div.whiteboards {
@@ -103,4 +127,13 @@ div.main {
             }
         }
     }
+}
+
+input[type="color"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    pointer-events: none;
+    height: 0;
 }

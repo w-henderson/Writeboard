@@ -35,6 +35,7 @@ var Host;
     function removeWhiteboard(e) {
         var userNode = document.querySelector("div.whiteboards div#" + snakeCase(e.val().name));
         userNode.remove();
+        console.log("Removed whiteboard");
     }
     var snakeCase = function (string) {
         return string.replace(/\W+/g, " ")

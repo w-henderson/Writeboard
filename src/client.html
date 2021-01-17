@@ -6,14 +6,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Writeboard</title>
 
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <link rel="stylesheet" href="compiled/style.css">
 </head>
 
 <body>
     <div class="main">
-        <h1>Writeboard</h1>
+        <h1>Welcome to Writeboard</h1>
         <canvas width=800 height=600></canvas>
+        
+        <div class="toolbar">
+            <i class="material-icons-round" onclick="Functionality.undo();">undo</i>
+            <i class="material-icons-round" onclick="Functionality.selectColor();" id="colorIcon">brush</i>
+        </div>
     </div>
+
+    <input type="color" value="#ffffff" onchange="Functionality.updateStrokeStyle();">
 
     <!-- Firebase Scripts -->
     <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-app.js"></script>
