@@ -29,6 +29,18 @@ var Graphics;
         ctx.stroke();
     }
     Graphics.update = update;
+    function exportImage(width, height, quality) {
+        if (width === void 0) { width = 800; }
+        if (height === void 0) { height = 600; }
+        if (quality === void 0) { quality = 0.5; }
+        var tempCanvas = canvas.cloneNode(true);
+        var tempCtx = tempCanvas.getContext("2d");
+        tempCanvas.width = width;
+        tempCanvas.height = height;
+        tempCtx.drawImage(canvas, 0, 0, width, height);
+        return tempCanvas.toDataURL("image/jpeg", quality);
+    }
+    Graphics.exportImage = exportImage;
 })(Graphics || (Graphics = {}));
 var Functionality;
 (function (Functionality) {

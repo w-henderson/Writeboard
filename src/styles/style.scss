@@ -58,19 +58,20 @@ div.main {
         max-width: 1000px;
         max-height: 60vh;
         overflow: hidden auto;
+        filter: drop-shadow(6px 6px 20px #181a1b, -6px -6px 20px #1e2122);
 
         div {
-            width: calc(33% - 10px);
+            width: calc(33% - 12.67px);
             box-sizing: border-box;
             margin: 0 10px 10px 0;
             display: inline-block;
             border-radius: 15px;
             background: var(--canvas);
-            box-shadow:  6px 6px 20px #181a1b, -6px -6px 20px #1e2122; 
 
             img {
                 width: 100%;
                 border-radius: 15px 15px 0 0;
+                display: block;
             }
 
             span {

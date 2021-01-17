@@ -33,6 +33,18 @@ namespace Graphics {
 
     ctx.stroke();
   }
+
+  export function exportImage(width = 800, height = 600, quality = 0.5): string {
+    let tempCanvas = <HTMLCanvasElement>canvas.cloneNode(true);
+    let tempCtx = tempCanvas.getContext("2d");
+
+    tempCanvas.width = width;
+    tempCanvas.height = height;
+
+    tempCtx.drawImage(canvas, 0, 0, width, height);
+
+    return tempCanvas.toDataURL("image/jpeg", quality);
+  }
 }
 
 namespace Functionality {
