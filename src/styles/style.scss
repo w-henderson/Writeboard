@@ -48,7 +48,9 @@ div.main {
 
         border-radius: 50px;
         background: var(--canvas);
-        box-shadow:  12px 12px 40px #181a1b, -12px -12px 40px #1e2122; 
+        box-shadow:  12px 12px 40px #181a1b, -12px -12px 40px #1e2122;
+
+        touch-action: none;
     }
 
     div.whiteboards {

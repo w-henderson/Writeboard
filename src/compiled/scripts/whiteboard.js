@@ -1,9 +1,10 @@
 var canvas = document.querySelector("canvas");
 var ctx = canvas.getContext("2d");
-var mouseDrawing = false;
+var pointerId = -1;
 var stroke = [];
 var whiteboardHistory = [];
-ctx.lineWidth = 5;
+var lineWidth = 5;
+ctx.lineWidth = lineWidth;
 ctx.lineCap = "round";
 ctx.fillStyle = "#1f2324";
 ctx.strokeStyle = "#fff";
@@ -52,60 +53,31 @@ var Functionality;
 })(Functionality || (Functionality = {}));
 var Events;
 (function (Events) {
-    function drawEventTouch(e) {
+    function handlePointerMove(e) {
         e.preventDefault();
-        stroke.push(Functionality.getCoords(e.touches[0].pageX, e.touches[0].pageY));
-        if (stroke.length >= 5)
-            stroke.splice(0, 1);
-        Graphics.update();
-    }
-    Events.drawEventTouch = drawEventTouch;
-    function startDrawTouch(e) {
-        e.preventDefault();
-        stroke = [Functionality.getCoords(e.touches[0].pageX, e.touches[0].pageY)];
-    }
-    Events.startDrawTouch = startDrawTouch;
-    function endDrawTouch(e) {
-        e.preventDefault();
-        stroke = [];
-        whiteboardHistory.push(canvas.toDataURL());
-        if (whiteboardHistory.length > 10)
-            whiteboardHistory.shift();
-    }
-    Events.endDrawTouch = endDrawTouch;
-    function drawEventMouse(e) {
-        if (e.buttons === 0)
-            mouseDrawing = false;
-        if (mouseDrawing) {
-            stroke.push([e.offsetX, e.offsetY]);
+        if (pointerId === -1 && e.pressure !== 0)
+            pointerId = e.pointerId;
+        if (pointerId === e.pointerId) {
+            if (e.pointerType === "pen")
+                ctx.lineWidth = lineWidth * e.pressure;
+            else
+                ctx.lineWidth = lineWidth;
+            stroke.push(Functionality.getCoords(e.pageX, e.pageY));
             if (stroke.length >= 5)
                 stroke.splice(0, 1);
             Graphics.update();
         }
     }
-    Events.drawEventMouse = drawEventMouse;
-    function startDrawMouse(e) {
-        mouseDrawing = true;
-        stroke = [[e.offsetX, e.offsetY]];
-    }
-    Events.startDrawMouse = startDrawMouse;
-    function endDrawMouse(e) {
-        if (mouseDrawing) {
-            drawEventMouse(e);
-            mouseDrawing = false;
-            Graphics.update();
+    Events.handlePointerMove = handlePointerMove;
+    function handlePointerUp(e) {
+        e.preventDefault();
+        console.log(e);
+        if (pointerId === e.pointerId) {
+            pointerId = -1;
             stroke = [];
-            whiteboardHistory.push(canvas.toDataURL());
-            if (whiteboardHistory.length > 10)
-                whiteboardHistory.shift();
         }
     }
-    Events.endDrawMouse = endDrawMouse;
+    Events.handlePointerUp = handlePointerUp;
 })(Events || (Events = {}));
-canvas.addEventListener("touchstart", Events.startDrawTouch);
-canvas.addEventListener("touchmove", Events.drawEventTouch);
-canvas.addEventListener("touchend", Events.endDrawTouch);
-canvas.addEventListener("mousedown", Events.startDrawMouse);
-canvas.addEventListener("mousemove", Events.drawEventMouse);
-canvas.addEventListener("mouseup", Events.endDrawMouse);
-canvas.addEventListener("mouseout", Events.endDrawMouse);
+canvas.addEventListener("pointermove", Events.handlePointerMove);
+canvas.addEventListener("pointerup", Events.handlePointerUp);
