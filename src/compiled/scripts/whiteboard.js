@@ -14,6 +14,8 @@ var Graphics;
 (function (Graphics) {
     function update(quality) {
         if (quality === void 0) { quality = 10; }
+        if (stroke.length < 2)
+            return;
         ctx.beginPath();
         ctx.moveTo(stroke[0][0], stroke[0][1]);
         var smoothed = Smooth.Smooth(stroke, {
@@ -71,13 +73,14 @@ var Events;
     Events.handlePointerMove = handlePointerMove;
     function handlePointerUp(e) {
         e.preventDefault();
-        console.log(e);
         if (pointerId === e.pointerId) {
             pointerId = -1;
             stroke = [];
+            whiteboardHistory.push(canvas.toDataURL());
         }
     }
     Events.handlePointerUp = handlePointerUp;
 })(Events || (Events = {}));
 canvas.addEventListener("pointermove", Events.handlePointerMove);
 canvas.addEventListener("pointerup", Events.handlePointerUp);
+canvas.addEventListener("pointerout", Events.handlePointerUp);

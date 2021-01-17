@@ -16,6 +16,8 @@ whiteboardHistory.push(canvas.toDataURL());
 
 namespace Graphics {
   export function update(quality = 10) {
+    if (stroke.length < 2) return;
+
     ctx.beginPath();
     ctx.moveTo(stroke[0][0], stroke[0][1]);
 
@@ -66,13 +68,14 @@ namespace Events {
 
   export function handlePointerUp(e: PointerEvent) {
     e.preventDefault();
-    console.log(e);
     if (pointerId === e.pointerId) {
       pointerId = -1;
       stroke = [];
+      whiteboardHistory.push(canvas.toDataURL());
     }
   }
 }
 
 canvas.addEventListener("pointermove", Events.handlePointerMove);
 canvas.addEventListener("pointerup", Events.handlePointerUp);
+canvas.addEventListener("pointerout", Events.handlePointerUp);
