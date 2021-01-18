@@ -26,7 +26,7 @@ namespace Host {
 
     userWhiteboard.src = e.val().board;
     userName.textContent = e.val().name;
-    userNode.id = snakeCase(e.val().name);
+    userNode.id = e.key;
 
     userNode.appendChild(userWhiteboard);
     userNode.appendChild(userName);
@@ -36,7 +36,7 @@ namespace Host {
   }
 
   function updateWhiteboard(e) {
-    let userNode = document.querySelector(`div.whiteboards div#${snakeCase(e.val().name)}`);
+    let userNode = document.querySelector(`div.whiteboards div#${e.key}`);
     userNode.querySelector("img").src = e.val().board;
     userNode.querySelector("span").textContent = e.val().name;
 
@@ -44,16 +44,9 @@ namespace Host {
   }
 
   function removeWhiteboard(e) {
-    let userNode = document.querySelector(`div.whiteboards div#${snakeCase(e.val().name)}`);
+    let userNode = document.querySelector(`div.whiteboards div#${e.key}`);
     userNode.remove();
 
     console.log("Removed whiteboard");
   }
-
-  const snakeCase = string => {
-    return string.replace(/\W+/g, " ")
-      .split(/ |\B(?=[A-Z])/)
-      .map(word => word.toLowerCase())
-      .join('_');
-  };
 }

@@ -18,6 +18,7 @@
         <div class="toolbar">
             <i class="material-icons-round" onclick="Functionality.undo();">undo</i>
             <i class="material-icons-round" onclick="Functionality.selectColor();" id="colorIcon">brush</i>
+            <i class="material-icons-round" onclick="Functionality.clearBoard();">clear</i>
         </div>
     </div>
 
@@ -28,8 +29,11 @@
     <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-database.js"></script>
     <script src="compiled/scripts/firebaseInit.js"></script>
 
-    <!-- Main Scripts -->
+    <!-- Vendor Scripts -->
     <script src="compiled/vendor/smooth.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+
+    <!-- Main Scripts -->
     <script src="compiled/scripts/clientAPI.js"></script>
     <script src="compiled/scripts/whiteboard.js"></script>
 </body>

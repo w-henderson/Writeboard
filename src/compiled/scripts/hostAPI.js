@@ -20,27 +20,21 @@ var Host;
         var userName = document.createElement("span");
         userWhiteboard.src = e.val().board;
         userName.textContent = e.val().name;
-        userNode.id = snakeCase(e.val().name);
+        userNode.id = e.key;
         userNode.appendChild(userWhiteboard);
         userNode.appendChild(userName);
         whiteboards.appendChild(userNode);
         console.log("Added whiteboard");
     }
     function updateWhiteboard(e) {
-        var userNode = document.querySelector("div.whiteboards div#" + snakeCase(e.val().name));
+        var userNode = document.querySelector("div.whiteboards div#" + e.key);
         userNode.querySelector("img").src = e.val().board;
         userNode.querySelector("span").textContent = e.val().name;
         console.log("Updated whiteboard");
     }
     function removeWhiteboard(e) {
-        var userNode = document.querySelector("div.whiteboards div#" + snakeCase(e.val().name));
+        var userNode = document.querySelector("div.whiteboards div#" + e.key);
         userNode.remove();
         console.log("Removed whiteboard");
     }
-    var snakeCase = function (string) {
-        return string.replace(/\W+/g, " ")
-            .split(/ |\B(?=[A-Z])/)
-            .map(function (word) { return word.toLowerCase(); })
-            .join('_');
-    };
 })(Host || (Host = {}));

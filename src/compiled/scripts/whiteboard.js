@@ -2,6 +2,7 @@ var canvas = document.querySelector("canvas");
 var ctx = canvas.getContext("2d");
 var pointerId = -1;
 var stroke = [];
+var strokes = 0;
 var whiteboardHistory = [];
 var lineWidth = 5;
 ctx.lineWidth = lineWidth;
@@ -50,6 +51,7 @@ var Functionality;
             whiteboardHistory.pop();
             imageToDraw_1.src = whiteboardHistory[whiteboardHistory.length - 1];
             imageToDraw_1.onload = function () { ctx.drawImage(imageToDraw_1, 0, 0); };
+            strokes--;
         }
     }
     Functionality.undo = undo;
@@ -74,6 +76,22 @@ var Functionality;
         ctx.strokeStyle = input.value;
     }
     Functionality.updateStrokeStyle = updateStrokeStyle;
+    function clearBoard() {
+        Swal.fire({
+            icon: "question",
+            title: "Are you sure you want to clear your board? This cannot be undone.",
+            showDenyButton: true,
+            confirmButtonText: "Clear",
+            denyButtonText: "Don't clear",
+            background: "var(--background)"
+        }).then(function (result) {
+            if (result.isConfirmed) {
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                strokes = 0;
+            }
+        });
+    }
+    Functionality.clearBoard = clearBoard;
     function placeToolbar() {
         var toolbar = document.querySelector("div.toolbar");
         var colorInput = document.querySelector("input[type='color']");
@@ -126,6 +144,7 @@ var Events;
         if (pointerId === e.pointerId) {
             pointerId = -1;
             stroke = [];
+            strokes++;
             whiteboardHistory.push(canvas.toDataURL());
         }
     }

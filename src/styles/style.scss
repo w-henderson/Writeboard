@@ -20,11 +20,16 @@ body {
     --heavy-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 
     margin: 0;
-    padding: 0;
+    padding: 0 !important;
 
     color: var(--text-color);
     background-color: var(--background);
+    font-family: Inter;
 }
+
+body.swal2-shown.swal2-height-auto { height: 100% !important; }
+h2.swal2-title, div.swal2-html-container, input.swal2-input, div.swal2-validation-message { color: var(--text-color) !important; }
+div.swal2-validation-message { background-color: var(--background-lighter) !important; }
 
 div.main {
     width: 100%;

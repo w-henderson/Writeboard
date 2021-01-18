@@ -2,6 +2,7 @@ var canvas = document.querySelector("canvas");
 var ctx = canvas.getContext("2d");
 var pointerId = -1;
 var stroke: number[][] = [];
+var strokes = 0;
 var whiteboardHistory: string[] = [];
 
 var lineWidth = 5;
@@ -54,6 +55,7 @@ namespace Functionality {
       whiteboardHistory.pop();
       imageToDraw.src = whiteboardHistory[whiteboardHistory.length - 1];
       imageToDraw.onload = () => { ctx.drawImage(imageToDraw, 0, 0) }
+      strokes--;
     }
   }
 
@@ -72,6 +74,22 @@ namespace Functionality {
     let input = (<HTMLInputElement>document.querySelector("input[type='color']"));
     (<HTMLElement>document.querySelector("#colorIcon")).style.color = input.value;
     ctx.strokeStyle = input.value;
+  }
+
+  export function clearBoard() {
+    Swal.fire({
+      icon: "question",
+      title: "Are you sure you want to clear your board? This cannot be undone.",
+      showDenyButton: true,
+      confirmButtonText: `Clear`,
+      denyButtonText: `Don't clear`,
+      background: "var(--background)"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        strokes = 0;
+      }
+    });
   }
 
   export function placeToolbar() {
@@ -122,6 +140,7 @@ namespace Events {
     if (pointerId === e.pointerId) {
       pointerId = -1;
       stroke = [];
+      strokes++;
       whiteboardHistory.push(canvas.toDataURL());
     }
   }

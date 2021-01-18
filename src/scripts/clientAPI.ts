@@ -1,5 +1,90 @@
 var firebase: any;
+var Swal: any;
 
 namespace Client {
   export var database = firebase.database(); // REMOVE EXPORT IN PRODUCTION
+  export var roomId = window.location.search.substr(1);
+  export var username;
+  export var userId;
+
+  var lastStrokeUpdate = -1;
+
+  var titleRef = database.ref(`rooms/${roomId}/name`);
+  var ref = database.ref(`rooms/${roomId}/users`);
+  export var userRef;
+  titleRef.once("value", updateTitle);
+
+  function updateTitle(e) {
+    let data = e.val();
+
+    if (data !== null) {
+      document.querySelector("h1").textContent = "Writeboard: " + data;
+      document.title = data + " - Writeboard";
+
+      Swal.fire({
+        title: 'Choose a username for this Writeboard.',
+        icon: "info",
+        input: 'text',
+        confirmButtonText: 'Join',
+        background: "var(--background)",
+        showLoaderOnConfirm: true,
+        preConfirm: (login) => {
+          return ref.once("value").then((snapshot) => {
+            console.log(snapshot.val());
+            if (snakeCase(login) in snapshot.val()) {
+              Swal.showValidationMessage("Username already taken!");
+              return false;
+            } else {
+              return login;
+            }
+          });
+        },
+        allowOutsideClick: false
+      }).then((result) => {
+        if (result.isConfirmed) {
+          username = result.value;
+          userId = snakeCase(result.value);
+
+          userRef = database.ref(`rooms/${roomId}/users/${userId}`);
+          userRef.set({
+            name: username,
+            board: Graphics.exportImage(400, 300)
+          });
+
+          window.setInterval(updateBoard, 5000);
+        }
+      })
+    } else {
+      Swal.fire({
+        title: "Error 404",
+        text: "Writeboard Not Found",
+        icon: "error",
+        background: "var(--background)"
+      }).then(() => {
+        document.querySelector("div.main").innerHTML = "<h1>Error 404:<br>Writeboard Not Found</h1>";
+        document.title = "Error 404 - Writeboard";
+      });
+    }
+  }
+
+  function updateBoard() {
+    if (lastStrokeUpdate !== strokes) {
+      userRef.update({
+        name: username,
+        board: Graphics.exportImage(400, 300)
+      });
+      lastStrokeUpdate = strokes;
+    }
+  }
+
+  window.addEventListener("beforeunload", () => {
+    return userRef.remove().then(() => { return });
+  });
 }
+
+const snakeCase = string => {
+  return string.replace(/\W+/g, " ")
+    .split(/ |\B(?=[A-Z])/)
+    .map(word => word.toLowerCase())
+    .join('_');
+};
