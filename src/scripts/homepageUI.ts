@@ -39,7 +39,15 @@ namespace UI {
       input: 'text',
       confirmButtonText: 'Create',
       background: "var(--background)",
-      allowOutsideClick: true
+      allowOutsideClick: true,
+      preConfirm: (name: string) => {
+        if (name.length === 0) {
+          Swal.showValidationMessage("You must name your room!");
+          return false;
+        } else {
+          return name;
+        }
+      },
     }).then(async (result) => {
       if (result.isConfirmed) {
         let roomName = result.value;

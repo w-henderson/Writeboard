@@ -29,11 +29,12 @@ namespace Host {
 
   function updateTitle(e) {
     let data = e.val();
-    document.querySelector("h1").textContent = `Writeboard (${roomId}): ${data}`;
+    document.querySelector("h1").textContent = `${data} (${roomId})`;
   }
 
   function addWhiteboard(e) {
     let whiteboards = document.querySelector("div.whiteboards");
+    if (whiteboards.textContent.trim() === "Waiting for people to connect...") whiteboards.innerHTML = "";
 
     let userNode = document.createElement("div");
     let userWhiteboard = document.createElement("img");
@@ -61,6 +62,8 @@ namespace Host {
   function removeWhiteboard(e) {
     let userNode = document.querySelector(`div.whiteboards div#${e.key}`);
     userNode.remove();
+
+    if (document.querySelector("div.whiteboards").innerHTML === "") document.querySelector("div.whiteboards").textContent = "Waiting for people to connect...";
 
     console.log("Removed whiteboard");
   }

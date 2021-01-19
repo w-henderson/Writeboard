@@ -59,7 +59,7 @@ namespace Client {
     } else {
       Swal.fire({
         title: "Whiteboard Doesn't Exist",
-        text: "This could be due a bad link, or the room host may have closed their browser.",
+        text: "This could be due to a bad link, or the room host may have closed their browser.",
         icon: "error",
         background: "var(--background)"
       }).then(() => {

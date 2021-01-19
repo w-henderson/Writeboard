@@ -26,10 +26,12 @@ var Host;
     }
     function updateTitle(e) {
         var data = e.val();
-        document.querySelector("h1").textContent = "Writeboard (" + Host.roomId + "): " + data;
+        document.querySelector("h1").textContent = data + " (" + Host.roomId + ")";
     }
     function addWhiteboard(e) {
         var whiteboards = document.querySelector("div.whiteboards");
+        if (whiteboards.textContent.trim() === "Waiting for people to connect...")
+            whiteboards.innerHTML = "";
         var userNode = document.createElement("div");
         var userWhiteboard = document.createElement("img");
         var userName = document.createElement("span");
@@ -50,6 +52,8 @@ var Host;
     function removeWhiteboard(e) {
         var userNode = document.querySelector("div.whiteboards div#" + e.key);
         userNode.remove();
+        if (document.querySelector("div.whiteboards").innerHTML === "")
+            document.querySelector("div.whiteboards").textContent = "Waiting for people to connect...";
         console.log("Removed whiteboard");
     }
     window.addEventListener("beforeunload", function () {

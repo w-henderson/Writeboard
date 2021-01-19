@@ -78,7 +78,16 @@ var UI;
                     input: 'text',
                     confirmButtonText: 'Create',
                     background: "var(--background)",
-                    allowOutsideClick: true
+                    allowOutsideClick: true,
+                    preConfirm: function (name) {
+                        if (name.length === 0) {
+                            Swal.showValidationMessage("You must name your room!");
+                            return false;
+                        }
+                        else {
+                            return name;
+                        }
+                    }
                 }).then(function (result) { return __awaiter(_this, void 0, void 0, function () {
                     var roomName, alphabet_1, valid_1, code_1, i;
                     return __generator(this, function (_a) {

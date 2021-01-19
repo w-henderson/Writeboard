@@ -143,6 +143,36 @@ section:nth-child(2n+1) {
     background-color: var(--background-lighter);
 }
 
+footer {
+    background-color: var(--background-lighter);
+    color: var(--text-color);
+    position: relative;
+    bottom: 8vw;
+    box-sizing: border-box;
+    padding: 1.5vh;
+    font-size: 2vh;
+    width: 100%;
+
+    span {
+        position: absolute;
+        right: 1.5vh;
+    }
+}
+
+@media (max-width: 52vh) {
+    footer {
+        display: none;
+    }
+}
+
+a:link, a:visited, a:active {
+    color: var(--text-color);
+    transition: color 100ms;
+    font-weight: 200;
+    text-decoration: none;
+}
+a:hover { color: var(--accent-color); }
+
 @keyframes animateIn {
     0% {
         opacity: 0;
