@@ -12,7 +12,7 @@ namespace Client {
   var titleRef = database.ref(`rooms/${roomId}/name`);
   var ref = database.ref(`rooms/${roomId}/users`);
   export var userRef;
-  titleRef.once("value", updateTitle);
+  titleRef.on("value", updateTitle);
 
   function updateTitle(e) {
     let data = e.val();
@@ -31,8 +31,11 @@ namespace Client {
         preConfirm: (login) => {
           return ref.once("value").then((snapshot) => {
             console.log(snapshot.val());
-            if (snakeCase(login) in snapshot.val()) {
+            if (snapshot.val() !== null && snakeCase(login) in snapshot.val()) {
               Swal.showValidationMessage("Username already taken!");
+              return false;
+            } else if (login.length === 0) {
+              Swal.showValidationMessage("You must choose a username!");
               return false;
             } else {
               return login;
@@ -56,13 +59,12 @@ namespace Client {
       })
     } else {
       Swal.fire({
-        title: "Error 404",
-        text: "Writeboard Not Found",
+        title: "Whiteboard Doesn't Exist",
+        text: "This could be due a bad link, or the room host may have closed their browser.",
         icon: "error",
         background: "var(--background)"
       }).then(() => {
-        document.querySelector("div.main").innerHTML = "<h1>Error 404:<br>Writeboard Not Found</h1>";
-        document.title = "Error 404 - Writeboard";
+        window.location.href = "/";
       });
     }
   }

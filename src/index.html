@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Writeboard</title>
 
+    <link rel="icon" href="images/logo.png">
     <link rel="stylesheet" href="compiled/promo.css">
 </head>
 
@@ -17,6 +18,11 @@
             The simple yet stylish whiteboard app.<br>
             Available now for free.
         </span>
+
+        <div class="buttons">
+            <button onclick="UI.joinRoom();">Join Room</button>
+            <button onclick="UI.hostRoom();">Host Room</button>
+        </div>
     </div>
 
     <div class="banner">
@@ -26,12 +32,32 @@
         <img src="images/banner/laptop.png">
     </div>
 
-    <section>
-        <h1>Why Choose Writeboard?</h1>
-        Content
+    <section style="padding-top:max(15vh,12vw);animation: animateInSection 1500ms forwards;">
+        <h1>What is Writeboard?</h1>
+        Writeboard is a simple yet stylish whiteboard web app to allow any team to share their ideas easily. Brought to you by the developers of the critically-acclaimed education apps Sadlet and Kascreech, Writeboard offers a user-friendly and intuitive platform for collaboration and communication, powered by Google's Firebase backend system.
     </section>
 
+    <section>
+        <h1>Features</h1>
+        Here at Writeboard, we believe that everyone should have a top-quality collaborative experience, which is why we built Writeboard from the ground up using state-of-the-art web technologies to optimise the user's experience. Here are just a few features of Writeboard which we believe makes it a true contender in the world of team software.
+        <ul>
+            <li>Intuitive whiteboard interface with numerous tools</li>
+            <li>Support for pen pressure and pens with erasers</li>
+            <li>Less than five seconds latency between your board and the host</li>
+            <li>Committed to privacy: all your data is deleted as soon as the room is closed</li>
+            <li>Completely free for everyone</li>
+        </ul>
+    </section>
+
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-database.js"></script>
+    <script src="compiled/scripts/firebaseInit.js"></script>
+
+    <!-- Vendor Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+
+    <!-- Main Scripts -->
     <script src="compiled/scripts/homepageUI.js"></script>
 </body>
 

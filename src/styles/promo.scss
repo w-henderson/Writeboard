@@ -23,9 +23,22 @@ body {
     padding: 0 !important;
 
     color: var(--text-color);
-    background-color: var(--background);
+    background: radial-gradient(var(--background-lighter), black);
     font-family: Inter;
     overflow: hidden auto;
+}
+
+body.swal2-shown.swal2-height-auto { height: 100% !important; }
+h2.swal2-title, div.swal2-html-container, input.swal2-input, div.swal2-validation-message { color: var(--text-color) !important; }
+div.swal2-validation-message { background-color: var(--background-lighter) !important; }
+button.swal2-styled.swal2-confirm { background-color: var(--accent-color) !important; }
+div.swal2-icon {
+    border-color: var(--accent-color) !important;
+    color: var(--alternate-accent) !important;
+}
+input.swal2-file:focus, input.swal2-input:focus, textarea.swal2-textarea:focus, button.swal2-styled:focus {
+    border: 1px solid #ef6461 !important;
+    box-shadow: 0 0 0 3px rgba(226, 105, 89, 0.5) !important;
 }
 
 div.hero {
@@ -47,6 +60,8 @@ div.hero {
         font-size: min(14vw, 10vh);
         margin: 20px 0;
         animation: heroAnimateIn 1s;
+        text-shadow: var(--shadow);
+        color: var(--accent-color);
     }
 
     span {
@@ -54,6 +69,32 @@ div.hero {
         opacity: 0;
         transform: scale(0);
         animation: heroAnimateIn 1s 200ms forwards;
+    }
+
+    div.buttons {
+        opacity: 0;
+        transform: scale(0);
+        animation: heroAnimateIn 1s 400ms forwards;
+        margin-top: 30px;
+
+        button {
+            border: 2px solid var(--text-color);
+            border-radius: 40px;
+            padding: 15px 20px;
+            color: var(--text-color);
+            outline: none;
+            background: none;
+            font-family: Inter;
+            font-size: 20px;
+            margin: 0 5px;
+            cursor: pointer;
+            transition: background-color 150ms, color 250ms;
+
+            &:hover {
+                background-color: var(--text-color);
+                color: var(--background);
+            }
+        }
     }
 }
 
@@ -84,12 +125,22 @@ div.banner {
 section {
     position: relative;
     z-index: -1;
-    bottom: 150px;
+    bottom: 8vw;
     width: 100%;
-    padding: 20vh 20vw;
+    padding: 10vh 20vw;
     box-sizing: border-box;
     background-color: var(--background);
-    animation: animateInSection 500ms 1000ms forwards;
+    font-size: 2.5vh;
+
+    h1 {
+        color: var(--alternate-accent);
+        text-shadow: var(--shadow);
+        margin-top: 0;
+    }
+}
+
+section:nth-child(2n+1) {
+    background-color: var(--background-lighter);
 }
 
 @keyframes animateIn {
@@ -118,8 +169,24 @@ section {
     0% {
         background-color: var(--background);
     }
-
+    66% {
+        background-color: var(--background);
+    }
     100% {
         background-color: var(--background-lighter);
     }
+}
+
+ul {
+    list-style: none; /* Remove default bullets */
+}
+
+ul li::before {
+    content: "\2022";  /* Add content: \2022 is the CSS Code/unicode for a bullet */
+    color: var(--accent-color); /* Change the color */
+    font-weight: 800; /* If you want it to be bold */
+    transform: scale(1.5);
+    display: inline-block; /* Needed to add space between the bullet and the text */
+    width: 1em; /* Also needed for space (tweak if needed) */
+    margin-left: -1em; /* Also needed for space (tweak if needed) */
 }

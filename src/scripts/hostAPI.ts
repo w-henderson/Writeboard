@@ -1,20 +1,35 @@
+var Swal: any;
 var firebase: any;
 
 namespace Host {
   export var database = firebase.database(); // REMOVE EXPORT IN PRODUCTION
-  export var roomId = "ABCDEF";
+  export var roomId = window.localStorage.getItem("writeboardTempId");
 
-  var ref = database.ref(`rooms/${roomId}/users`);
-  var titleRef = database.ref(`rooms/${roomId}/name`);
-  titleRef.once("value", updateTitle);
+  if (!roomId) {
+    Swal.fire({
+      title: "Error 404",
+      text: "Writeboard Not Found",
+      icon: "error",
+      background: "var(--background)"
+    }).then(() => {
+      document.querySelector("div.main").innerHTML = "<h1>Error 404:<br>Writeboard Not Found</h1>";
+      document.title = "Error 404 - Writeboard";
+    });
+  } else {
+    var ref = database.ref(`rooms/${roomId}/users`);
+    var titleRef = database.ref(`rooms/${roomId}/name`);
+    titleRef.once("value", updateTitle);
 
-  ref.on("child_added", addWhiteboard);
-  ref.on("child_changed", updateWhiteboard);
-  ref.on("child_removed", removeWhiteboard);
+    ref.on("child_added", addWhiteboard);
+    ref.on("child_changed", updateWhiteboard);
+    ref.on("child_removed", removeWhiteboard);
+
+    window.localStorage.removeItem("writeboardTempId");
+  }
 
   function updateTitle(e) {
     let data = e.val();
-    document.querySelector("h1").textContent = "Writeboard (Host): " + data;
+    document.querySelector("h1").textContent = `Writeboard (${roomId}): ${data}`;
   }
 
   function addWhiteboard(e) {
@@ -49,4 +64,8 @@ namespace Host {
 
     console.log("Removed whiteboard");
   }
+
+  window.addEventListener("beforeunload", () => {
+    return database.ref(`rooms/${roomId}`).remove().then(() => { return });
+  });
 }

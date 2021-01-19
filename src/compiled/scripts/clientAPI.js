@@ -7,7 +7,7 @@ var Client;
     var lastStrokeUpdate = -1;
     var titleRef = Client.database.ref("rooms/" + Client.roomId + "/name");
     var ref = Client.database.ref("rooms/" + Client.roomId + "/users");
-    titleRef.once("value", updateTitle);
+    titleRef.on("value", updateTitle);
     function updateTitle(e) {
         var data = e.val();
         if (data !== null) {
@@ -23,8 +23,12 @@ var Client;
                 preConfirm: function (login) {
                     return ref.once("value").then(function (snapshot) {
                         console.log(snapshot.val());
-                        if (snakeCase(login) in snapshot.val()) {
+                        if (snapshot.val() !== null && snakeCase(login) in snapshot.val()) {
                             Swal.showValidationMessage("Username already taken!");
+                            return false;
+                        }
+                        else if (login.length === 0) {
+                            Swal.showValidationMessage("You must choose a username!");
                             return false;
                         }
                         else {
@@ -48,13 +52,12 @@ var Client;
         }
         else {
             Swal.fire({
-                title: "Error 404",
-                text: "Writeboard Not Found",
+                title: "Whiteboard Doesn't Exist",
+                text: "This could be due a bad link, or the room host may have closed their browser.",
                 icon: "error",
                 background: "var(--background)"
             }).then(function () {
-                document.querySelector("div.main").innerHTML = "<h1>Error 404:<br>Writeboard Not Found</h1>";
-                document.title = "Error 404 - Writeboard";
+                window.location.href = "/";
             });
         }
     }

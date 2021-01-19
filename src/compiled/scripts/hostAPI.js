@@ -1,17 +1,32 @@
+var Swal;
 var firebase;
 var Host;
 (function (Host) {
     Host.database = firebase.database(); // REMOVE EXPORT IN PRODUCTION
-    Host.roomId = "ABCDEF";
-    var ref = Host.database.ref("rooms/" + Host.roomId + "/users");
-    var titleRef = Host.database.ref("rooms/" + Host.roomId + "/name");
-    titleRef.once("value", updateTitle);
-    ref.on("child_added", addWhiteboard);
-    ref.on("child_changed", updateWhiteboard);
-    ref.on("child_removed", removeWhiteboard);
+    Host.roomId = window.localStorage.getItem("writeboardTempId");
+    if (!Host.roomId) {
+        Swal.fire({
+            title: "Error 404",
+            text: "Writeboard Not Found",
+            icon: "error",
+            background: "var(--background)"
+        }).then(function () {
+            document.querySelector("div.main").innerHTML = "<h1>Error 404:<br>Writeboard Not Found</h1>";
+            document.title = "Error 404 - Writeboard";
+        });
+    }
+    else {
+        var ref = Host.database.ref("rooms/" + Host.roomId + "/users");
+        var titleRef = Host.database.ref("rooms/" + Host.roomId + "/name");
+        titleRef.once("value", updateTitle);
+        ref.on("child_added", addWhiteboard);
+        ref.on("child_changed", updateWhiteboard);
+        ref.on("child_removed", removeWhiteboard);
+        window.localStorage.removeItem("writeboardTempId");
+    }
     function updateTitle(e) {
         var data = e.val();
-        document.querySelector("h1").textContent = "Writeboard (Host): " + data;
+        document.querySelector("h1").textContent = "Writeboard (" + Host.roomId + "): " + data;
     }
     function addWhiteboard(e) {
         var whiteboards = document.querySelector("div.whiteboards");
@@ -37,4 +52,7 @@ var Host;
         userNode.remove();
         console.log("Removed whiteboard");
     }
+    window.addEventListener("beforeunload", function () {
+        return Host.database.ref("rooms/" + Host.roomId).remove().then(function () { return; });
+    });
 })(Host || (Host = {}));

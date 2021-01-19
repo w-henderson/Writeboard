@@ -79,7 +79,8 @@ namespace Functionality {
   export function clearBoard() {
     Swal.fire({
       icon: "question",
-      title: "Are you sure you want to clear your board? This cannot be undone.",
+      title: "Are you sure you want to clear your board?",
+      text: "This cannot be undone.",
       showDenyButton: true,
       confirmButtonText: `Clear`,
       denyButtonText: `Don't clear`,
