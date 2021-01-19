@@ -6,6 +6,8 @@ var strokes = 0;
 var whiteboardHistory: string[] = [];
 
 var lineWidth = 5;
+var color = "#ffffff";
+var tool = "brush";
 
 ctx.lineWidth = lineWidth;
 ctx.lineCap = "round";
@@ -20,10 +22,12 @@ namespace Graphics {
     if (stroke.length < 2) return;
 
     ctx.beginPath();
+    ctx.strokeStyle = tool === "brush" ? color : "#1f2324";
+    if (tool === "eraser") ctx.lineWidth = 40;
     ctx.moveTo(stroke[0][0], stroke[0][1]);
 
     let smoothed = Smooth.Smooth(stroke, {
-      method: Smooth.METHOD_CUBIC,
+      method: tool === "brush" ? Smooth.METHOD_CUBIC : Smooth.METHOD_LINEAR,
       clip: Smooth.CLIP_CLAMP
     });
 
@@ -67,13 +71,22 @@ namespace Functionality {
   }
 
   export function selectColor() {
-    (<HTMLInputElement>document.querySelector("input[type='color']")).click();
+    if (tool === "brush") (<HTMLInputElement>document.querySelector("input[type='color']")).click();
+    else {
+      tool = "brush";
+      document.querySelector("div.toolbar").className = "toolbar brush";
+    }
+  }
+
+  export function selectEraser() {
+    tool = "eraser";
+    document.querySelector("div.toolbar").className = "toolbar eraser";
   }
 
   export function updateStrokeStyle() {
     let input = (<HTMLInputElement>document.querySelector("input[type='color']"));
     (<HTMLElement>document.querySelector("#colorIcon")).style.color = input.value;
-    ctx.strokeStyle = input.value;
+    color = input.value;
   }
 
   export function clearBoard() {
@@ -106,7 +119,6 @@ namespace Functionality {
       toolbar.style.height = "unset";
       toolbar.style.width = "50px";
       toolbar.style.borderRadius = "0 5px 5px 0";
-      toolbar.style.paddingTop = "unset";
     } else {
       toolbar.style.top = `${canvasRect.y + canvasRect.height}px`;
       colorInput.style.top = `${canvasRect.y + canvasRect.height}px`;

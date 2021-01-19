@@ -72,7 +72,7 @@ var UI;
             var _this = this;
             return __generator(this, function (_a) {
                 Swal.fire({
-                    title: 'Choose a name for your room.',
+                    title: 'Name your room.',
                     text: "This will appear at the top of your screen along with the room code.",
                     icon: "info",
                     input: 'text',

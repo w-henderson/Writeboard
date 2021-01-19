@@ -5,6 +5,8 @@ var stroke = [];
 var strokes = 0;
 var whiteboardHistory = [];
 var lineWidth = 5;
+var color = "#ffffff";
+var tool = "brush";
 ctx.lineWidth = lineWidth;
 ctx.lineCap = "round";
 ctx.fillStyle = "#1f2324";
@@ -18,9 +20,12 @@ var Graphics;
         if (stroke.length < 2)
             return;
         ctx.beginPath();
+        ctx.strokeStyle = tool === "brush" ? color : "#1f2324";
+        if (tool === "eraser")
+            ctx.lineWidth = 40;
         ctx.moveTo(stroke[0][0], stroke[0][1]);
         var smoothed = Smooth.Smooth(stroke, {
-            method: Smooth.METHOD_CUBIC,
+            method: tool === "brush" ? Smooth.METHOD_CUBIC : Smooth.METHOD_LINEAR,
             clip: Smooth.CLIP_CLAMP
         });
         for (var i = 0; i < stroke.length - 1; i += 1 / quality) {
@@ -67,13 +72,23 @@ var Functionality;
     }
     Functionality.getCoords = getCoords;
     function selectColor() {
-        document.querySelector("input[type='color']").click();
+        if (tool === "brush")
+            document.querySelector("input[type='color']").click();
+        else {
+            tool = "brush";
+            document.querySelector("div.toolbar").className = "toolbar brush";
+        }
     }
     Functionality.selectColor = selectColor;
+    function selectEraser() {
+        tool = "eraser";
+        document.querySelector("div.toolbar").className = "toolbar eraser";
+    }
+    Functionality.selectEraser = selectEraser;
     function updateStrokeStyle() {
         var input = document.querySelector("input[type='color']");
         document.querySelector("#colorIcon").style.color = input.value;
-        ctx.strokeStyle = input.value;
+        color = input.value;
     }
     Functionality.updateStrokeStyle = updateStrokeStyle;
     function clearBoard() {
@@ -105,7 +120,6 @@ var Functionality;
             toolbar.style.height = "unset";
             toolbar.style.width = "50px";
             toolbar.style.borderRadius = "0 5px 5px 0";
-            toolbar.style.paddingTop = "unset";
         }
         else {
             toolbar.style.top = canvasRect.y + canvasRect.height + "px";

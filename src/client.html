@@ -16,9 +16,10 @@
         <h1>Welcome to Writeboard</h1>
         <canvas width=800 height=600></canvas>
         
-        <div class="toolbar">
-            <i class="material-icons-round" onclick="Functionality.undo();">undo</i>
+        <div class="toolbar brush">
             <i class="material-icons-round" onclick="Functionality.selectColor();" id="colorIcon">brush</i>
+            <img src="images/eraser.svg" onclick="Functionality.selectEraser();">
+            <i class="material-icons-round" onclick="Functionality.undo();">undo</i>
             <i class="material-icons-round" onclick="Functionality.clearBoard();">clear</i>
         </div>
     </div>

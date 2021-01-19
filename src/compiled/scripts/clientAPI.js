@@ -22,7 +22,6 @@ var Client;
                 showLoaderOnConfirm: true,
                 preConfirm: function (login) {
                     return ref.once("value").then(function (snapshot) {
-                        console.log(snapshot.val());
                         if (snapshot.val() !== null && snakeCase(login) in snapshot.val()) {
                             Swal.showValidationMessage("Username already taken!");
                             return false;

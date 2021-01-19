@@ -81,13 +81,26 @@ div.main {
         box-shadow: var(--shadow);
         user-select: none;
         
-        i {
+        i, img {
             font-size: 32px;
+            width: 32px;
             cursor: pointer;
-            transition: transform 250ms;
+            transition: transform 250ms, opacity 250ms;
 
             &:active {
                 transform: scale(0.75);
+            }
+        }
+
+        &.brush {
+            img {
+                opacity: 0.2;
+            }
+        }
+
+        &.eraser {
+            i:first-child {
+                opacity: 0.2;
             }
         }
     }
