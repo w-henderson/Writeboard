@@ -2,7 +2,12 @@ var Swal: any;
 var firebase: any;
 
 namespace UI {
-  export var database = firebase.database(); // REMOVE EXPORT IN PRODUCTION
+  var database = firebase.database();
+
+  function route(r: string) {
+    if (window.location.hostname !== "localhost") return r;
+    else return `${r}.html`;
+  }
 
   export function joinRoom() {
     Swal.fire({
@@ -26,7 +31,7 @@ namespace UI {
     }).then((result) => {
       if (result.isConfirmed) {
         let roomId = result.value;
-        window.location.href = "/client.html?" + roomId;
+        window.location.href = `/${route("client")}?${roomId}`;
       }
     });
   }
@@ -73,7 +78,7 @@ namespace UI {
           users: {}
         }).then(() => {
           window.localStorage.setItem("writeboardTempId", code);
-          window.location.href = "host.html";
+          window.location.href = "/" + route("host");
         }).catch(() => {
           Swal.fire({
             title: "An error occurred.",

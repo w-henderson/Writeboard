@@ -2,7 +2,7 @@ var firebase: any;
 var Swal: any;
 
 namespace Client {
-  export var database = firebase.database(); // REMOVE EXPORT IN PRODUCTION
+  var database = firebase.database();
   export var roomId = window.location.search.substr(1);
   export var username;
   export var userId;

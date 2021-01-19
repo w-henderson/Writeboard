@@ -38,7 +38,13 @@ var Swal;
 var firebase;
 var UI;
 (function (UI) {
-    UI.database = firebase.database(); // REMOVE EXPORT IN PRODUCTION
+    var database = firebase.database();
+    function route(r) {
+        if (window.location.hostname !== "localhost")
+            return r;
+        else
+            return r + ".html";
+    }
     function joinRoom() {
         Swal.fire({
             title: 'Enter the room ID.',
@@ -62,7 +68,7 @@ var UI;
         }).then(function (result) {
             if (result.isConfirmed) {
                 var roomId = result.value;
-                window.location.href = "/client.html?" + roomId;
+                window.location.href = "/" + route("client") + "?" + roomId;
             }
         });
     }
@@ -103,7 +109,7 @@ var UI;
                                 _a.label = 1;
                             case 1:
                                 if (!!valid_1) return [3 /*break*/, 3];
-                                return [4 /*yield*/, UI.database.ref("rooms/" + code_1).once("value", function (snapshot) {
+                                return [4 /*yield*/, database.ref("rooms/" + code_1).once("value", function (snapshot) {
                                         if (snapshot.val() === null) {
                                             valid_1 = true;
                                         }
@@ -117,12 +123,12 @@ var UI;
                                 _a.sent();
                                 return [3 /*break*/, 1];
                             case 3:
-                                UI.database.ref("rooms/" + code_1).set({
+                                database.ref("rooms/" + code_1).set({
                                     name: roomName,
                                     users: {}
                                 }).then(function () {
                                     window.localStorage.setItem("writeboardTempId", code_1);
-                                    window.location.href = "host.html";
+                                    window.location.href = "/" + route("host");
                                 })["catch"](function () {
                                     Swal.fire({
                                         title: "An error occurred.",

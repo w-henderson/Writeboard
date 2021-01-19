@@ -9,7 +9,8 @@
     "build-sass": "sass src/styles:src/compiled --no-source-map --style compressed",
     "build-ts": "tsc",
     "host": "python -m http.server 80 --directory src",
-    "dev-deploy": "surge src https://writeboard-dev.surge.sh"
+    "dev-deploy": "surge src https://writeboard-dev.surge.sh",
+    "deploy": "netlify deploy --prod --dir src"
   },
   "devDependencies": {
     "typescript": "^4.1.3",

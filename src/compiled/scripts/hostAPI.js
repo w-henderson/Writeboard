@@ -2,7 +2,7 @@ var Swal;
 var firebase;
 var Host;
 (function (Host) {
-    Host.database = firebase.database(); // REMOVE EXPORT IN PRODUCTION
+    var database = firebase.database();
     Host.roomId = window.localStorage.getItem("writeboardTempId");
     if (!Host.roomId) {
         Swal.fire({
@@ -11,13 +11,12 @@ var Host;
             icon: "error",
             background: "var(--background)"
         }).then(function () {
-            document.querySelector("div.main").innerHTML = "<h1>Error 404:<br>Writeboard Not Found</h1>";
-            document.title = "Error 404 - Writeboard";
+            window.location.href = "/";
         });
     }
     else {
-        var ref = Host.database.ref("rooms/" + Host.roomId + "/users");
-        var titleRef = Host.database.ref("rooms/" + Host.roomId + "/name");
+        var ref = database.ref("rooms/" + Host.roomId + "/users");
+        var titleRef = database.ref("rooms/" + Host.roomId + "/name");
         titleRef.once("value", updateTitle);
         ref.on("child_added", addWhiteboard);
         ref.on("child_changed", updateWhiteboard);
@@ -26,6 +25,7 @@ var Host;
     }
     function updateTitle(e) {
         var data = e.val();
+        document.title = data + " - Writeboard";
         document.querySelector("h1").textContent = data + " (" + Host.roomId + ")";
     }
     function addWhiteboard(e) {
@@ -57,6 +57,6 @@ var Host;
         console.log("Removed whiteboard");
     }
     window.addEventListener("beforeunload", function () {
-        return Host.database.ref("rooms/" + Host.roomId).remove().then(function () { return; });
+        return database.ref("rooms/" + Host.roomId).remove().then(function () { return; });
     });
 })(Host || (Host = {}));

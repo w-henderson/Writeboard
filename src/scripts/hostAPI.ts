@@ -2,7 +2,7 @@ var Swal: any;
 var firebase: any;
 
 namespace Host {
-  export var database = firebase.database(); // REMOVE EXPORT IN PRODUCTION
+  var database = firebase.database();
   export var roomId = window.localStorage.getItem("writeboardTempId");
 
   if (!roomId) {
@@ -12,8 +12,7 @@ namespace Host {
       icon: "error",
       background: "var(--background)"
     }).then(() => {
-      document.querySelector("div.main").innerHTML = "<h1>Error 404:<br>Writeboard Not Found</h1>";
-      document.title = "Error 404 - Writeboard";
+      window.location.href = "/";
     });
   } else {
     var ref = database.ref(`rooms/${roomId}/users`);
@@ -29,6 +28,7 @@ namespace Host {
 
   function updateTitle(e) {
     let data = e.val();
+    document.title = `${data} - Writeboard`;
     document.querySelector("h1").textContent = `${data} (${roomId})`;
   }
 

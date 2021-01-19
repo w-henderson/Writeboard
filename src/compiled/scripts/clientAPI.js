@@ -2,11 +2,11 @@ var firebase;
 var Swal;
 var Client;
 (function (Client) {
-    Client.database = firebase.database(); // REMOVE EXPORT IN PRODUCTION
+    var database = firebase.database();
     Client.roomId = window.location.search.substr(1);
     var lastStrokeUpdate = -1;
-    var titleRef = Client.database.ref("rooms/" + Client.roomId + "/name");
-    var ref = Client.database.ref("rooms/" + Client.roomId + "/users");
+    var titleRef = database.ref("rooms/" + Client.roomId + "/name");
+    var ref = database.ref("rooms/" + Client.roomId + "/users");
     titleRef.on("value", updateTitle);
     function updateTitle(e) {
         var data = e.val();
@@ -40,7 +40,7 @@ var Client;
                 if (result.isConfirmed) {
                     Client.username = result.value;
                     Client.userId = snakeCase(result.value);
-                    Client.userRef = Client.database.ref("rooms/" + Client.roomId + "/users/" + Client.userId);
+                    Client.userRef = database.ref("rooms/" + Client.roomId + "/users/" + Client.userId);
                     Client.userRef.set({
                         name: Client.username,
                         board: Graphics.exportImage(400, 300)
