@@ -5,7 +5,7 @@ namespace UI {
   var database = firebase.database();
 
   function route(r: string) {
-    if (window.location.hostname !== "localhost") return r;
+    if (window.location.hostname !== "localhost" && window.location.hostname !== "192.168.1.1") return r;
     else return `${r}.html`;
   }
 

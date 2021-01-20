@@ -9,6 +9,9 @@ var lineWidth = 5;
 var color = "#ffffff";
 var tool = "brush";
 
+var surfaceMode = true;
+var eraserAuto = false;
+
 ctx.lineWidth = lineWidth;
 ctx.lineCap = "round";
 ctx.fillStyle = "#1f2324";
@@ -80,6 +83,7 @@ namespace Functionality {
 
   export function selectEraser() {
     tool = "eraser";
+    eraserAuto = false;
     document.querySelector("div.toolbar").className = "toolbar eraser";
   }
 
@@ -140,6 +144,17 @@ namespace Events {
     e.preventDefault();
     if (pointerId === -1 && e.pressure !== 0) pointerId = e.pointerId;
     if (pointerId === e.pointerId) {
+      if (surfaceMode) {
+        if (e.buttons === 32) {
+          tool = "eraser";
+          eraserAuto = true;
+          document.querySelector("div.toolbar").className = "toolbar eraser";
+        } else if (eraserAuto) {
+          tool = "brush";
+          document.querySelector("div.toolbar").className = "toolbar brush";
+        }
+      }
+
       if (e.pointerType === "pen") ctx.lineWidth = lineWidth * e.pressure;
       else ctx.lineWidth = lineWidth;
       stroke.push(Functionality.getCoords(e.pageX, e.pageY));

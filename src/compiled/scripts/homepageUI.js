@@ -40,7 +40,7 @@ var UI;
 (function (UI) {
     var database = firebase.database();
     function route(r) {
-        if (window.location.hostname !== "localhost")
+        if (window.location.hostname !== "localhost" && window.location.hostname !== "192.168.1.1")
             return r;
         else
             return r + ".html";
