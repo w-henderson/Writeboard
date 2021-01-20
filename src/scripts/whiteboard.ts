@@ -31,7 +31,8 @@ namespace Graphics {
 
     let smoothed = Smooth.Smooth(stroke, {
       method: tool === "brush" ? Smooth.METHOD_CUBIC : Smooth.METHOD_LINEAR,
-      clip: Smooth.CLIP_CLAMP
+      clip: Smooth.CLIP_CLAMP,
+      cubicTension: 0
     });
 
     for (let i = 0; i < stroke.length - 1; i += 1 / quality) {

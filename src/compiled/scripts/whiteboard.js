@@ -28,7 +28,8 @@ var Graphics;
         ctx.moveTo(stroke[0][0], stroke[0][1]);
         var smoothed = Smooth.Smooth(stroke, {
             method: tool === "brush" ? Smooth.METHOD_CUBIC : Smooth.METHOD_LINEAR,
-            clip: Smooth.CLIP_CLAMP
+            clip: Smooth.CLIP_CLAMP,
+            cubicTension: 0
         });
         for (var i = 0; i < stroke.length - 1; i += 1 / quality) {
             var calculatedPoint = smoothed(i);
