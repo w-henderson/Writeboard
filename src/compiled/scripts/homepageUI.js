@@ -132,7 +132,8 @@ var UI;
                                 })["catch"](function () {
                                     Swal.fire({
                                         title: "An error occurred.",
-                                        icon: "error"
+                                        icon: "error",
+                                        background: "var(--background)"
                                     });
                                 });
                                 _a.label = 4;
@@ -145,6 +146,17 @@ var UI;
         });
     }
     UI.hostRoom = hostRoom;
+    function privacy() {
+        Swal.fire({
+            icon: "info",
+            width: 800,
+            title: "Our Privacy Policy",
+            html: "Here at Writeboard, we're committed to your privacy, which is why this privacy policy aims to be as transparent as possible.\n      All the data we collect is for the sole purpose of improving Writeboard, and we never share any data with any third parties.\n      <h2>What data do we collect?</h2>\n        <ul>\n          <li>Device information such as OS, model etc</li>\n          <li>Browser information such as name, version, screen resolution etc</li>\n          <li>Mode of input such as pen, touch, mouse etc</li>\n          <li>When and how often you create, join, leave, or close a room</li>\n          <li>Country</li>\n        </ul>\n      <h2>What data don't we collect?</h2>\n      <ul>\n        <li>Any personally-identifiable data</li>\n        <li>IP addresses</li>\n      </ul>",
+            confirmButtonText: "Close",
+            background: "var(--background)"
+        });
+    }
+    UI.privacy = privacy;
     function updateSizing() {
         var height = (window.visualViewport.width * 0.176) + 170; // it works, don't mess it up
         document.querySelector("div.banner").style.height = height + "px";

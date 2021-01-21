@@ -3,6 +3,7 @@ var Swal;
 var Client;
 (function (Client) {
     var database = firebase.database();
+    Client.analytics = firebase.analytics();
     Client.roomId = window.location.search.substr(1);
     var lastStrokeUpdate = -1;
     var titleRef = database.ref("rooms/" + Client.roomId + "/name");
@@ -40,6 +41,7 @@ var Client;
                 if (result.isConfirmed) {
                     Client.username = result.value;
                     Client.userId = snakeCase(result.value);
+                    Client.analytics.logEvent("join", { roomId: Client.roomId, username: Client.username });
                     Client.userRef = database.ref("rooms/" + Client.roomId + "/users/" + Client.userId);
                     Client.userRef.set({
                         name: Client.username,
@@ -56,6 +58,7 @@ var Client;
                 icon: "error",
                 background: "var(--background)"
             }).then(function () {
+                Client.analytics.logEvent("failJoin", { roomId: Client.roomId });
                 window.location.href = "/";
             });
         }
@@ -70,6 +73,7 @@ var Client;
         }
     }
     window.addEventListener("beforeunload", function () {
+        Client.analytics.logEvent("leave", { roomId: Client.roomId, username: Client.username });
         return Client.userRef.remove().then(function () { return; });
     });
 })(Client || (Client = {}));

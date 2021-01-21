@@ -3,6 +3,7 @@ var firebase: any;
 
 namespace Host {
   var database = firebase.database();
+  var analytics = firebase.analytics();
   export var roomId = window.localStorage.getItem("writeboardTempId");
 
   if (!roomId) {
@@ -12,6 +13,7 @@ namespace Host {
       icon: "error",
       background: "var(--background)"
     }).then(() => {
+      analytics.logEvent("failHost", {});
       window.location.href = "/";
     });
   } else {
@@ -30,6 +32,8 @@ namespace Host {
     let data = e.val();
     document.title = `${data} - Writeboard`;
     document.querySelector("h1").textContent = `${data} (${roomId})`;
+
+    analytics.logEvent("host", { roomId, title: data });
   }
 
   function addWhiteboard(e) {
@@ -69,6 +73,7 @@ namespace Host {
   }
 
   window.addEventListener("beforeunload", () => {
+    analytics.logEvent("closeRoom", { roomId });
     return database.ref(`rooms/${roomId}`).remove().then(() => { return });
   });
 }

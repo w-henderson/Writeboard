@@ -3,6 +3,7 @@ var firebase;
 var Host;
 (function (Host) {
     var database = firebase.database();
+    var analytics = firebase.analytics();
     Host.roomId = window.localStorage.getItem("writeboardTempId");
     if (!Host.roomId) {
         Swal.fire({
@@ -11,6 +12,7 @@ var Host;
             icon: "error",
             background: "var(--background)"
         }).then(function () {
+            analytics.logEvent("failHost", {});
             window.location.href = "/";
         });
     }
@@ -27,6 +29,7 @@ var Host;
         var data = e.val();
         document.title = data + " - Writeboard";
         document.querySelector("h1").textContent = data + " (" + Host.roomId + ")";
+        analytics.logEvent("host", { roomId: Host.roomId, title: data });
     }
     function addWhiteboard(e) {
         var whiteboards = document.querySelector("div.whiteboards");
@@ -57,6 +60,7 @@ var Host;
         console.log("Removed whiteboard");
     }
     window.addEventListener("beforeunload", function () {
+        analytics.logEvent("closeRoom", { roomId: Host.roomId });
         return database.ref("rooms/" + Host.roomId).remove().then(function () { return; });
     });
 })(Host || (Host = {}));

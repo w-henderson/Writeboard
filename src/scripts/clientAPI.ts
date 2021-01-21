@@ -3,6 +3,7 @@ var Swal: any;
 
 namespace Client {
   var database = firebase.database();
+  export var analytics = firebase.analytics();
   export var roomId = window.location.search.substr(1);
   export var username;
   export var userId;
@@ -47,6 +48,8 @@ namespace Client {
           username = result.value;
           userId = snakeCase(result.value);
 
+          analytics.logEvent("join", { roomId, username });
+
           userRef = database.ref(`rooms/${roomId}/users/${userId}`);
           userRef.set({
             name: username,
@@ -63,6 +66,7 @@ namespace Client {
         icon: "error",
         background: "var(--background)"
       }).then(() => {
+        analytics.logEvent("failJoin", { roomId });
         window.location.href = "/";
       });
     }
@@ -79,6 +83,7 @@ namespace Client {
   }
 
   window.addEventListener("beforeunload", () => {
+    analytics.logEvent("leave", { roomId, username });
     return userRef.remove().then(() => { return });
   });
 }

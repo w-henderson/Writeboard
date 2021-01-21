@@ -176,6 +176,7 @@ var Events;
             stroke = [];
             strokes++;
             whiteboardHistory.push(canvas.toDataURL());
+            Client.analytics.setUserProperties({ inputType: e.pointerType });
         }
     }
     Events.handlePointerUp = handlePointerUp;

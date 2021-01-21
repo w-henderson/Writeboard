@@ -82,11 +82,37 @@ namespace UI {
         }).catch(() => {
           Swal.fire({
             title: "An error occurred.",
-            icon: "error"
+            icon: "error",
+            background: "var(--background)"
           });
         });
       }
     });
+  }
+
+  export function privacy() {
+    Swal.fire({
+      icon: "info",
+      width: 800,
+      title: "Our Privacy Policy",
+      html: `Here at Writeboard, we're committed to your privacy, which is why this privacy policy aims to be as transparent as possible.
+      All the data we collect is for the sole purpose of improving Writeboard, and we never share any data with any third parties.
+      <h2>What data do we collect?</h2>
+        <ul>
+          <li>Device information such as OS, model etc</li>
+          <li>Browser information such as name, version, screen resolution etc</li>
+          <li>Mode of input such as pen, touch, mouse etc</li>
+          <li>When and how often you create, join, leave, or close a room</li>
+          <li>Country</li>
+        </ul>
+      <h2>What data don't we collect?</h2>
+      <ul>
+        <li>Any personally-identifiable data</li>
+        <li>IP addresses</li>
+      </ul>`,
+      confirmButtonText: "Close",
+      background: "var(--background)"
+    })
   }
 
   function updateSizing() {
