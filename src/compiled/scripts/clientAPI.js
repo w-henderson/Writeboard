@@ -5,6 +5,7 @@ var Client;
     var database = firebase.database();
     Client.analytics = firebase.analytics();
     Client.roomId = window.location.search.substr(1);
+    var messageRef;
     var lastStrokeUpdate = -1;
     var titleRef = database.ref("rooms/" + Client.roomId + "/name");
     var ref = database.ref("rooms/" + Client.roomId + "/users");
@@ -45,8 +46,11 @@ var Client;
                     Client.userRef = database.ref("rooms/" + Client.roomId + "/users/" + Client.userId);
                     Client.userRef.set({
                         name: Client.username,
-                        board: Graphics.exportImage(400, 300)
+                        board: Graphics.exportImage(400, 300),
+                        message: ""
                     });
+                    messageRef = database.ref("rooms/" + Client.roomId + "/users/" + Client.userId + "/message");
+                    messageRef.on("value", showMessage);
                     window.setInterval(updateBoard, 5000);
                 }
             });
@@ -66,11 +70,26 @@ var Client;
     function updateBoard() {
         if (lastStrokeUpdate !== strokes) {
             Client.userRef.update({
-                name: Client.username,
                 board: Graphics.exportImage(400, 300)
             });
             lastStrokeUpdate = strokes;
         }
+    }
+    function showMessage(e) {
+        console.log(e.val());
+        if (e.val() === null || e.val() === "")
+            return;
+        var message = document.createElement("div");
+        message.className = "message";
+        var titleSpan = document.createElement("span");
+        var messageText = document.createTextNode(e.val());
+        titleSpan.textContent = "Message from the host:";
+        message.appendChild(titleSpan);
+        message.appendChild(messageText);
+        document.body.appendChild(message);
+        window.setTimeout(function () {
+            message.remove();
+        }, 8000);
     }
     window.addEventListener("beforeunload", function () {
         Client.analytics.logEvent("leave", { roomId: Client.roomId, username: Client.username });

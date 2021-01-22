@@ -157,6 +157,28 @@ div.main {
     }
 }
 
+div.message {
+    max-width: 90vw;
+    width: 400px;
+    box-sizing: border-box;
+    padding: 20px;
+    border-radius: 10px 0 0 10px;
+    background-color: var(--background);
+    position: fixed;
+    bottom: 40px;
+    right: 0px;
+    z-index: 5;
+    font-weight: 200;
+    font-size: 2vh;
+    box-shadow: var(--shadow);
+    animation: showMessage 8s;
+
+    span {
+        display: block;
+        font-weight: 400;
+    }
+}
+
 input[type="color"] {
     position: absolute;
     top: 0;
@@ -164,4 +186,19 @@ input[type="color"] {
     opacity: 0;
     pointer-events: none;
     height: 0;
+}
+
+@keyframes showMessage {
+    0% {
+        transform: translateX(100%);
+    }
+    8% {
+        transform: none;
+    }
+    92% {
+        transform: none;
+    }
+    100% {
+        transform: translateX(100%);
+    }
 }

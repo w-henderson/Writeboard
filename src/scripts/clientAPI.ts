@@ -7,6 +7,7 @@ namespace Client {
   export var roomId = window.location.search.substr(1);
   export var username;
   export var userId;
+  var messageRef;
 
   var lastStrokeUpdate = -1;
 
@@ -53,8 +54,11 @@ namespace Client {
           userRef = database.ref(`rooms/${roomId}/users/${userId}`);
           userRef.set({
             name: username,
-            board: Graphics.exportImage(400, 300)
+            board: Graphics.exportImage(400, 300),
+            message: ""
           });
+          messageRef = database.ref(`rooms/${roomId}/users/${userId}/message`);
+          messageRef.on("value", showMessage);
 
           window.setInterval(updateBoard, 5000);
         }
@@ -75,11 +79,30 @@ namespace Client {
   function updateBoard() {
     if (lastStrokeUpdate !== strokes) {
       userRef.update({
-        name: username,
         board: Graphics.exportImage(400, 300)
       });
       lastStrokeUpdate = strokes;
     }
+  }
+
+  function showMessage(e) {
+    console.log(e.val());
+    if (e.val() === null || e.val() === "") return;
+
+    let message = document.createElement("div");
+    message.className = "message";
+
+    let titleSpan = document.createElement("span");
+    let messageText = document.createTextNode(e.val());
+    titleSpan.textContent = "Message from the host:";
+
+    message.appendChild(titleSpan);
+    message.appendChild(messageText);
+    document.body.appendChild(message);
+
+    window.setTimeout(() => {
+      message.remove();
+    }, 8000);
   }
 
   window.addEventListener("beforeunload", () => {
