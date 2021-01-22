@@ -156,7 +156,7 @@ namespace Events {
         }
       }
 
-      if (e.pointerType === "pen") ctx.lineWidth = lineWidth * e.pressure;
+      if (e.pointerType === "pen" && navigator.userAgent.indexOf("Firefox") === -1) ctx.lineWidth = lineWidth * e.pressure;
       else ctx.lineWidth = lineWidth;
       stroke.push(Functionality.getCoords(e.pageX, e.pageY));
       if (stroke.length >= 5) stroke.splice(0, 1);

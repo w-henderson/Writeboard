@@ -158,7 +158,7 @@ var Events;
                     document.querySelector("div.toolbar").className = "toolbar brush";
                 }
             }
-            if (e.pointerType === "pen")
+            if (e.pointerType === "pen" && navigator.userAgent.indexOf("Firefox") === -1)
                 ctx.lineWidth = lineWidth * e.pressure;
             else
                 ctx.lineWidth = lineWidth;
