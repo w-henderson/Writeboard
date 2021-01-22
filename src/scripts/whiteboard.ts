@@ -143,7 +143,7 @@ namespace Functionality {
 namespace Events {
   export function handlePointerMove(e: PointerEvent) {
     e.preventDefault();
-    if (pointerId === -1 && e.pressure !== 0) pointerId = e.pointerId;
+    if (pointerId === -1 && (e.pressure !== 0 || e.buttons === 1)) pointerId = e.pointerId;
     if (pointerId === e.pointerId) {
       if (surfaceMode) {
         if (e.buttons === 32) {
@@ -156,7 +156,7 @@ namespace Events {
         }
       }
 
-      if (e.pointerType === "pen" && navigator.userAgent.indexOf("Firefox") === -1) ctx.lineWidth = lineWidth * e.pressure;
+      if (e.pointerType === "pen" && navigator.userAgent.indexOf("Firefox") === -1 && e.pressure !== 0) ctx.lineWidth = lineWidth * e.pressure;
       else ctx.lineWidth = lineWidth;
       stroke.push(Functionality.getCoords(e.pageX, e.pageY));
       if (stroke.length >= 5) stroke.splice(0, 1);
@@ -176,6 +176,6 @@ namespace Events {
   }
 }
 
-canvas.addEventListener("pointermove", Events.handlePointerMove);
-canvas.addEventListener("pointerup", Events.handlePointerUp);
-canvas.addEventListener("pointerout", Events.handlePointerUp);
+canvas.onpointermove = Events.handlePointerMove;
+canvas.onpointerup = Events.handlePointerUp;
+canvas.onpointerout = Events.handlePointerUp;

@@ -144,7 +144,7 @@ var Events;
 (function (Events) {
     function handlePointerMove(e) {
         e.preventDefault();
-        if (pointerId === -1 && e.pressure !== 0)
+        if (pointerId === -1 && (e.pressure !== 0 || e.buttons === 1))
             pointerId = e.pointerId;
         if (pointerId === e.pointerId) {
             if (surfaceMode) {
@@ -158,7 +158,7 @@ var Events;
                     document.querySelector("div.toolbar").className = "toolbar brush";
                 }
             }
-            if (e.pointerType === "pen" && navigator.userAgent.indexOf("Firefox") === -1)
+            if (e.pointerType === "pen" && navigator.userAgent.indexOf("Firefox") === -1 && e.pressure !== 0)
                 ctx.lineWidth = lineWidth * e.pressure;
             else
                 ctx.lineWidth = lineWidth;
@@ -181,6 +181,6 @@ var Events;
     }
     Events.handlePointerUp = handlePointerUp;
 })(Events || (Events = {}));
-canvas.addEventListener("pointermove", Events.handlePointerMove);
-canvas.addEventListener("pointerup", Events.handlePointerUp);
-canvas.addEventListener("pointerout", Events.handlePointerUp);
+canvas.onpointermove = Events.handlePointerMove;
+canvas.onpointerup = Events.handlePointerUp;
+canvas.onpointerout = Events.handlePointerUp;
