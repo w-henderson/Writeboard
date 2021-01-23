@@ -4,6 +4,7 @@ var pointerId = -1;
 var stroke: number[][] = [];
 var strokes = 0;
 var whiteboardHistory: string[] = [];
+var historyLocation = 0;
 
 var lineWidth = 10;
 var color = "#ffffff";
@@ -55,8 +56,18 @@ namespace Functionality {
   export function undo() {
     if (whiteboardHistory.length > 1) {
       let imageToDraw = new Image();
-      whiteboardHistory.pop();
-      imageToDraw.src = whiteboardHistory[whiteboardHistory.length - 1];
+      historyLocation++;
+      imageToDraw.src = whiteboardHistory[whiteboardHistory.length - 1 - historyLocation];
+      imageToDraw.onload = () => { ctx.drawImage(imageToDraw, 0, 0) }
+      strokes--;
+    }
+  }
+
+  export function redo() {
+    if (historyLocation > 0) {
+      let imageToDraw = new Image();
+      historyLocation--;
+      imageToDraw.src = whiteboardHistory[whiteboardHistory.length - 1 - historyLocation];
       imageToDraw.onload = () => { ctx.drawImage(imageToDraw, 0, 0) }
       strokes--;
     }
@@ -102,6 +113,7 @@ namespace Functionality {
       if (result.isConfirmed) {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         strokes = 0;
+        whiteboardHistory.push(canvas.toDataURL());
       }
     });
   }
@@ -165,6 +177,8 @@ namespace Events {
       pointerId = -1;
       stroke = [];
       strokes++;
+      whiteboardHistory.splice(whiteboardHistory.length - historyLocation);
+      historyLocation = 0;
       whiteboardHistory.push(canvas.toDataURL());
       Client.analytics.setUserProperties({ inputType: e.pointerType })
     }

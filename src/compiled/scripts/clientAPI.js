@@ -76,7 +76,6 @@ var Client;
         }
     }
     function showMessage(e) {
-        console.log(e.val());
         if (e.val() === null || e.val() === "")
             return;
         var message = document.createElement("div");

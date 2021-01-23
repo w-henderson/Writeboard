@@ -4,6 +4,7 @@ var pointerId = -1;
 var stroke = [];
 var strokes = 0;
 var whiteboardHistory = [];
+var historyLocation = 0;
 var lineWidth = 10;
 var color = "#ffffff";
 var tool = "brush";
@@ -54,13 +55,23 @@ var Functionality;
     function undo() {
         if (whiteboardHistory.length > 1) {
             var imageToDraw_1 = new Image();
-            whiteboardHistory.pop();
-            imageToDraw_1.src = whiteboardHistory[whiteboardHistory.length - 1];
+            historyLocation++;
+            imageToDraw_1.src = whiteboardHistory[whiteboardHistory.length - 1 - historyLocation];
             imageToDraw_1.onload = function () { ctx.drawImage(imageToDraw_1, 0, 0); };
             strokes--;
         }
     }
     Functionality.undo = undo;
+    function redo() {
+        if (historyLocation > 0) {
+            var imageToDraw_2 = new Image();
+            historyLocation--;
+            imageToDraw_2.src = whiteboardHistory[whiteboardHistory.length - 1 - historyLocation];
+            imageToDraw_2.onload = function () { ctx.drawImage(imageToDraw_2, 0, 0); };
+            strokes--;
+        }
+    }
+    Functionality.redo = redo;
     function getCoords() {
         var screenCoords = [];
         for (var _i = 0; _i < arguments.length; _i++) {
@@ -106,6 +117,7 @@ var Functionality;
             if (result.isConfirmed) {
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 strokes = 0;
+                whiteboardHistory.push(canvas.toDataURL());
             }
         });
     }
@@ -173,6 +185,8 @@ var Events;
             pointerId = -1;
             stroke = [];
             strokes++;
+            whiteboardHistory.splice(whiteboardHistory.length - historyLocation);
+            historyLocation = 0;
             whiteboardHistory.push(canvas.toDataURL());
             Client.analytics.setUserProperties({ inputType: e.pointerType });
         }

@@ -86,7 +86,6 @@ namespace Client {
   }
 
   function showMessage(e) {
-    console.log(e.val());
     if (e.val() === null || e.val() === "") return;
 
     let message = document.createElement("div");
