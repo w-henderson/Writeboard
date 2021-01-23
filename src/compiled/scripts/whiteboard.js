@@ -4,7 +4,7 @@ var pointerId = -1;
 var stroke = [];
 var strokes = 0;
 var whiteboardHistory = [];
-var lineWidth = 5;
+var lineWidth = 10;
 var color = "#ffffff";
 var tool = "brush";
 var surfaceMode = true;
@@ -18,22 +18,20 @@ whiteboardHistory.push(canvas.toDataURL());
 var Graphics;
 (function (Graphics) {
     function update(quality) {
-        if (quality === void 0) { quality = 10; }
+        if (quality === void 0) { quality = 20; }
         if (stroke.length < 2)
             return;
         ctx.beginPath();
         ctx.strokeStyle = tool === "brush" ? color : "#1f2324";
-        if (tool === "eraser")
-            ctx.lineWidth = 40;
         ctx.moveTo(stroke[0][0], stroke[0][1]);
-        var smoothed = Smooth.Smooth(stroke, {
-            method: tool === "brush" ? Smooth.METHOD_CUBIC : Smooth.METHOD_LINEAR,
-            clip: Smooth.CLIP_CLAMP,
-            cubicTension: 0
-        });
-        for (var i = 0; i < stroke.length - 1; i += 1 / quality) {
-            var calculatedPoint = smoothed(i);
-            ctx.lineTo(calculatedPoint[0], calculatedPoint[1]);
+        if (tool === "brush")
+            ctx.curve(stroke.flat(), 0.5, quality);
+        else {
+            for (var _i = 0, stroke_1 = stroke; _i < stroke_1.length; _i++) {
+                var point = stroke_1[_i];
+                ctx.arc(point[0], point[1], 60, 0, Math.PI * 2);
+                ctx.fill();
+            }
         }
         ctx.stroke();
     }

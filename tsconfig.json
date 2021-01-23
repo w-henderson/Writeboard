@@ -6,6 +6,7 @@
             "ES2015.Promise",
             "ES2016.Array.Include",
             "ES2017",
+            "ES2019",
             "dom"
         ],
     },

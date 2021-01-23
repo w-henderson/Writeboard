@@ -5,7 +5,7 @@ var stroke: number[][] = [];
 var strokes = 0;
 var whiteboardHistory: string[] = [];
 
-var lineWidth = 5;
+var lineWidth = 10;
 var color = "#ffffff";
 var tool = "brush";
 
@@ -21,25 +21,20 @@ ctx.fillRect(0, 0, canvas.width, canvas.height);
 whiteboardHistory.push(canvas.toDataURL());
 
 namespace Graphics {
-  export function update(quality = 10) {
+  export function update(quality = 20) {
     if (stroke.length < 2) return;
 
     ctx.beginPath();
     ctx.strokeStyle = tool === "brush" ? color : "#1f2324";
-    if (tool === "eraser") ctx.lineWidth = 40;
     ctx.moveTo(stroke[0][0], stroke[0][1]);
 
-    let smoothed = Smooth.Smooth(stroke, {
-      method: tool === "brush" ? Smooth.METHOD_CUBIC : Smooth.METHOD_LINEAR,
-      clip: Smooth.CLIP_CLAMP,
-      cubicTension: 0
-    });
-
-    for (let i = 0; i < stroke.length - 1; i += 1 / quality) {
-      let calculatedPoint = smoothed(i);
-      ctx.lineTo(calculatedPoint[0], calculatedPoint[1]);
+    if (tool === "brush") (<any>ctx).curve(stroke.flat(), 0.5, quality);
+    else {
+      for (let point of stroke) {
+        ctx.arc(point[0], point[1], 60, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
-
     ctx.stroke();
   }
 

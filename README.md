@@ -17,7 +17,7 @@ Here at Writeboard, we believe that everyone should have a top-quality collabora
 ### Whiteboard
 
 - [PointerEvents](https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events) for the cross-platform input
-- [Smooth.js](https://github.com/osuushi/Smooth.js) (slightly modified since it hasn't been updated in 5 years) to smooth out the strokes
+- [curve()](https://stackoverflow.com/a/17286720/6106196) to smooth out the strokes (was previously using [Smooth.js](https://github.com/osuushi/Smooth.js))
 - [HTML5 canvas](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API) for the rendering and exporting of the whiteboard
 
 ### User Interface
