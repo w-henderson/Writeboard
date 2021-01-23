@@ -103,7 +103,7 @@ namespace UI {
           <li>Browser information such as name, version, screen resolution etc</li>
           <li>Mode of input such as pen, touch, mouse etc</li>
           <li>When and how often you create, join, leave, or close a room</li>
-          <li>Country</li>
+          <li>Vague location estimated by Google, not personally identifiable</li>
         </ul>
       <h2>What data don't we collect?</h2>
       <ul>

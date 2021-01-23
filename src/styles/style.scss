@@ -110,7 +110,7 @@ div.main {
         max-width: 1000px;
         height: 60vh;
         overflow: hidden auto;
-        filter: drop-shadow(6px 6px 20px #181a1b, -6px -6px 20px #1e2122);
+        filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.25));
 
         div {
             width: calc(33% - 12.67px);
@@ -134,6 +134,15 @@ div.main {
                 padding: 10px 12px;
                 background-color: var(--navbar-background);
                 border-radius: 0 0 15px 15px;
+                text-align: left;
+
+                i {
+                    font-size: 20px;
+                    display: block;
+                    float: right;
+                    cursor: pointer;
+                    margin-left: 8px;
+                }
             }
         }
 

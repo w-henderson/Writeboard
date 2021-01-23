@@ -38,9 +38,46 @@ var Host;
         var userNode = document.createElement("div");
         var userWhiteboard = document.createElement("img");
         var userName = document.createElement("span");
+        var messageIcon = document.createElement("i");
         userWhiteboard.src = e.val().board;
         userName.textContent = e.val().name;
         userNode.id = e.key;
+        messageIcon.className = "material-icons-round";
+        messageIcon.textContent = "message";
+        messageIcon.onclick = function (e) {
+            var userId = e.target.parentNode.parentNode.id;
+            var userName = e.target.parentNode.firstChild.textContent;
+            var messageRef = database.ref("rooms/" + Host.roomId + "/users/" + userId + "/message");
+            Swal.fire({
+                title: "Message to " + userName + ":",
+                text: "This will pop up on " + userName + "'s screen.",
+                icon: "info",
+                input: 'text',
+                confirmButtonText: 'Send Message',
+                background: "var(--background)",
+                allowOutsideClick: true,
+                preConfirm: function (msg) {
+                    if (msg.length === 0) {
+                        Swal.showValidationMessage("You can't send an empty message!");
+                        return false;
+                    }
+                    else {
+                        return msg;
+                    }
+                }
+            }).then(function (result) {
+                if (result.isConfirmed) {
+                    messageRef.set(result.value);
+                    Swal.fire({
+                        title: "Message sent!",
+                        text: "Your message has been successfully sent.",
+                        icon: "success",
+                        background: "var(--background)"
+                    });
+                }
+            });
+        };
+        userName.appendChild(messageIcon);
         userNode.appendChild(userWhiteboard);
         userNode.appendChild(userName);
         whiteboards.appendChild(userNode);
@@ -49,7 +86,7 @@ var Host;
     function updateWhiteboard(e) {
         var userNode = document.querySelector("div.whiteboards div#" + e.key);
         userNode.querySelector("img").src = e.val().board;
-        userNode.querySelector("span").textContent = e.val().name;
+        userNode.querySelector("span").firstChild.textContent = e.val().name;
         console.log("Updated whiteboard");
     }
     function removeWhiteboard(e) {
