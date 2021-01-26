@@ -11,6 +11,7 @@
         ],
     },
     "files": [
+        "src/scripts/types.d.ts",
         "src/vendor/smooth.ts",
         "src/scripts/clientAPI.ts",
         "src/scripts/hostAPI.ts",

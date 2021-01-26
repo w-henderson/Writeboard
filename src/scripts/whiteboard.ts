@@ -50,11 +50,41 @@ namespace Graphics {
 
     return tempCanvas.toDataURL("image/jpeg", quality);
   }
+
+  export function addImageToCanvas(dataURL: string) {
+    let image = new Image();
+
+    image.onload = () => {
+      const scaleFactor = 1.5;
+      let [width, height] = [image.naturalWidth * scaleFactor, image.naturalHeight * scaleFactor];
+      let aspectRatio = width / height;
+
+      if (width > 1600 || height > 1200) {
+        if (aspectRatio > 4 / 3) {
+          width = 1600;
+          height = 1600 / aspectRatio;
+        } else {
+          height = 1200;
+          width = 1200 * aspectRatio;
+        }
+      }
+
+      let anchorX = (1600 - width) / 2;
+      let anchorY = (1200 - height) / 2;
+
+      ctx.drawImage(image, anchorX, anchorY, width, height);
+      whiteboardHistory.splice(whiteboardHistory.length - historyLocation);
+      historyLocation = 0;
+      whiteboardHistory.push(canvas.toDataURL());
+    }
+
+    image.src = dataURL;
+  }
 }
 
 namespace Functionality {
   export function undo() {
-    if (whiteboardHistory.length > 1) {
+    if (whiteboardHistory.length - historyLocation > 1) {
       let imageToDraw = new Image();
       historyLocation++;
       imageToDraw.src = whiteboardHistory[whiteboardHistory.length - 1 - historyLocation];
@@ -100,6 +130,16 @@ namespace Functionality {
     color = input.value;
   }
 
+  export function forcePaste() {
+    (<any>navigator.clipboard).read().then((data) => { Events.handlePasteButton(data) });
+  }
+
+  export function forceCopy() {
+    canvas.toBlob((blob) => {
+      (<any>navigator.clipboard).write([new ClipboardItem({ [blob.type]: blob })]);
+    });
+  }
+
   export function clearBoard() {
     Swal.fire({
       icon: "question",
@@ -113,6 +153,8 @@ namespace Functionality {
       if (result.isConfirmed) {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         strokes = 0;
+        whiteboardHistory.splice(whiteboardHistory.length - historyLocation);
+        historyLocation = 0;
         whiteboardHistory.push(canvas.toDataURL());
       }
     });
@@ -183,8 +225,37 @@ namespace Events {
       Client.analytics.setUserProperties({ inputType: e.pointerType })
     }
   }
+
+  export function handlePasteHotkey(e: ClipboardEvent) {
+    let data = e.clipboardData;
+    if (!data || !data.items) return;
+
+    let items = data.items;
+    const IMAGE_MIME_REGEX = /^image\/(p?jpeg|gif|png)$/i;
+
+    for (let i = 0; i < items.length; i++) {
+      if (IMAGE_MIME_REGEX.test(items[i].type)) {
+        let fileReader = new FileReader();
+        fileReader.onload = (e) => {
+          Graphics.addImageToCanvas((<string>e.target.result));
+        }
+        fileReader.readAsDataURL(items[i].getAsFile());
+      }
+    }
+  }
+
+  export async function handlePasteButton(e) {
+    for (let item of e) {
+      for (let type of item.types) {
+        let blob = await item.getType(type);
+        Graphics.addImageToCanvas(URL.createObjectURL(blob));
+      }
+    }
+  }
 }
 
+document.onpaste = Events.handlePasteHotkey;
+document.oncopy = Functionality.forceCopy;
 canvas.onpointermove = Events.handlePointerMove;
 canvas.onpointerup = Events.handlePointerUp;
 canvas.onpointerout = Events.handlePointerUp;

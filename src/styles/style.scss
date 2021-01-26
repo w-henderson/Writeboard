@@ -92,6 +92,17 @@ div.main {
             }
         }
 
+        i.smaller {
+            font-size: 28px;
+            margin: 5px 0;
+
+            @media (orientation: portrait) {
+                & {
+                    display: none;
+                }
+            }
+        }
+
         &.brush {
             img {
                 opacity: 0.2;
