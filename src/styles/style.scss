@@ -58,10 +58,10 @@ div.main {
 
     canvas {
         position: relative;
-        max-width: 800px;
-        max-height: 600px;
-        height: min(90vw * 0.75, 80vh);
-        width: min(90vw, 80vh * (4 / 3));
+        max-width: 1600px;
+        max-height: 1200px;
+        height: min(90vw * 0.75, 70vh);
+        width: min(90vw, 70vh * (4 / 3));
         z-index: 1;
 
         border-radius: 40px;
