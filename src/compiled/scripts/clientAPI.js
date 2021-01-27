@@ -6,7 +6,9 @@ var Client;
     Client.analytics = firebase.analytics();
     Client.roomId = window.location.search.substr(1);
     var messageRef;
+    var maximisedRef;
     var lastStrokeUpdate = -1;
+    Client.maximised = false;
     var titleRef = database.ref("rooms/" + Client.roomId + "/name");
     var ref = database.ref("rooms/" + Client.roomId + "/users");
     titleRef.on("value", updateTitle);
@@ -24,7 +26,7 @@ var Client;
                 showLoaderOnConfirm: true,
                 preConfirm: function (login) {
                     return ref.once("value").then(function (snapshot) {
-                        if (snapshot.val() !== null && snakeCase(login) in snapshot.val()) {
+                        if (snapshot.val() !== null && _snakeCase(login) in snapshot.val()) {
                             Swal.showValidationMessage("Username already taken!");
                             return false;
                         }
@@ -41,17 +43,20 @@ var Client;
             }).then(function (result) {
                 if (result.isConfirmed) {
                     Client.username = result.value;
-                    Client.userId = snakeCase(result.value);
+                    Client.userId = _snakeCase(result.value);
                     Client.analytics.logEvent("join", { roomId: Client.roomId, username: Client.username });
                     Client.userRef = database.ref("rooms/" + Client.roomId + "/users/" + Client.userId);
                     Client.userRef.set({
                         name: Client.username,
                         board: Graphics.exportImage(400, 300),
-                        message: ""
+                        message: "",
+                        maximised: false
                     });
                     messageRef = database.ref("rooms/" + Client.roomId + "/users/" + Client.userId + "/message");
                     messageRef.on("value", showMessage);
-                    window.setInterval(updateBoard, 5000);
+                    maximisedRef = database.ref("rooms/" + Client.roomId + "/users/" + Client.userId + "/maximised");
+                    maximisedRef.on("value", updateMaximised);
+                    window.setTimeout(updateBoard, 5000);
                 }
             });
         }
@@ -67,12 +72,20 @@ var Client;
             });
         }
     }
-    function updateBoard() {
-        if (lastStrokeUpdate !== strokes) {
+    function updateBoard(force) {
+        if (force === void 0) { force = false; }
+        if (lastStrokeUpdate !== strokes || force) {
             Client.userRef.update({
-                board: Graphics.exportImage(400, 300)
+                board: Client.maximised ? Graphics.exportImage(800, 600, 0.8) : Graphics.exportImage(400, 300)
             });
             lastStrokeUpdate = strokes;
+        }
+        window.setTimeout(updateBoard, Client.maximised ? 1000 : 5000); // update more frequently if maximised
+    }
+    function updateMaximised(e) {
+        Client.maximised = e.val();
+        if (Client.maximised) {
+            updateBoard(true);
         }
     }
     function showMessage(e) {
@@ -95,7 +108,7 @@ var Client;
         return Client.userRef.remove().then(function () { return; });
     });
 })(Client || (Client = {}));
-var snakeCase = function (string) {
+var _snakeCase = function (string) {
     return string.replace(/\W+/g, " ")
         .split(/ |\B(?=[A-Z])/)
         .map(function (word) { return word.toLowerCase(); })

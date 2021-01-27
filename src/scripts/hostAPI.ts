@@ -5,28 +5,35 @@ namespace Host {
   var database = firebase.database();
   var analytics = firebase.analytics();
   export var roomId = window.localStorage.getItem("writeboardTempId");
+  export var maximisedUser;
 
-  if (!roomId) {
-    Swal.fire({
-      title: "Error 404",
-      text: "Writeboard Not Found",
-      icon: "error",
-      background: "var(--background)"
-    }).then(() => {
-      analytics.logEvent("failHost", {});
-      window.location.href = "/";
-    });
-  } else {
-    var ref = database.ref(`rooms/${roomId}/users`);
-    var titleRef = database.ref(`rooms/${roomId}/name`);
-    titleRef.once("value", updateTitle);
+  var ref;
+  var titleRef;
+  var maximisedRef;
 
-    ref.on("child_added", addWhiteboard);
-    ref.on("child_changed", updateWhiteboard);
-    ref.on("child_removed", removeWhiteboard);
+  window.addEventListener("load", () => {
+    if (!roomId) {
+      Swal.fire({
+        title: "Error 404",
+        text: "Writeboard Not Found",
+        icon: "error",
+        background: "var(--background)"
+      }).then(() => {
+        analytics.logEvent("failHost", {});
+        window.location.href = "/";
+      });
+    } else {
+      ref = database.ref(`rooms/${roomId}/users`);
+      titleRef = database.ref(`rooms/${roomId}/name`);
+      titleRef.once("value", updateTitle);
 
-    window.localStorage.removeItem("writeboardTempId");
-  }
+      ref.on("child_added", addWhiteboard);
+      ref.on("child_changed", updateWhiteboard);
+      ref.on("child_removed", removeWhiteboard);
+
+      window.localStorage.removeItem("writeboardTempId");
+    }
+  });
 
   function updateTitle(e) {
     let data = e.val();
@@ -46,6 +53,7 @@ namespace Host {
     let messageIcon = document.createElement("i");
 
     userWhiteboard.src = e.val().board;
+    userWhiteboard.onclick = Chat.clickHandler;
     userName.textContent = e.val().name;
     userNode.id = e.key;
 
@@ -114,4 +122,71 @@ namespace Host {
     analytics.logEvent("closeRoom", { roomId });
     return database.ref(`rooms/${roomId}`).remove().then(() => { return });
   });
+
+  export namespace Chat {
+    export function showMaximisedBoard(id: string) {
+      let div: HTMLElement = document.querySelector("div.maximised");
+
+      div.querySelector("img").src = (<HTMLImageElement>document.querySelector(`div#${id} img`)).src;
+      div.querySelector("span").textContent = document.querySelector(`div#${id} span`).firstChild.textContent;
+      div.onclick = closeClickHandler;
+
+      div.className = "maximised shown";
+      maximisedUser = id;
+
+      // Disconnect from all the other boards to save data
+      ref.off("child_added");
+      ref.off("child_changed");
+      ref.off("child_removed");
+
+      // Remove all the other boards to prevent duplication bug
+      document.querySelector("div.whiteboards").innerHTML = "";
+
+      maximisedRef = database.ref(`rooms/${roomId}/users/${maximisedUser}`);
+      maximisedRef.update({
+        maximised: true
+      });
+      maximisedRef.on("value", (data) => {
+        let userData = data.val();
+        if (userData === null) hideMaximised(true);
+        else div.querySelector("img").src = data.val().board;
+      });
+    }
+
+    export function hideMaximised(deleted = false) {
+      let div: HTMLElement = document.querySelector("div.maximised");
+      div.className = "maximised";
+      div.onclick = null;
+
+      // Turn standard event handling back on
+      ref.on("child_added", addWhiteboard);
+      ref.on("child_changed", updateWhiteboard);
+      ref.on("child_removed", removeWhiteboard);
+
+      if (!deleted) {
+        maximisedRef.update({
+          maximised: false
+        });
+      } else {
+        Swal.fire({
+          title: "User left the room.",
+          text: "The user you were viewing has just left the room, so the connection to their board has been lost.",
+          icon: "warning",
+          background: "var(--background)"
+        });
+      }
+
+      maximisedRef.off();
+      maximisedRef = undefined;
+      maximisedUser = undefined;
+    }
+
+    export function clickHandler(e) {
+      showMaximisedBoard(e.target.parentNode.id);
+    }
+
+    export function closeClickHandler(e) {
+      if (e.target.className === "maximised shown") hideMaximised();
+    }
+  }
 }

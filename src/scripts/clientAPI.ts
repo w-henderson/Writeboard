@@ -8,8 +8,10 @@ namespace Client {
   export var username;
   export var userId;
   var messageRef;
+  var maximisedRef;
 
   var lastStrokeUpdate = -1;
+  export var maximised = false;
 
   var titleRef = database.ref(`rooms/${roomId}/name`);
   var ref = database.ref(`rooms/${roomId}/users`);
@@ -32,7 +34,7 @@ namespace Client {
         showLoaderOnConfirm: true,
         preConfirm: (login) => {
           return ref.once("value").then((snapshot) => {
-            if (snapshot.val() !== null && snakeCase(login) in snapshot.val()) {
+            if (snapshot.val() !== null && _snakeCase(login) in snapshot.val()) {
               Swal.showValidationMessage("Username already taken!");
               return false;
             } else if (login.length === 0) {
@@ -47,7 +49,7 @@ namespace Client {
       }).then((result) => {
         if (result.isConfirmed) {
           username = result.value;
-          userId = snakeCase(result.value);
+          userId = _snakeCase(result.value);
 
           analytics.logEvent("join", { roomId, username });
 
@@ -55,12 +57,17 @@ namespace Client {
           userRef.set({
             name: username,
             board: Graphics.exportImage(400, 300),
-            message: ""
+            message: "",
+            maximised: false
           });
+
           messageRef = database.ref(`rooms/${roomId}/users/${userId}/message`);
           messageRef.on("value", showMessage);
 
-          window.setInterval(updateBoard, 5000);
+          maximisedRef = database.ref(`rooms/${roomId}/users/${userId}/maximised`);
+          maximisedRef.on("value", updateMaximised);
+
+          window.setTimeout(updateBoard, 5000);
         }
       })
     } else {
@@ -76,12 +83,21 @@ namespace Client {
     }
   }
 
-  function updateBoard() {
-    if (lastStrokeUpdate !== strokes) {
+  function updateBoard(force = false) {
+    if (lastStrokeUpdate !== strokes || force) {
       userRef.update({
-        board: Graphics.exportImage(400, 300)
+        board: maximised ? Graphics.exportImage(800, 600, 0.8) : Graphics.exportImage(400, 300)
       });
       lastStrokeUpdate = strokes;
+    }
+
+    window.setTimeout(updateBoard, maximised ? 1000 : 5000); // update more frequently if maximised
+  }
+
+  function updateMaximised(e) {
+    maximised = e.val();
+    if (maximised) {
+      updateBoard(true);
     }
   }
 
@@ -110,7 +126,7 @@ namespace Client {
   });
 }
 
-const snakeCase = string => {
+const _snakeCase = string => {
   return string.replace(/\W+/g, " ")
     .split(/ |\B(?=[A-Z])/)
     .map(word => word.toLowerCase())
