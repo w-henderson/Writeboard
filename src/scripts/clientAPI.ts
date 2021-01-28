@@ -101,6 +101,29 @@ namespace Client {
     analytics.logEvent("leave", { roomId, username });
     return userRef.remove().then(() => { return });
   });
+
+  export namespace Chat {
+    export var visible = false;
+
+    export function showChat() {
+      document.querySelector("div.main").className = "main chatShown";
+      document.querySelector("div.clientChat").className = "clientChat chatShown";
+      visible = true;
+      toolbarTransition();
+    }
+
+    export function hideChat() {
+      document.querySelector("div.main").className = "main";
+      document.querySelector("div.clientChat").className = "clientChat";
+      visible = false;
+      toolbarTransition();
+    }
+
+    function toolbarTransition() {
+      window.setInterval(Functionality.placeToolbar, 16.7);
+      window.setTimeout(window.clearInterval, 500);
+    }
+  }
 }
 
 const _snakeCase = string => {

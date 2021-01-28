@@ -89,6 +89,28 @@ var Client;
         Client.analytics.logEvent("leave", { roomId: Client.roomId, username: Client.username });
         return Client.userRef.remove().then(function () { return; });
     });
+    var Chat;
+    (function (Chat) {
+        Chat.visible = false;
+        function showChat() {
+            document.querySelector("div.main").className = "main chatShown";
+            document.querySelector("div.clientChat").className = "clientChat chatShown";
+            Chat.visible = true;
+            toolbarTransition();
+        }
+        Chat.showChat = showChat;
+        function hideChat() {
+            document.querySelector("div.main").className = "main";
+            document.querySelector("div.clientChat").className = "clientChat";
+            Chat.visible = false;
+            toolbarTransition();
+        }
+        Chat.hideChat = hideChat;
+        function toolbarTransition() {
+            window.setInterval(Functionality.placeToolbar, 16.7);
+            window.setTimeout(window.clearInterval, 500);
+        }
+    })(Chat = Client.Chat || (Client.Chat = {}));
 })(Client || (Client = {}));
 var _snakeCase = function (string) {
     return string.replace(/\W+/g, " ")
