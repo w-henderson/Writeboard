@@ -7,7 +7,6 @@ namespace Client {
   export var roomId = window.location.search.substr(1);
   export var username;
   export var userId;
-  var messageRef;
   var maximisedRef;
 
   var lastStrokeUpdate = -1;
@@ -57,12 +56,9 @@ namespace Client {
           userRef.set({
             name: username,
             board: Graphics.exportImage(400, 300),
-            message: "",
-            maximised: false
+            maximised: false,
+            messages: []
           });
-
-          messageRef = database.ref(`rooms/${roomId}/users/${userId}/message`);
-          messageRef.on("value", showMessage);
 
           maximisedRef = database.ref(`rooms/${roomId}/users/${userId}/maximised`);
           maximisedRef.on("value", updateMaximised);
@@ -99,25 +95,6 @@ namespace Client {
     if (maximised) {
       updateBoard(true);
     }
-  }
-
-  function showMessage(e) {
-    if (e.val() === null || e.val() === "") return;
-
-    let message = document.createElement("div");
-    message.className = "message";
-
-    let titleSpan = document.createElement("span");
-    let messageText = document.createTextNode(e.val());
-    titleSpan.textContent = "Message from the host:";
-
-    message.appendChild(titleSpan);
-    message.appendChild(messageText);
-    document.body.appendChild(message);
-
-    window.setTimeout(() => {
-      message.remove();
-    }, 8000);
   }
 
   window.addEventListener("beforeunload", () => {

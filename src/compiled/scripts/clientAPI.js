@@ -5,7 +5,6 @@ var Client;
     var database = firebase.database();
     Client.analytics = firebase.analytics();
     Client.roomId = window.location.search.substr(1);
-    var messageRef;
     var maximisedRef;
     var lastStrokeUpdate = -1;
     Client.maximised = false;
@@ -49,11 +48,9 @@ var Client;
                     Client.userRef.set({
                         name: Client.username,
                         board: Graphics.exportImage(400, 300),
-                        message: "",
-                        maximised: false
+                        maximised: false,
+                        messages: []
                     });
-                    messageRef = database.ref("rooms/" + Client.roomId + "/users/" + Client.userId + "/message");
-                    messageRef.on("value", showMessage);
                     maximisedRef = database.ref("rooms/" + Client.roomId + "/users/" + Client.userId + "/maximised");
                     maximisedRef.on("value", updateMaximised);
                     window.setTimeout(updateBoard, 5000);
@@ -87,21 +84,6 @@ var Client;
         if (Client.maximised) {
             updateBoard(true);
         }
-    }
-    function showMessage(e) {
-        if (e.val() === null || e.val() === "")
-            return;
-        var message = document.createElement("div");
-        message.className = "message";
-        var titleSpan = document.createElement("span");
-        var messageText = document.createTextNode(e.val());
-        titleSpan.textContent = "Message from the host:";
-        message.appendChild(titleSpan);
-        message.appendChild(messageText);
-        document.body.appendChild(message);
-        window.setTimeout(function () {
-            message.remove();
-        }, 8000);
     }
     window.addEventListener("beforeunload", function () {
         Client.analytics.logEvent("leave", { roomId: Client.roomId, username: Client.username });

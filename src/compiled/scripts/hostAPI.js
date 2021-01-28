@@ -29,6 +29,7 @@ var Host;
             ref.on("child_removed", removeWhiteboard);
             window.localStorage.removeItem("writeboardTempId");
         }
+        document.querySelector("input").onkeyup = Chat.sendMessage;
     });
     function updateTitle(e) {
         var data = e.val();
@@ -43,56 +44,52 @@ var Host;
         var userNode = document.createElement("div");
         var userWhiteboard = document.createElement("img");
         var userName = document.createElement("span");
-        var messageIcon = document.createElement("i");
+        var messageIndicator = document.createElement("div");
         userWhiteboard.src = e.val().board;
         userWhiteboard.onclick = Chat.clickHandler;
         userName.textContent = e.val().name;
         userNode.id = e.key;
-        messageIcon.className = "material-icons-round";
-        messageIcon.textContent = "message";
-        messageIcon.onclick = function (e) {
-            var userId = e.target.parentNode.parentNode.id;
-            var userName = e.target.parentNode.firstChild.textContent;
-            var messageRef = database.ref("rooms/" + Host.roomId + "/users/" + userId + "/message");
-            Swal.fire({
-                title: "Message to " + userName + ":",
-                text: "This will pop up on " + userName + "'s screen.",
-                icon: "info",
-                input: 'text',
-                confirmButtonText: 'Send Message',
-                background: "var(--background)",
-                allowOutsideClick: true,
-                preConfirm: function (msg) {
-                    if (msg.length === 0) {
-                        Swal.showValidationMessage("You can't send an empty message!");
-                        return false;
-                    }
-                    else {
-                        return msg;
-                    }
-                }
-            }).then(function (result) {
-                if (result.isConfirmed) {
-                    messageRef.set(result.value);
-                    Swal.fire({
-                        title: "Message sent!",
-                        text: "Your message has been successfully sent.",
-                        icon: "success",
-                        background: "var(--background)"
-                    });
-                }
-            });
-        };
-        userName.appendChild(messageIcon);
+        messageIndicator.style.display = "none";
         userNode.appendChild(userWhiteboard);
         userNode.appendChild(userName);
+        userNode.appendChild(messageIndicator);
         whiteboards.appendChild(userNode);
+        Chat.seenMessages[e.key] = 0;
         console.log("Added whiteboard");
     }
     function updateWhiteboard(e) {
+        var data = e.val();
         var userNode = document.querySelector("div.whiteboards div#" + e.key);
-        userNode.querySelector("img").src = e.val().board;
-        userNode.querySelector("span").firstChild.textContent = e.val().name;
+        userNode.querySelector("img").src = data.board;
+        userNode.querySelector("span").firstChild.textContent = data.name;
+        if (e.key === Host.maximisedUser) {
+            var div = document.querySelector("div.maximised");
+            if (data === null)
+                Chat.hideMaximised(true);
+            else
+                div.querySelector("img").src = data.board;
+            if (data.messages) {
+                var messagesDiv = document.querySelector("div.messages");
+                messagesDiv.innerHTML = "";
+                for (var messageId in data.messages) {
+                    var outerSpan = document.createElement("span");
+                    var innerSpan = document.createElement("span");
+                    outerSpan.className = data.messages[messageId].sender + "Message";
+                    innerSpan.textContent = data.messages[messageId].content;
+                    outerSpan.appendChild(innerSpan);
+                    messagesDiv.appendChild(outerSpan);
+                }
+                messagesDiv.lastChild.scrollIntoView();
+                Chat.seenMessages = Object.keys(data.messages).length;
+            }
+        }
+        if (data.messages && Object.keys(data.messages).length > Chat.seenMessages[e.key]) {
+            userNode.querySelector("div").style.display = "block";
+            userNode.querySelector("div").textContent = (Object.keys(data.messages).length - Chat.seenMessages[e.key]).toString();
+        }
+        else {
+            userNode.querySelector("div").style.display = "none";
+        }
         console.log("Updated whiteboard");
     }
     function removeWhiteboard(e) {
@@ -108,6 +105,7 @@ var Host;
     });
     var Chat;
     (function (Chat) {
+        Chat.seenMessages = {};
         function showMaximisedBoard(id) {
             var div = document.querySelector("div.maximised");
             div.querySelector("img").src = document.querySelector("div#" + id + " img").src;
@@ -115,22 +113,9 @@ var Host;
             div.onclick = closeClickHandler;
             div.className = "maximised shown";
             Host.maximisedUser = id;
-            // Disconnect from all the other boards to save data
-            ref.off("child_added");
-            ref.off("child_changed");
-            ref.off("child_removed");
-            // Remove all the other boards to prevent duplication bug
-            document.querySelector("div.whiteboards").innerHTML = "";
             maximisedRef = database.ref("rooms/" + Host.roomId + "/users/" + Host.maximisedUser);
             maximisedRef.update({
                 maximised: true
-            });
-            maximisedRef.on("value", function (data) {
-                var userData = data.val();
-                if (userData === null)
-                    hideMaximised(true);
-                else
-                    div.querySelector("img").src = data.val().board;
             });
         }
         Chat.showMaximisedBoard = showMaximisedBoard;
@@ -139,10 +124,6 @@ var Host;
             var div = document.querySelector("div.maximised");
             div.className = "maximised";
             div.onclick = null;
-            // Turn standard event handling back on
-            ref.on("child_added", addWhiteboard);
-            ref.on("child_changed", updateWhiteboard);
-            ref.on("child_removed", removeWhiteboard);
             if (!deleted) {
                 maximisedRef.update({
                     maximised: false
@@ -161,6 +142,20 @@ var Host;
             Host.maximisedUser = undefined;
         }
         Chat.hideMaximised = hideMaximised;
+        function sendMessage(e) {
+            e.preventDefault();
+            if (e.keyCode !== 13)
+                return;
+            var input = document.querySelector("input");
+            var messageText = input.value;
+            input.value = "";
+            var messagesRef = database.ref("rooms/" + Host.roomId + "/users/" + Host.maximisedUser + "/messages").push();
+            messagesRef.set({
+                sender: "host",
+                content: messageText
+            });
+        }
+        Chat.sendMessage = sendMessage;
         function clickHandler(e) {
             showMaximisedBoard(e.target.parentNode.id);
         }

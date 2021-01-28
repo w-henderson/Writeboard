@@ -33,6 +33,8 @@ namespace Host {
 
       window.localStorage.removeItem("writeboardTempId");
     }
+
+    document.querySelector("input").onkeyup = Chat.sendMessage;
   });
 
   function updateTitle(e) {
@@ -50,23 +52,59 @@ namespace Host {
     let userNode = document.createElement("div");
     let userWhiteboard = document.createElement("img");
     let userName = document.createElement("span");
+    let messageIndicator = document.createElement("div");
 
     userWhiteboard.src = e.val().board;
     userWhiteboard.onclick = Chat.clickHandler;
     userName.textContent = e.val().name;
     userNode.id = e.key;
+    messageIndicator.style.display = "none";
 
     userNode.appendChild(userWhiteboard);
     userNode.appendChild(userName);
+    userNode.appendChild(messageIndicator);
     whiteboards.appendChild(userNode);
+
+    Chat.seenMessages[e.key] = 0;
 
     console.log("Added whiteboard");
   }
 
   function updateWhiteboard(e) {
+    let data = e.val();
     let userNode = document.querySelector(`div.whiteboards div#${e.key}`);
-    userNode.querySelector("img").src = e.val().board;
-    userNode.querySelector("span").firstChild.textContent = e.val().name;
+    userNode.querySelector("img").src = data.board;
+    userNode.querySelector("span").firstChild.textContent = data.name;
+
+    if (e.key === maximisedUser) {
+      let div: HTMLElement = document.querySelector("div.maximised");
+      if (data === null) Chat.hideMaximised(true);
+      else div.querySelector("img").src = data.board;
+
+      if (data.messages) {
+        let messagesDiv = document.querySelector("div.messages");
+        messagesDiv.innerHTML = "";
+
+        for (let messageId in data.messages) {
+          let outerSpan = document.createElement("span");
+          let innerSpan = document.createElement("span");
+          outerSpan.className = data.messages[messageId].sender + "Message";
+          innerSpan.textContent = data.messages[messageId].content;
+          outerSpan.appendChild(innerSpan);
+          messagesDiv.appendChild(outerSpan);
+        }
+
+        (<HTMLSpanElement>messagesDiv.lastChild).scrollIntoView();
+        Chat.seenMessages = Object.keys(data.messages).length;
+      }
+    }
+
+    if (data.messages && Object.keys(data.messages).length > Chat.seenMessages[e.key]) {
+      userNode.querySelector("div").style.display = "block";
+      userNode.querySelector("div").textContent = (Object.keys(data.messages).length - Chat.seenMessages[e.key]).toString();
+    } else {
+      userNode.querySelector("div").style.display = "none";
+    }
 
     console.log("Updated whiteboard");
   }
@@ -86,6 +124,8 @@ namespace Host {
   });
 
   export namespace Chat {
+    export var seenMessages: any = {};
+
     export function showMaximisedBoard(id: string) {
       let div: HTMLElement = document.querySelector("div.maximised");
 
@@ -96,22 +136,9 @@ namespace Host {
       div.className = "maximised shown";
       maximisedUser = id;
 
-      // Disconnect from all the other boards to save data
-      ref.off("child_added");
-      ref.off("child_changed");
-      ref.off("child_removed");
-
-      // Remove all the other boards to prevent duplication bug
-      document.querySelector("div.whiteboards").innerHTML = "";
-
       maximisedRef = database.ref(`rooms/${roomId}/users/${maximisedUser}`);
       maximisedRef.update({
         maximised: true
-      });
-      maximisedRef.on("value", (data) => {
-        let userData = data.val();
-        if (userData === null) hideMaximised(true);
-        else div.querySelector("img").src = data.val().board;
       });
     }
 
@@ -119,11 +146,6 @@ namespace Host {
       let div: HTMLElement = document.querySelector("div.maximised");
       div.className = "maximised";
       div.onclick = null;
-
-      // Turn standard event handling back on
-      ref.on("child_added", addWhiteboard);
-      ref.on("child_changed", updateWhiteboard);
-      ref.on("child_removed", removeWhiteboard);
 
       if (!deleted) {
         maximisedRef.update({
@@ -141,6 +163,21 @@ namespace Host {
       maximisedRef.off();
       maximisedRef = undefined;
       maximisedUser = undefined;
+    }
+
+    export function sendMessage(e) {
+      e.preventDefault();
+      if (e.keyCode !== 13) return;
+
+      let input = document.querySelector("input");
+      let messageText = input.value;
+      input.value = "";
+
+      let messagesRef = database.ref(`rooms/${roomId}/users/${maximisedUser}/messages`).push();
+      messagesRef.set({
+        sender: "host",
+        content: messageText
+      });
     }
 
     export function clickHandler(e) {
