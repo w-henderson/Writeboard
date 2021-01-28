@@ -3,6 +3,7 @@
 html, body {
     width: 100%;
     height: 100%;
+    overflow: hidden;
 }
 
 body {
@@ -25,7 +26,7 @@ body {
     color: var(--text-color);
     background: radial-gradient(var(--background-lighter), black);
     font-family: Inter;
-    overflow: hidden;
+    position: absolute;
 }
 
 body.swal2-shown.swal2-height-auto { height: 100% !important; }
@@ -384,14 +385,14 @@ div.clientChat {
     }
 
     h2 {
-        margin: 20px;
+        margin: 25px;
         font-size: 1.8em;
     }
 
     div.messages {
         flex: 1;
         overflow: hidden auto;
-        padding: 0 20px;
+        padding: 0 25px;
         box-sizing: border-box;
 
         &::-webkit-scrollbar {
@@ -451,6 +452,38 @@ div.clientChat {
         outline: none !important;
         background-color: var(--navbar-background);
         color: var(--text-color);
+    }
+
+    div.toggle {
+        position: absolute;
+        top: 12.5px;
+        left: -60px;
+        width: 60px;
+        height: 60px;
+        background-color: var(--background);
+        border-radius: 25px 0 0 25px;
+        box-sizing: border-box;
+        padding: 14px;
+        cursor: pointer;
+
+        i {
+            font-size: 36px;
+            pointer-events: none;
+        }
+
+        div.notification {
+            position: absolute;
+            bottom: -6px;
+            left: -6px;
+            background-color: var(--accent-color);
+            width: 36px;
+            height: 36px;
+            border-radius: 18px;
+            font-size: 22px;
+            line-height: 36px;
+            text-align: center;
+            pointer-events: none;
+        }
     }
 }
 

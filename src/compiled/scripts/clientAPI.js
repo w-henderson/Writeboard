@@ -95,6 +95,8 @@ var Client;
         function showChat() {
             document.querySelector("div.main").className = "main chatShown";
             document.querySelector("div.clientChat").className = "clientChat chatShown";
+            document.querySelector("div.clientChat i").textContent = "clear";
+            document.querySelector("div.clientChat div.toggle").onclick = hideChat;
             Chat.visible = true;
             toolbarTransition();
         }
@@ -102,6 +104,8 @@ var Client;
         function hideChat() {
             document.querySelector("div.main").className = "main";
             document.querySelector("div.clientChat").className = "clientChat";
+            document.querySelector("div.clientChat i").textContent = "message";
+            document.querySelector("div.clientChat div.toggle").onclick = showChat;
             Chat.visible = false;
             toolbarTransition();
         }

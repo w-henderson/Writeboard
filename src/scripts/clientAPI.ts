@@ -108,6 +108,8 @@ namespace Client {
     export function showChat() {
       document.querySelector("div.main").className = "main chatShown";
       document.querySelector("div.clientChat").className = "clientChat chatShown";
+      document.querySelector("div.clientChat i").textContent = "clear";
+      (<HTMLDivElement>document.querySelector("div.clientChat div.toggle")).onclick = hideChat;
       visible = true;
       toolbarTransition();
     }
@@ -115,6 +117,8 @@ namespace Client {
     export function hideChat() {
       document.querySelector("div.main").className = "main";
       document.querySelector("div.clientChat").className = "clientChat";
+      document.querySelector("div.clientChat i").textContent = "message";
+      (<HTMLDivElement>document.querySelector("div.clientChat div.toggle")).onclick = showChat;
       visible = false;
       toolbarTransition();
     }
