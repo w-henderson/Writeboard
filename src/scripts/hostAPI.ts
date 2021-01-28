@@ -7,6 +7,8 @@ namespace Host {
   export var roomId = window.localStorage.getItem("writeboardTempId");
   export var maximisedUser;
 
+  export var userCache: any = {};
+
   var ref;
   var titleRef;
   var maximisedRef;
@@ -65,7 +67,10 @@ namespace Host {
     userNode.appendChild(messageIndicator);
     whiteboards.appendChild(userNode);
 
-    Chat.seenMessages[e.key] = 0;
+    userCache[e.key] = {
+      data: e.val(),
+      seenMessages: 0
+    }
 
     console.log("Added whiteboard");
   }
@@ -76,32 +81,13 @@ namespace Host {
     userNode.querySelector("img").src = data.board;
     userNode.querySelector("span").firstChild.textContent = data.name;
 
-    if (e.key === maximisedUser) {
-      let div: HTMLElement = document.querySelector("div.maximised");
-      if (data === null) Chat.hideMaximised(true);
-      else div.querySelector("img").src = data.board;
+    userCache[e.key].data = e.val();
 
-      if (data.messages) {
-        let messagesDiv = document.querySelector("div.messages");
-        messagesDiv.innerHTML = "";
+    if (e.key === maximisedUser) Chat.updateMaximised();
 
-        for (let messageId in data.messages) {
-          let outerSpan = document.createElement("span");
-          let innerSpan = document.createElement("span");
-          outerSpan.className = data.messages[messageId].sender + "Message";
-          innerSpan.textContent = data.messages[messageId].content;
-          outerSpan.appendChild(innerSpan);
-          messagesDiv.appendChild(outerSpan);
-        }
-
-        (<HTMLSpanElement>messagesDiv.lastChild).scrollIntoView();
-        Chat.seenMessages = Object.keys(data.messages).length;
-      }
-    }
-
-    if (data.messages && Object.keys(data.messages).length > Chat.seenMessages[e.key]) {
+    if (userCache[e.key].data.messages && Object.keys(userCache[e.key].data.messages).length > userCache[e.key].seenMessages) {
       userNode.querySelector("div").style.display = "block";
-      userNode.querySelector("div").textContent = (Object.keys(data.messages).length - Chat.seenMessages[e.key]).toString();
+      userNode.querySelector("div").textContent = (Object.keys(userCache[e.key].data.messages).length - userCache[e.key].seenMessages).toString();
     } else {
       userNode.querySelector("div").style.display = "none";
     }
@@ -112,6 +98,10 @@ namespace Host {
   function removeWhiteboard(e) {
     let userNode = document.querySelector(`div.whiteboards div#${e.key}`);
     userNode.remove();
+
+    if (e.key === maximisedUser) Chat.hideMaximised(true);
+
+    delete userCache[e.key];
 
     if (document.querySelector("div.whiteboards").innerHTML === "") document.querySelector("div.whiteboards").textContent = "Waiting for people to connect...";
 
@@ -136,10 +126,33 @@ namespace Host {
       div.className = "maximised shown";
       maximisedUser = id;
 
+      updateMaximised();
+
       maximisedRef = database.ref(`rooms/${roomId}/users/${maximisedUser}`);
       maximisedRef.update({
         maximised: true
       });
+    }
+
+    export function updateMaximised() {
+      let div: HTMLElement = document.querySelector("div.maximised");
+      div.querySelector("img").src = userCache[maximisedUser].data.board;
+
+      let messagesDiv = document.querySelector("div.messages");
+      messagesDiv.innerHTML = "";
+      if (userCache[maximisedUser].data.messages) {
+        for (let messageId in userCache[maximisedUser].data.messages) {
+          let outerSpan = document.createElement("span");
+          let innerSpan = document.createElement("span");
+          outerSpan.className = userCache[maximisedUser].data.messages[messageId].sender + "Message";
+          innerSpan.textContent = userCache[maximisedUser].data.messages[messageId].content;
+          outerSpan.appendChild(innerSpan);
+          messagesDiv.appendChild(outerSpan);
+        }
+
+        (<HTMLSpanElement>messagesDiv.lastChild).scrollIntoView();
+        userCache[maximisedUser].seenMessages = Object.keys(userCache[maximisedUser].data.messages).length;
+      }
     }
 
     export function hideMaximised(deleted = false) {
@@ -177,6 +190,14 @@ namespace Host {
       messagesRef.set({
         sender: "host",
         content: messageText
+      });
+    }
+
+    export function debugSendMessage(userId, msg = "This is a testing debug message", sender = "user") {
+      let messagesRef = database.ref(`rooms/${roomId}/users/${userId}/messages`).push();
+      messagesRef.set({
+        sender,
+        content: msg
       });
     }
 

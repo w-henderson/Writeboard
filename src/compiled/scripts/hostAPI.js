@@ -5,6 +5,7 @@ var Host;
     var database = firebase.database();
     var analytics = firebase.analytics();
     Host.roomId = window.localStorage.getItem("writeboardTempId");
+    Host.userCache = {};
     var ref;
     var titleRef;
     var maximisedRef;
@@ -54,7 +55,10 @@ var Host;
         userNode.appendChild(userName);
         userNode.appendChild(messageIndicator);
         whiteboards.appendChild(userNode);
-        Chat.seenMessages[e.key] = 0;
+        Host.userCache[e.key] = {
+            data: e.val(),
+            seenMessages: 0
+        };
         console.log("Added whiteboard");
     }
     function updateWhiteboard(e) {
@@ -62,30 +66,12 @@ var Host;
         var userNode = document.querySelector("div.whiteboards div#" + e.key);
         userNode.querySelector("img").src = data.board;
         userNode.querySelector("span").firstChild.textContent = data.name;
-        if (e.key === Host.maximisedUser) {
-            var div = document.querySelector("div.maximised");
-            if (data === null)
-                Chat.hideMaximised(true);
-            else
-                div.querySelector("img").src = data.board;
-            if (data.messages) {
-                var messagesDiv = document.querySelector("div.messages");
-                messagesDiv.innerHTML = "";
-                for (var messageId in data.messages) {
-                    var outerSpan = document.createElement("span");
-                    var innerSpan = document.createElement("span");
-                    outerSpan.className = data.messages[messageId].sender + "Message";
-                    innerSpan.textContent = data.messages[messageId].content;
-                    outerSpan.appendChild(innerSpan);
-                    messagesDiv.appendChild(outerSpan);
-                }
-                messagesDiv.lastChild.scrollIntoView();
-                Chat.seenMessages = Object.keys(data.messages).length;
-            }
-        }
-        if (data.messages && Object.keys(data.messages).length > Chat.seenMessages[e.key]) {
+        Host.userCache[e.key].data = e.val();
+        if (e.key === Host.maximisedUser)
+            Chat.updateMaximised();
+        if (Host.userCache[e.key].data.messages && Object.keys(Host.userCache[e.key].data.messages).length > Host.userCache[e.key].seenMessages) {
             userNode.querySelector("div").style.display = "block";
-            userNode.querySelector("div").textContent = (Object.keys(data.messages).length - Chat.seenMessages[e.key]).toString();
+            userNode.querySelector("div").textContent = (Object.keys(Host.userCache[e.key].data.messages).length - Host.userCache[e.key].seenMessages).toString();
         }
         else {
             userNode.querySelector("div").style.display = "none";
@@ -95,6 +81,9 @@ var Host;
     function removeWhiteboard(e) {
         var userNode = document.querySelector("div.whiteboards div#" + e.key);
         userNode.remove();
+        if (e.key === Host.maximisedUser)
+            Chat.hideMaximised(true);
+        delete Host.userCache[e.key];
         if (document.querySelector("div.whiteboards").innerHTML === "")
             document.querySelector("div.whiteboards").textContent = "Waiting for people to connect...";
         console.log("Removed whiteboard");
@@ -113,12 +102,32 @@ var Host;
             div.onclick = closeClickHandler;
             div.className = "maximised shown";
             Host.maximisedUser = id;
+            updateMaximised();
             maximisedRef = database.ref("rooms/" + Host.roomId + "/users/" + Host.maximisedUser);
             maximisedRef.update({
                 maximised: true
             });
         }
         Chat.showMaximisedBoard = showMaximisedBoard;
+        function updateMaximised() {
+            var div = document.querySelector("div.maximised");
+            div.querySelector("img").src = Host.userCache[Host.maximisedUser].data.board;
+            var messagesDiv = document.querySelector("div.messages");
+            messagesDiv.innerHTML = "";
+            if (Host.userCache[Host.maximisedUser].data.messages) {
+                for (var messageId in Host.userCache[Host.maximisedUser].data.messages) {
+                    var outerSpan = document.createElement("span");
+                    var innerSpan = document.createElement("span");
+                    outerSpan.className = Host.userCache[Host.maximisedUser].data.messages[messageId].sender + "Message";
+                    innerSpan.textContent = Host.userCache[Host.maximisedUser].data.messages[messageId].content;
+                    outerSpan.appendChild(innerSpan);
+                    messagesDiv.appendChild(outerSpan);
+                }
+                messagesDiv.lastChild.scrollIntoView();
+                Host.userCache[Host.maximisedUser].seenMessages = Object.keys(Host.userCache[Host.maximisedUser].data.messages).length;
+            }
+        }
+        Chat.updateMaximised = updateMaximised;
         function hideMaximised(deleted) {
             if (deleted === void 0) { deleted = false; }
             var div = document.querySelector("div.maximised");
@@ -156,6 +165,16 @@ var Host;
             });
         }
         Chat.sendMessage = sendMessage;
+        function debugSendMessage(userId, msg, sender) {
+            if (msg === void 0) { msg = "This is a testing debug message"; }
+            if (sender === void 0) { sender = "user"; }
+            var messagesRef = database.ref("rooms/" + Host.roomId + "/users/" + userId + "/messages").push();
+            messagesRef.set({
+                sender: sender,
+                content: msg
+            });
+        }
+        Chat.debugSendMessage = debugSendMessage;
         function clickHandler(e) {
             showMaximisedBoard(e.target.parentNode.id);
         }
