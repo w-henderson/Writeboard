@@ -50,50 +50,12 @@ namespace Host {
     let userNode = document.createElement("div");
     let userWhiteboard = document.createElement("img");
     let userName = document.createElement("span");
-    let messageIcon = document.createElement("i");
 
     userWhiteboard.src = e.val().board;
     userWhiteboard.onclick = Chat.clickHandler;
     userName.textContent = e.val().name;
     userNode.id = e.key;
 
-    messageIcon.className = "material-icons-round";
-    messageIcon.textContent = "message";
-    messageIcon.onclick = (e) => {
-      let userId = (<HTMLElement>(<HTMLElement>e.target).parentNode.parentNode).id;
-      let userName = (<HTMLElement>e.target).parentNode.firstChild.textContent;
-      let messageRef = database.ref(`rooms/${roomId}/users/${userId}/message`);
-
-      Swal.fire({
-        title: `Message to ${userName}:`,
-        text: `This will pop up on ${userName}'s screen.`,
-        icon: "info",
-        input: 'text',
-        confirmButtonText: 'Send Message',
-        background: "var(--background)",
-        allowOutsideClick: true,
-        preConfirm: (msg: string) => {
-          if (msg.length === 0) {
-            Swal.showValidationMessage("You can't send an empty message!");
-            return false;
-          } else {
-            return msg;
-          }
-        },
-      }).then((result) => {
-        if (result.isConfirmed) {
-          messageRef.set(result.value);
-          Swal.fire({
-            title: "Message sent!",
-            text: "Your message has been successfully sent.",
-            icon: "success",
-            background: "var(--background)"
-          });
-        }
-      });
-    }
-
-    userName.appendChild(messageIcon);
     userNode.appendChild(userWhiteboard);
     userNode.appendChild(userName);
     whiteboards.appendChild(userNode);
