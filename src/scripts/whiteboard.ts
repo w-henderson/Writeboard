@@ -161,11 +161,11 @@ namespace Functionality {
   }
 
   export function placeToolbar() {
-    let toolbar = <HTMLDivElement>document.querySelector("div.toolbar");
-    let colorInput = <HTMLInputElement>document.querySelector("input[type='color']");
+    let toolbar: HTMLDivElement = document.querySelector("div.toolbar");
+    let colorInput: HTMLInputElement = document.querySelector("input[type='color']");
     let canvasRect = canvas.getBoundingClientRect();
 
-    if (window.matchMedia("(orientation: landscape)").matches) {
+    if (window.matchMedia("(orientation: landscape)").matches && (!Client.Chat.visible || window.innerWidth > window.innerHeight * 1.5)) {
       toolbar.style.top = `${canvasRect.y + 40}px`;
       colorInput.style.top = `${canvasRect.y + 40}px`;
       toolbar.style.left = `${canvasRect.x + canvasRect.width}px`;
@@ -183,6 +183,9 @@ namespace Functionality {
       toolbar.style.borderRadius = "0 0 10px 10px";
       toolbar.style.paddingTop = "8px";
     }
+
+    let main: HTMLDivElement = document.querySelector("div.main");
+    canvas.style.maxHeight = `min(1200px, ${main.clientWidth * 0.675}px)`;
   }
 
   window.addEventListener("load", placeToolbar);

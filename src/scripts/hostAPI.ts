@@ -5,28 +5,39 @@ namespace Host {
   var database = firebase.database();
   var analytics = firebase.analytics();
   export var roomId = window.localStorage.getItem("writeboardTempId");
+  export var maximisedUser;
 
-  if (!roomId) {
-    Swal.fire({
-      title: "Error 404",
-      text: "Writeboard Not Found",
-      icon: "error",
-      background: "var(--background)"
-    }).then(() => {
-      analytics.logEvent("failHost", {});
-      window.location.href = "/";
-    });
-  } else {
-    var ref = database.ref(`rooms/${roomId}/users`);
-    var titleRef = database.ref(`rooms/${roomId}/name`);
-    titleRef.once("value", updateTitle);
+  export var userCache: any = {};
 
-    ref.on("child_added", addWhiteboard);
-    ref.on("child_changed", updateWhiteboard);
-    ref.on("child_removed", removeWhiteboard);
+  var ref;
+  var titleRef;
+  var maximisedRef;
 
-    window.localStorage.removeItem("writeboardTempId");
-  }
+  window.addEventListener("load", () => {
+    if (!roomId) {
+      Swal.fire({
+        title: "Error 404",
+        text: "Writeboard Not Found",
+        icon: "error",
+        background: "var(--background)"
+      }).then(() => {
+        analytics.logEvent("failHost", {});
+        window.location.href = "/";
+      });
+    } else {
+      ref = database.ref(`rooms/${roomId}/users`);
+      titleRef = database.ref(`rooms/${roomId}/name`);
+      titleRef.once("value", updateTitle);
+
+      ref.on("child_added", addWhiteboard);
+      ref.on("child_changed", updateWhiteboard);
+      ref.on("child_removed", removeWhiteboard);
+
+      window.localStorage.removeItem("writeboardTempId");
+    }
+
+    (<HTMLInputElement>document.querySelector("input#messageInput")).onkeyup = Chat.sendMessage;
+  });
 
   function updateTitle(e) {
     let data = e.val();
@@ -43,60 +54,43 @@ namespace Host {
     let userNode = document.createElement("div");
     let userWhiteboard = document.createElement("img");
     let userName = document.createElement("span");
-    let messageIcon = document.createElement("i");
+    let messageIndicator = document.createElement("div");
 
     userWhiteboard.src = e.val().board;
+    userWhiteboard.onclick = Chat.clickHandler;
     userName.textContent = e.val().name;
     userNode.id = e.key;
+    messageIndicator.style.display = "none";
 
-    messageIcon.className = "material-icons-round";
-    messageIcon.textContent = "message";
-    messageIcon.onclick = (e) => {
-      let userId = (<HTMLElement>(<HTMLElement>e.target).parentNode.parentNode).id;
-      let userName = (<HTMLElement>e.target).parentNode.firstChild.textContent;
-      let messageRef = database.ref(`rooms/${roomId}/users/${userId}/message`);
-
-      Swal.fire({
-        title: `Message to ${userName}:`,
-        text: `This will pop up on ${userName}'s screen.`,
-        icon: "info",
-        input: 'text',
-        confirmButtonText: 'Send Message',
-        background: "var(--background)",
-        allowOutsideClick: true,
-        preConfirm: (msg: string) => {
-          if (msg.length === 0) {
-            Swal.showValidationMessage("You can't send an empty message!");
-            return false;
-          } else {
-            return msg;
-          }
-        },
-      }).then((result) => {
-        if (result.isConfirmed) {
-          messageRef.set(result.value);
-          Swal.fire({
-            title: "Message sent!",
-            text: "Your message has been successfully sent.",
-            icon: "success",
-            background: "var(--background)"
-          });
-        }
-      });
-    }
-
-    userName.appendChild(messageIcon);
     userNode.appendChild(userWhiteboard);
     userNode.appendChild(userName);
+    userNode.appendChild(messageIndicator);
     whiteboards.appendChild(userNode);
+
+    userCache[e.key] = {
+      data: e.val(),
+      seenMessages: 0
+    }
 
     console.log("Added whiteboard");
   }
 
   function updateWhiteboard(e) {
+    let data = e.val();
     let userNode = document.querySelector(`div.whiteboards div#${e.key}`);
-    userNode.querySelector("img").src = e.val().board;
-    userNode.querySelector("span").firstChild.textContent = e.val().name;
+    userNode.querySelector("img").src = data.board;
+    userNode.querySelector("span").firstChild.textContent = data.name;
+
+    userCache[e.key].data = e.val();
+
+    if (e.key === maximisedUser) Chat.updateMaximised();
+
+    if (userCache[e.key].data.messages && Object.keys(userCache[e.key].data.messages).length > userCache[e.key].seenMessages) {
+      userNode.querySelector("div").style.display = "block";
+      userNode.querySelector("div").textContent = (Object.keys(userCache[e.key].data.messages).length - userCache[e.key].seenMessages).toString();
+    } else {
+      userNode.querySelector("div").style.display = "none";
+    }
 
     console.log("Updated whiteboard");
   }
@@ -104,6 +98,10 @@ namespace Host {
   function removeWhiteboard(e) {
     let userNode = document.querySelector(`div.whiteboards div#${e.key}`);
     userNode.remove();
+
+    if (e.key === maximisedUser) Chat.hideMaximised(true);
+
+    delete userCache[e.key];
 
     if (document.querySelector("div.whiteboards").innerHTML === "") document.querySelector("div.whiteboards").textContent = "Waiting for people to connect...";
 
@@ -114,4 +112,101 @@ namespace Host {
     analytics.logEvent("closeRoom", { roomId });
     return database.ref(`rooms/${roomId}`).remove().then(() => { return });
   });
+
+  export namespace Chat {
+    export var seenMessages: any = {};
+
+    export function showMaximisedBoard(id: string) {
+      let div: HTMLElement = document.querySelector("div.maximised");
+
+      div.querySelector("img").src = (<HTMLImageElement>document.querySelector(`div#${id} img`)).src;
+      div.querySelector("span").textContent = document.querySelector(`div#${id} span`).firstChild.textContent;
+      div.onclick = closeClickHandler;
+
+      div.className = "maximised shown";
+      maximisedUser = id;
+
+      updateMaximised();
+
+      maximisedRef = database.ref(`rooms/${roomId}/users/${maximisedUser}`);
+      maximisedRef.update({
+        maximised: true
+      });
+    }
+
+    export function updateMaximised() {
+      let div: HTMLElement = document.querySelector("div.maximised");
+      div.querySelector("img").src = userCache[maximisedUser].data.board;
+
+      let messagesDiv = document.querySelector("div.messages");
+      messagesDiv.innerHTML = "";
+      if (userCache[maximisedUser].data.messages) {
+        for (let messageId in userCache[maximisedUser].data.messages) {
+          let outerSpan = document.createElement("span");
+          let innerSpan = document.createElement("span");
+          outerSpan.className = userCache[maximisedUser].data.messages[messageId].sender + "Message";
+          innerSpan.textContent = userCache[maximisedUser].data.messages[messageId].content;
+          outerSpan.appendChild(innerSpan);
+          messagesDiv.appendChild(outerSpan);
+        }
+
+        (<HTMLSpanElement>messagesDiv.lastChild).scrollIntoView();
+        userCache[maximisedUser].seenMessages = Object.keys(userCache[maximisedUser].data.messages).length;
+      }
+    }
+
+    export function hideMaximised(deleted = false) {
+      let div: HTMLElement = document.querySelector("div.maximised");
+      div.className = "maximised";
+      div.onclick = null;
+
+      if (!deleted) {
+        maximisedRef.update({
+          maximised: false
+        });
+      } else {
+        Swal.fire({
+          title: "User left the room.",
+          text: "The user you were viewing has just left the room, so the connection to their board has been lost.",
+          icon: "warning",
+          background: "var(--background)"
+        });
+      }
+
+      maximisedRef.off();
+      maximisedRef = undefined;
+      maximisedUser = undefined;
+    }
+
+    export function sendMessage(e) {
+      e.preventDefault();
+      if (e.keyCode !== 13) return;
+
+      let input: HTMLInputElement = document.querySelector("input#messageInput");
+      let messageText = input.value;
+      input.value = "";
+
+      let messagesRef = database.ref(`rooms/${roomId}/users/${maximisedUser}/messages`).push();
+      messagesRef.set({
+        sender: "host",
+        content: messageText
+      });
+    }
+
+    export function debugSendMessage(userId, msg = "This is a testing debug message", sender = "user") {
+      let messagesRef = database.ref(`rooms/${roomId}/users/${userId}/messages`).push();
+      messagesRef.set({
+        sender,
+        content: msg
+      });
+    }
+
+    export function clickHandler(e) {
+      showMaximisedBoard(e.target.parentNode.id);
+    }
+
+    export function closeClickHandler(e) {
+      if (e.target.className === "maximised shown") hideMaximised();
+    }
+  }
 }

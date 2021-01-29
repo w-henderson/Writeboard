@@ -7,14 +7,27 @@ namespace Client {
   export var roomId = window.location.search.substr(1);
   export var username;
   export var userId;
+  export var userRef;
+  var maximisedRef;
   var messageRef;
+  var titleRef;
+  var ref;
+
+  var messageCache: any = {
+    read: 0,
+    data: null
+  }
 
   var lastStrokeUpdate = -1;
+  export var maximised = false;
 
-  var titleRef = database.ref(`rooms/${roomId}/name`);
-  var ref = database.ref(`rooms/${roomId}/users`);
-  export var userRef;
-  titleRef.on("value", updateTitle);
+  window.onload = () => {
+    titleRef = database.ref(`rooms/${roomId}/name`);
+    ref = database.ref(`rooms/${roomId}/users`);
+
+    titleRef.on("value", updateTitle);
+    (<HTMLInputElement>document.querySelector("input#messageInput")).onkeyup = Chat.sendMessage;
+  }
 
   function updateTitle(e) {
     let data = e.val();
@@ -32,7 +45,7 @@ namespace Client {
         showLoaderOnConfirm: true,
         preConfirm: (login) => {
           return ref.once("value").then((snapshot) => {
-            if (snapshot.val() !== null && snakeCase(login) in snapshot.val()) {
+            if (snapshot.val() !== null && _snakeCase(login) in snapshot.val()) {
               Swal.showValidationMessage("Username already taken!");
               return false;
             } else if (login.length === 0) {
@@ -47,7 +60,7 @@ namespace Client {
       }).then((result) => {
         if (result.isConfirmed) {
           username = result.value;
-          userId = snakeCase(result.value);
+          userId = _snakeCase(result.value);
 
           analytics.logEvent("join", { roomId, username });
 
@@ -55,12 +68,16 @@ namespace Client {
           userRef.set({
             name: username,
             board: Graphics.exportImage(400, 300),
-            message: ""
+            maximised: false,
+            messages: []
           });
-          messageRef = database.ref(`rooms/${roomId}/users/${userId}/message`);
-          messageRef.on("value", showMessage);
 
-          window.setInterval(updateBoard, 5000);
+          messageRef = database.ref(`rooms/${roomId}/users/${userId}/messages`);
+          maximisedRef = database.ref(`rooms/${roomId}/users/${userId}/maximised`);
+          messageRef.on("value", Chat.messageHandler);
+          maximisedRef.on("value", updateMaximised);
+
+          window.setTimeout(updateBoard, 5000);
         }
       })
     } else {
@@ -76,41 +93,109 @@ namespace Client {
     }
   }
 
-  function updateBoard() {
-    if (lastStrokeUpdate !== strokes) {
+  function updateBoard(force = false) {
+    if (lastStrokeUpdate !== strokes || force) {
       userRef.update({
-        board: Graphics.exportImage(400, 300)
+        board: maximised ? Graphics.exportImage(800, 600, 0.8) : Graphics.exportImage(400, 300)
       });
       lastStrokeUpdate = strokes;
     }
+
+    window.setTimeout(updateBoard, maximised ? 1000 : 5000); // update more frequently if maximised
   }
 
-  function showMessage(e) {
-    if (e.val() === null || e.val() === "") return;
-
-    let message = document.createElement("div");
-    message.className = "message";
-
-    let titleSpan = document.createElement("span");
-    let messageText = document.createTextNode(e.val());
-    titleSpan.textContent = "Message from the host:";
-
-    message.appendChild(titleSpan);
-    message.appendChild(messageText);
-    document.body.appendChild(message);
-
-    window.setTimeout(() => {
-      message.remove();
-    }, 8000);
+  function updateMaximised(e) {
+    maximised = e.val();
+    if (maximised) {
+      updateBoard(true);
+    }
   }
 
   window.addEventListener("beforeunload", () => {
     analytics.logEvent("leave", { roomId, username });
     return userRef.remove().then(() => { return });
   });
+
+  export namespace Chat {
+    export var visible = false;
+
+    export function sendMessage(e) {
+      e.preventDefault();
+      if (e.keyCode !== 13) return;
+
+      let input: HTMLInputElement = document.querySelector("input#messageInput");
+      let messageText = input.value;
+      input.value = "";
+
+      messageRef.push().set({
+        sender: "user",
+        content: messageText
+      });
+    }
+
+    export function updateMessages() {
+      if (visible) {
+        let messagesDiv = document.querySelector("div.messages");
+        messagesDiv.innerHTML = "";
+        if (messageCache.data) {
+          for (let messageId in messageCache.data) {
+            let outerSpan = document.createElement("span");
+            let innerSpan = document.createElement("span");
+            outerSpan.className = messageCache.data[messageId].sender + "Message";
+            innerSpan.textContent = messageCache.data[messageId].content;
+            outerSpan.appendChild(innerSpan);
+            messagesDiv.appendChild(outerSpan);
+          }
+
+          if (messagesDiv.getBoundingClientRect().right === window.innerWidth) {
+            (<HTMLSpanElement>messagesDiv.lastChild).scrollIntoView();
+          }
+          messageCache.read = Object.keys(messageCache.data).length;
+        }
+      }
+
+      let notification: HTMLDivElement = document.querySelector("div.notification");
+      if (messageCache.data && Object.keys(messageCache.data).length > messageCache.read) {
+        let unread = Object.keys(messageCache.data).length - messageCache.read;
+        notification.style.display = "block";
+        notification.textContent = unread.toString();
+      } else {
+        notification.style.display = "none";
+      }
+    }
+
+    export function messageHandler(e) {
+      messageCache.data = e.val();
+      updateMessages();
+    }
+
+    export function showChat() {
+      document.querySelector("div.main").className = "main chatShown";
+      document.querySelector("div.clientChat").className = "clientChat chatShown";
+      document.querySelector("div.clientChat i").textContent = "clear";
+      (<HTMLDivElement>document.querySelector("div.clientChat div.toggle")).onclick = hideChat;
+      visible = true;
+      updateMessages();
+      toolbarTransition();
+    }
+
+    export function hideChat() {
+      document.querySelector("div.main").className = "main";
+      document.querySelector("div.clientChat").className = "clientChat";
+      document.querySelector("div.clientChat i").textContent = "message";
+      (<HTMLDivElement>document.querySelector("div.clientChat div.toggle")).onclick = showChat;
+      visible = false;
+      toolbarTransition();
+    }
+
+    function toolbarTransition() {
+      window.setInterval(Functionality.placeToolbar, 16.7);
+      window.setTimeout(window.clearInterval, 500);
+    }
+  }
 }
 
-const snakeCase = string => {
+const _snakeCase = string => {
   return string.replace(/\W+/g, " ")
     .split(/ |\B(?=[A-Z])/)
     .map(word => word.toLowerCase())
