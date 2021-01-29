@@ -12,8 +12,8 @@ body {
     --alternate-accent: #e4b363;
     --background: #1c1f20;
     --canvas: #1f2324;
-    --background-lighter: #333636;
-    --navbar-background: #313638;
+    --background-lighter: #313638;
+    --background-lightest: #3e4346;
     --unselected-navbar: #888;
     --light-line: #666;
     --text-color: #fff;
@@ -151,7 +151,7 @@ div.main {
                 height: 40px;
                 box-sizing: border-box;
                 padding: 10px 12px;
-                background-color: var(--navbar-background);
+                background-color: var(--background-lighter);
                 border-radius: 0 0 15px 15px;
                 text-align: left;
 
@@ -190,7 +190,7 @@ div.main {
         }
            
         &::-webkit-scrollbar-thumb {
-            background-color: var(--navbar-background);
+            background-color: var(--background-lighter);
             border-radius: 4px;
 
             &:hover {
@@ -247,7 +247,7 @@ div.maximised {
     div.board {
         max-width: 1600px;
         max-height: 1200px;
-        height: calc(37.5vw + 40px);
+        height: calc(37.5vw + 60px);
         width: 50vw;
 
         img {
@@ -259,12 +259,13 @@ div.maximised {
         span {
             display: block;
             width: 100%;
-            height: 40px;
+            height: 60px;
             box-sizing: border-box;
-            padding: 10px 15px;
-            background-color: var(--navbar-background);
+            padding: 15px 20px;
+            background-color: var(--background-lighter);
             text-align: left;
             border-radius: 0 0 0 20px;
+            font-size: 24px;
 
             i {
                 font-size: 20px;
@@ -277,7 +278,7 @@ div.maximised {
     }
 
     div.chat {
-        height: calc(37.5vw + 40px);
+        height: calc(37.5vw + 60px);
         width: 20vw;
         background-color: var(--background);
         border-radius: 0 20px 20px 0;
@@ -306,7 +307,7 @@ div.maximised {
             }
                
             &::-webkit-scrollbar-thumb {
-                background-color: var(--navbar-background);
+                background-color: var(--background-lighter);
                 border-radius: 4px;
     
                 &:hover {
@@ -320,7 +321,7 @@ div.maximised {
 
                 span {
                     display: inline-block;
-                    background-color: var(--navbar-background);
+                    background-color: var(--background-lighter);
                     border-radius: 15px 15px 15px 0;
                     padding: 10px;
                     max-width: 80%;
@@ -345,9 +346,9 @@ div.maximised {
 
         input {
             box-sizing: border-box;
-            height: 40px;
+            height: 60px;
             border: none;
-            padding: 0 10px;
+            padding: 0 20px;
             border-radius: 0 0 20px;
             font-family: Inter;
             font-size: 18px;
@@ -381,12 +382,19 @@ div.clientChat {
 
         @media (orientation: portrait) {
             width: calc(100% - 0px);
+            div.toggle {
+                left: 12px !important;
+            }
+            h2 {
+                margin: 27.5px 25px 25px 80px;
+            }
         }
     }
 
     h2 {
         margin: 25px;
         font-size: 1.8em;
+        transition: margin 500ms;
     }
 
     div.messages {
@@ -405,7 +413,7 @@ div.clientChat {
         }
             
         &::-webkit-scrollbar-thumb {
-            background-color: var(--navbar-background);
+            background-color: var(--background-lighter);
             border-radius: 4px;
 
             &:hover {
@@ -419,7 +427,7 @@ div.clientChat {
 
             span {
                 display: inline-block;
-                background-color: var(--navbar-background);
+                background-color: var(--background-lighter);
                 border-radius: 15px 15px 15px 0;
                 padding: 10px;
                 max-width: 80%;
@@ -450,8 +458,13 @@ div.clientChat {
         font-family: Inter;
         font-size: 24px;
         outline: none !important;
-        background-color: var(--navbar-background);
+        background-color: var(--background-lighter);
         color: var(--text-color);
+        transition: background-color 100ms;
+
+        &:hover, &:focus {
+            background-color: var(--background-lightest);
+        }
     }
 
     div.toggle {
@@ -465,6 +478,7 @@ div.clientChat {
         box-sizing: border-box;
         padding: 14px;
         cursor: pointer;
+        transition: left 500ms;
 
         i {
             font-size: 36px;
