@@ -107,6 +107,7 @@ div.banner {
     overflow: hidden;
     position: relative;
     filter: drop-shadow(0 0 25px rgba(0, 0, 0, 0.5));
+    margin-bottom: -8vw;
 
     img {
         position: relative;
@@ -124,9 +125,7 @@ div.banner {
 }
 
 section {
-    position: relative;
     z-index: -1;
-    bottom: 8vw;
     width: 100%;
     padding: 10vh 20vw;
     box-sizing: border-box;
@@ -145,10 +144,8 @@ section:nth-child(2n+1) {
 }
 
 footer {
-    background-color: var(--background-lighter);
+    background-color: var(--background);
     color: var(--text-color);
-    position: relative;
-    bottom: 8vw;
     box-sizing: border-box;
     padding: 1.5vh;
     font-size: 2vh;
@@ -164,6 +161,11 @@ footer {
     footer {
         display: none;
     }
+}
+
+div.horizontalAd {
+    width: 100%;
+    text-align: center;
 }
 
 a:link, a:visited, a:active, a {
