@@ -6,11 +6,21 @@ var Client;
     Client.analytics = firebase.analytics();
     Client.roomId = window.location.search.substr(1);
     var maximisedRef;
+    var messageRef;
+    var titleRef;
+    var ref;
+    var messageCache = {
+        read: 0,
+        data: null
+    };
     var lastStrokeUpdate = -1;
     Client.maximised = false;
-    var titleRef = database.ref("rooms/" + Client.roomId + "/name");
-    var ref = database.ref("rooms/" + Client.roomId + "/users");
-    titleRef.on("value", updateTitle);
+    window.onload = function () {
+        titleRef = database.ref("rooms/" + Client.roomId + "/name");
+        ref = database.ref("rooms/" + Client.roomId + "/users");
+        titleRef.on("value", updateTitle);
+        document.querySelector("input#messageInput").onkeyup = Chat.sendMessage;
+    };
     function updateTitle(e) {
         var data = e.val();
         if (data !== null) {
@@ -51,7 +61,9 @@ var Client;
                         maximised: false,
                         messages: []
                     });
+                    messageRef = database.ref("rooms/" + Client.roomId + "/users/" + Client.userId + "/messages");
                     maximisedRef = database.ref("rooms/" + Client.roomId + "/users/" + Client.userId + "/maximised");
+                    messageRef.on("value", Chat.messageHandler);
                     maximisedRef.on("value", updateMaximised);
                     window.setTimeout(updateBoard, 5000);
                 }
@@ -92,12 +104,61 @@ var Client;
     var Chat;
     (function (Chat) {
         Chat.visible = false;
+        function sendMessage(e) {
+            e.preventDefault();
+            if (e.keyCode !== 13)
+                return;
+            var input = document.querySelector("input#messageInput");
+            var messageText = input.value;
+            input.value = "";
+            messageRef.push().set({
+                sender: "user",
+                content: messageText
+            });
+        }
+        Chat.sendMessage = sendMessage;
+        function updateMessages() {
+            if (Chat.visible) {
+                var messagesDiv = document.querySelector("div.messages");
+                messagesDiv.innerHTML = "";
+                if (messageCache.data) {
+                    for (var messageId in messageCache.data) {
+                        var outerSpan = document.createElement("span");
+                        var innerSpan = document.createElement("span");
+                        outerSpan.className = messageCache.data[messageId].sender + "Message";
+                        innerSpan.textContent = messageCache.data[messageId].content;
+                        outerSpan.appendChild(innerSpan);
+                        messagesDiv.appendChild(outerSpan);
+                    }
+                    if (messagesDiv.getBoundingClientRect().right === window.innerWidth) {
+                        messagesDiv.lastChild.scrollIntoView();
+                    }
+                    messageCache.read = Object.keys(messageCache.data).length;
+                }
+            }
+            var notification = document.querySelector("div.notification");
+            if (messageCache.data && Object.keys(messageCache.data).length > messageCache.read) {
+                var unread = Object.keys(messageCache.data).length - messageCache.read;
+                notification.style.display = "block";
+                notification.textContent = unread.toString();
+            }
+            else {
+                notification.style.display = "none";
+            }
+        }
+        Chat.updateMessages = updateMessages;
+        function messageHandler(e) {
+            messageCache.data = e.val();
+            updateMessages();
+        }
+        Chat.messageHandler = messageHandler;
         function showChat() {
             document.querySelector("div.main").className = "main chatShown";
             document.querySelector("div.clientChat").className = "clientChat chatShown";
             document.querySelector("div.clientChat i").textContent = "clear";
             document.querySelector("div.clientChat div.toggle").onclick = hideChat;
             Chat.visible = true;
+            updateMessages();
             toolbarTransition();
         }
         Chat.showChat = showChat;

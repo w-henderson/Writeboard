@@ -363,20 +363,20 @@ div.maximised.shown {
 
 div.clientChat {
     position: absolute;
-    right: 0;
+    right: -400px;
 
     height: 100%;
-    width: 0px;
+    width: 400px;
     background-color: var(--background);
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     box-shadow: none;
 
-    transition: width 500ms, box-shadow 500ms;
+    transition: right 500ms, width 500ms, box-shadow 500ms;
 
     &.chatShown {
-        width: 400px;
+        right: 0px;
         box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
 
         @media (orientation: portrait) {
@@ -426,7 +426,7 @@ div.clientChat {
                 word-break: break-word;
             }
 
-            &.hostMessage {
+            &.userMessage {
                 text-align: right;
 
                 span {

@@ -30,7 +30,7 @@ var Host;
             ref.on("child_removed", removeWhiteboard);
             window.localStorage.removeItem("writeboardTempId");
         }
-        document.querySelector("input").onkeyup = Chat.sendMessage;
+        document.querySelector("input#messageInput").onkeyup = Chat.sendMessage;
     });
     function updateTitle(e) {
         var data = e.val();
@@ -155,7 +155,7 @@ var Host;
             e.preventDefault();
             if (e.keyCode !== 13)
                 return;
-            var input = document.querySelector("input");
+            var input = document.querySelector("input#messageInput");
             var messageText = input.value;
             input.value = "";
             var messagesRef = database.ref("rooms/" + Host.roomId + "/users/" + Host.maximisedUser + "/messages").push();

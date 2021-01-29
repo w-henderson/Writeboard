@@ -7,15 +7,27 @@ namespace Client {
   export var roomId = window.location.search.substr(1);
   export var username;
   export var userId;
+  export var userRef;
   var maximisedRef;
+  var messageRef;
+  var titleRef;
+  var ref;
+
+  var messageCache: any = {
+    read: 0,
+    data: null
+  }
 
   var lastStrokeUpdate = -1;
   export var maximised = false;
 
-  var titleRef = database.ref(`rooms/${roomId}/name`);
-  var ref = database.ref(`rooms/${roomId}/users`);
-  export var userRef;
-  titleRef.on("value", updateTitle);
+  window.onload = () => {
+    titleRef = database.ref(`rooms/${roomId}/name`);
+    ref = database.ref(`rooms/${roomId}/users`);
+
+    titleRef.on("value", updateTitle);
+    (<HTMLInputElement>document.querySelector("input#messageInput")).onkeyup = Chat.sendMessage;
+  }
 
   function updateTitle(e) {
     let data = e.val();
@@ -60,7 +72,9 @@ namespace Client {
             messages: []
           });
 
+          messageRef = database.ref(`rooms/${roomId}/users/${userId}/messages`);
           maximisedRef = database.ref(`rooms/${roomId}/users/${userId}/maximised`);
+          messageRef.on("value", Chat.messageHandler);
           maximisedRef.on("value", updateMaximised);
 
           window.setTimeout(updateBoard, 5000);
@@ -105,12 +119,63 @@ namespace Client {
   export namespace Chat {
     export var visible = false;
 
+    export function sendMessage(e) {
+      e.preventDefault();
+      if (e.keyCode !== 13) return;
+
+      let input: HTMLInputElement = document.querySelector("input#messageInput");
+      let messageText = input.value;
+      input.value = "";
+
+      messageRef.push().set({
+        sender: "user",
+        content: messageText
+      });
+    }
+
+    export function updateMessages() {
+      if (visible) {
+        let messagesDiv = document.querySelector("div.messages");
+        messagesDiv.innerHTML = "";
+        if (messageCache.data) {
+          for (let messageId in messageCache.data) {
+            let outerSpan = document.createElement("span");
+            let innerSpan = document.createElement("span");
+            outerSpan.className = messageCache.data[messageId].sender + "Message";
+            innerSpan.textContent = messageCache.data[messageId].content;
+            outerSpan.appendChild(innerSpan);
+            messagesDiv.appendChild(outerSpan);
+          }
+
+          if (messagesDiv.getBoundingClientRect().right === window.innerWidth) {
+            (<HTMLSpanElement>messagesDiv.lastChild).scrollIntoView();
+          }
+          messageCache.read = Object.keys(messageCache.data).length;
+        }
+      }
+
+      let notification: HTMLDivElement = document.querySelector("div.notification");
+      if (messageCache.data && Object.keys(messageCache.data).length > messageCache.read) {
+        let unread = Object.keys(messageCache.data).length - messageCache.read;
+        notification.style.display = "block";
+        notification.textContent = unread.toString();
+      } else {
+        notification.style.display = "none";
+      }
+    }
+
+    export function messageHandler(e) {
+      messageCache.data = e.val();
+      updateMessages();
+    }
+
     export function showChat() {
       document.querySelector("div.main").className = "main chatShown";
       document.querySelector("div.clientChat").className = "clientChat chatShown";
       document.querySelector("div.clientChat i").textContent = "clear";
       (<HTMLDivElement>document.querySelector("div.clientChat div.toggle")).onclick = hideChat;
       visible = true;
+      updateMessages();
       toolbarTransition();
     }
 

@@ -36,7 +36,7 @@ namespace Host {
       window.localStorage.removeItem("writeboardTempId");
     }
 
-    document.querySelector("input").onkeyup = Chat.sendMessage;
+    (<HTMLInputElement>document.querySelector("input#messageInput")).onkeyup = Chat.sendMessage;
   });
 
   function updateTitle(e) {
@@ -182,7 +182,7 @@ namespace Host {
       e.preventDefault();
       if (e.keyCode !== 13) return;
 
-      let input = document.querySelector("input");
+      let input: HTMLInputElement = document.querySelector("input#messageInput");
       let messageText = input.value;
       input.value = "";
 
