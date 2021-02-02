@@ -115,6 +115,7 @@ var Graphics;
 var Functionality;
 (function (Functionality) {
     function undo() {
+        closeBrushMenu();
         if (whiteboardHistory.length - historyLocation > 1) {
             var imageToDraw_1 = new Image();
             historyLocation++;
@@ -125,6 +126,7 @@ var Functionality;
     }
     Functionality.undo = undo;
     function redo() {
+        closeBrushMenu();
         if (historyLocation > 0) {
             var imageToDraw_2 = new Image();
             historyLocation--;
@@ -145,6 +147,11 @@ var Functionality;
         ];
     }
     Functionality.getCoords = getCoords;
+    function closeBrushMenu() {
+        var extendedBrush = document.querySelector("div.extendedBrush");
+        extendedBrush.className = "extended extendedBrush";
+    }
+    Functionality.closeBrushMenu = closeBrushMenu;
     function openBrushMenu() {
         if (tool === "brush") {
             var extendedBrush = document.querySelector("div.extendedBrush");
@@ -157,6 +164,7 @@ var Functionality;
     }
     Functionality.openBrushMenu = openBrushMenu;
     function selectEraser() {
+        closeBrushMenu();
         tool = "eraser";
         eraserAuto = false;
         document.querySelector("div.toolbar").className = "toolbar eraser";
@@ -167,16 +175,19 @@ var Functionality;
     }
     Functionality.selectColor = selectColor;
     function updateStrokeStyle() {
+        closeBrushMenu();
         var input = document.querySelector("input[type='color']");
         document.querySelector("#colorIcon").style.color = input.value;
         color = input.value;
     }
     Functionality.updateStrokeStyle = updateStrokeStyle;
     function forcePaste() {
+        closeBrushMenu();
         navigator.clipboard.read().then(function (data) { Events.handlePasteButton(data); });
     }
     Functionality.forcePaste = forcePaste;
     function forceCopy() {
+        closeBrushMenu();
         canvas.toBlob(function (blob) {
             var _a;
             navigator.clipboard.write([new ClipboardItem((_a = {}, _a[blob.type] = blob, _a))]);
@@ -184,6 +195,7 @@ var Functionality;
     }
     Functionality.forceCopy = forceCopy;
     function clearBoard() {
+        closeBrushMenu();
         Swal.fire({
             icon: "question",
             title: "Are you sure you want to clear your board?",
@@ -240,6 +252,7 @@ var Events;
         if (pointerId === -1 && (e.pressure !== 0 || e.buttons === 1))
             pointerId = e.pointerId;
         if (pointerId === e.pointerId) {
+            Functionality.closeBrushMenu();
             if (surfaceMode) {
                 if (e.buttons === 32) {
                     tool = "eraser";

@@ -84,6 +84,7 @@ namespace Graphics {
 
 namespace Functionality {
   export function undo() {
+    closeBrushMenu();
     if (whiteboardHistory.length - historyLocation > 1) {
       let imageToDraw = new Image();
       historyLocation++;
@@ -94,6 +95,7 @@ namespace Functionality {
   }
 
   export function redo() {
+    closeBrushMenu();
     if (historyLocation > 0) {
       let imageToDraw = new Image();
       historyLocation--;
@@ -110,6 +112,11 @@ namespace Functionality {
     ]
   }
 
+  export function closeBrushMenu() {
+    let extendedBrush: HTMLDivElement = document.querySelector("div.extendedBrush");
+    extendedBrush.className = "extended extendedBrush";
+  }
+
   export function openBrushMenu() {
     if (tool === "brush") {
       let extendedBrush: HTMLDivElement = document.querySelector("div.extendedBrush");
@@ -121,6 +128,7 @@ namespace Functionality {
   }
 
   export function selectEraser() {
+    closeBrushMenu();
     tool = "eraser";
     eraserAuto = false;
     document.querySelector("div.toolbar").className = "toolbar eraser";
@@ -131,22 +139,26 @@ namespace Functionality {
   }
 
   export function updateStrokeStyle() {
+    closeBrushMenu();
     let input = (<HTMLInputElement>document.querySelector("input[type='color']"));
     (<HTMLElement>document.querySelector("#colorIcon")).style.color = input.value;
     color = input.value;
   }
 
   export function forcePaste() {
+    closeBrushMenu();
     (<any>navigator.clipboard).read().then((data) => { Events.handlePasteButton(data) });
   }
 
   export function forceCopy() {
+    closeBrushMenu();
     canvas.toBlob((blob) => {
       (<any>navigator.clipboard).write([new ClipboardItem({ [blob.type]: blob })]);
     });
   }
 
   export function clearBoard() {
+    closeBrushMenu();
     Swal.fire({
       icon: "question",
       title: "Are you sure you want to clear your board?",
@@ -203,6 +215,8 @@ namespace Events {
     e.preventDefault();
     if (pointerId === -1 && (e.pressure !== 0 || e.buttons === 1)) pointerId = e.pointerId;
     if (pointerId === e.pointerId) {
+      Functionality.closeBrushMenu();
+
       if (surfaceMode) {
         if (e.buttons === 32) {
           tool = "eraser";
