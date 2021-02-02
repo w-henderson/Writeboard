@@ -110,9 +110,11 @@ namespace Functionality {
     ]
   }
 
-  export function selectColor() {
-    if (tool === "brush") (<HTMLInputElement>document.querySelector("input[type='color']")).click();
-    else {
+  export function openBrushMenu() {
+    if (tool === "brush") {
+      let extendedBrush: HTMLDivElement = document.querySelector("div.extendedBrush");
+      extendedBrush.className = extendedBrush.classList.contains("enlarged") ? "extended extendedBrush" : "extended extendedBrush enlarged";
+    } else {
       tool = "brush";
       document.querySelector("div.toolbar").className = "toolbar brush";
     }
@@ -122,6 +124,10 @@ namespace Functionality {
     tool = "eraser";
     eraserAuto = false;
     document.querySelector("div.toolbar").className = "toolbar eraser";
+  }
+
+  export function selectColor() {
+    (<HTMLInputElement>document.querySelector("input[type='color']")).click();
   }
 
   export function updateStrokeStyle() {
@@ -167,7 +173,7 @@ namespace Functionality {
 
     if (window.matchMedia("(orientation: landscape)").matches && (!Client.Chat.visible || window.innerWidth > window.innerHeight * 1.5)) {
       toolbar.style.top = `${canvasRect.y + 40}px`;
-      colorInput.style.top = `${canvasRect.y + 40}px`;
+      colorInput.style.top = `${canvasRect.y + 80}px`;
       toolbar.style.left = `${canvasRect.x + canvasRect.width}px`;
       colorInput.style.left = `${canvasRect.x + canvasRect.width}px`;
       toolbar.style.height = "unset";
@@ -176,10 +182,10 @@ namespace Functionality {
     } else {
       toolbar.style.top = `${canvasRect.y + canvasRect.height}px`;
       colorInput.style.top = `${canvasRect.y + canvasRect.height}px`;
-      toolbar.style.left = `${canvasRect.x + 40}px`;
-      colorInput.style.left = `${canvasRect.x + 40}px`;
+      toolbar.style.left = `${canvasRect.x + 30}px`;
+      colorInput.style.left = `${canvasRect.x + 80}px`;
       toolbar.style.height = "35px";
-      toolbar.style.width = `${canvasRect.width - 80}px`;
+      toolbar.style.width = `${canvasRect.width - 60}px`;
       toolbar.style.borderRadius = "0 0 10px 10px";
       toolbar.style.paddingTop = "8px";
     }

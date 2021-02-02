@@ -145,21 +145,27 @@ var Functionality;
         ];
     }
     Functionality.getCoords = getCoords;
-    function selectColor() {
-        if (tool === "brush")
-            document.querySelector("input[type='color']").click();
+    function openBrushMenu() {
+        if (tool === "brush") {
+            var extendedBrush = document.querySelector("div.extendedBrush");
+            extendedBrush.className = extendedBrush.classList.contains("enlarged") ? "extended extendedBrush" : "extended extendedBrush enlarged";
+        }
         else {
             tool = "brush";
             document.querySelector("div.toolbar").className = "toolbar brush";
         }
     }
-    Functionality.selectColor = selectColor;
+    Functionality.openBrushMenu = openBrushMenu;
     function selectEraser() {
         tool = "eraser";
         eraserAuto = false;
         document.querySelector("div.toolbar").className = "toolbar eraser";
     }
     Functionality.selectEraser = selectEraser;
+    function selectColor() {
+        document.querySelector("input[type='color']").click();
+    }
+    Functionality.selectColor = selectColor;
     function updateStrokeStyle() {
         var input = document.querySelector("input[type='color']");
         document.querySelector("#colorIcon").style.color = input.value;
@@ -203,7 +209,7 @@ var Functionality;
         var canvasRect = canvas.getBoundingClientRect();
         if (window.matchMedia("(orientation: landscape)").matches && (!Client.Chat.visible || window.innerWidth > window.innerHeight * 1.5)) {
             toolbar.style.top = canvasRect.y + 40 + "px";
-            colorInput.style.top = canvasRect.y + 40 + "px";
+            colorInput.style.top = canvasRect.y + 80 + "px";
             toolbar.style.left = canvasRect.x + canvasRect.width + "px";
             colorInput.style.left = canvasRect.x + canvasRect.width + "px";
             toolbar.style.height = "unset";
@@ -213,10 +219,10 @@ var Functionality;
         else {
             toolbar.style.top = canvasRect.y + canvasRect.height + "px";
             colorInput.style.top = canvasRect.y + canvasRect.height + "px";
-            toolbar.style.left = canvasRect.x + 40 + "px";
-            colorInput.style.left = canvasRect.x + 40 + "px";
+            toolbar.style.left = canvasRect.x + 30 + "px";
+            colorInput.style.left = canvasRect.x + 80 + "px";
             toolbar.style.height = "35px";
-            toolbar.style.width = canvasRect.width - 80 + "px";
+            toolbar.style.width = canvasRect.width - 60 + "px";
             toolbar.style.borderRadius = "0 0 10px 10px";
             toolbar.style.paddingTop = "8px";
         }
