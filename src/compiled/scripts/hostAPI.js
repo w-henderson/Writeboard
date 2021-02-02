@@ -59,7 +59,6 @@ var Host;
             data: e.val(),
             seenMessages: 0
         };
-        console.log("Added whiteboard");
     }
     function updateWhiteboard(e) {
         var data = e.val();
@@ -76,7 +75,6 @@ var Host;
         else {
             userNode.querySelector("div").style.display = "none";
         }
-        console.log("Updated whiteboard");
     }
     function removeWhiteboard(e) {
         var userNode = document.querySelector("div.whiteboards div#" + e.key);
@@ -86,7 +84,6 @@ var Host;
         delete Host.userCache[e.key];
         if (document.querySelector("div.whiteboards").innerHTML === "")
             document.querySelector("div.whiteboards").textContent = "Waiting for people to connect...";
-        console.log("Removed whiteboard");
     }
     window.addEventListener("beforeunload", function () {
         analytics.logEvent("closeRoom", { roomId: Host.roomId });
@@ -165,16 +162,6 @@ var Host;
             });
         }
         Chat.sendMessage = sendMessage;
-        function debugSendMessage(userId, msg, sender) {
-            if (msg === void 0) { msg = "This is a testing debug message"; }
-            if (sender === void 0) { sender = "user"; }
-            var messagesRef = database.ref("rooms/" + Host.roomId + "/users/" + userId + "/messages").push();
-            messagesRef.set({
-                sender: sender,
-                content: msg
-            });
-        }
-        Chat.debugSendMessage = debugSendMessage;
         function clickHandler(e) {
             showMaximisedBoard(e.target.parentNode.id);
         }

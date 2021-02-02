@@ -71,8 +71,6 @@ namespace Host {
       data: e.val(),
       seenMessages: 0
     }
-
-    console.log("Added whiteboard");
   }
 
   function updateWhiteboard(e) {
@@ -91,8 +89,6 @@ namespace Host {
     } else {
       userNode.querySelector("div").style.display = "none";
     }
-
-    console.log("Updated whiteboard");
   }
 
   function removeWhiteboard(e) {
@@ -104,8 +100,6 @@ namespace Host {
     delete userCache[e.key];
 
     if (document.querySelector("div.whiteboards").innerHTML === "") document.querySelector("div.whiteboards").textContent = "Waiting for people to connect...";
-
-    console.log("Removed whiteboard");
   }
 
   window.addEventListener("beforeunload", () => {
@@ -190,14 +184,6 @@ namespace Host {
       messagesRef.set({
         sender: "host",
         content: messageText
-      });
-    }
-
-    export function debugSendMessage(userId, msg = "This is a testing debug message", sender = "user") {
-      let messagesRef = database.ref(`rooms/${roomId}/users/${userId}/messages`).push();
-      messagesRef.set({
-        sender,
-        content: msg
       });
     }
 
