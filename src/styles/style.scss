@@ -120,6 +120,39 @@ div.main {
                 opacity: 0.2;
             }
         }
+
+        div.extended {
+            background-color: var(--background);
+            margin: 0;
+            height: 0px;
+            width: 50px;
+            border-radius: 0 0 10px 10px;
+            transition: height 250ms, margin 250ms, padding 250ms, width 250ms;
+            overflow: hidden;
+            box-sizing: border-box;
+            padding: 0;
+
+            &.extendedBrush.enlarged {
+                height: 122px;
+                margin: 4px 0 8px;
+                padding: 10px 0;
+            }
+
+            &.portrait {
+                display: inline-block;
+                width: 0px;
+                height: 32px;
+                border-radius: 0 10px 10px 0;
+                margin: -2px;
+                
+                &.extendedBrush.enlarged {
+                    height: 32px;
+                    padding: 0;
+                    margin: 0;
+                    width: 122px;
+                }
+            }
+        }
     }
 
     div.whiteboards {

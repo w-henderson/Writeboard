@@ -42,9 +42,10 @@ var strokes = 0;
 var whiteboardHistory = [];
 var historyLocation = 0;
 var lineWidth = 10;
+var lineWidthMultiplier = 1;
 var color = "#ffffff";
 var tool = "brush";
-var surfaceMode = true;
+var straightLine = false;
 var eraserAuto = false;
 ctx.lineWidth = lineWidth;
 ctx.lineCap = "round";
@@ -58,14 +59,20 @@ var Graphics;
         if (quality === void 0) { quality = 20; }
         if (stroke.length < 2)
             return;
+        var shortenedStroke;
+        if (stroke.length >= 5)
+            shortenedStroke = stroke.slice(stroke.length - 5, stroke.length);
+        else
+            shortenedStroke = stroke;
         ctx.beginPath();
         ctx.strokeStyle = tool === "brush" ? color : "#1f2324";
-        ctx.moveTo(stroke[0][0], stroke[0][1]);
-        if (tool === "brush")
-            ctx.curve(stroke.flat(), 0.5, quality);
+        ctx.moveTo(shortenedStroke[0][0], shortenedStroke[0][1]);
+        if (tool === "brush") {
+            ctx.curve(shortenedStroke.flat(), 0.5, quality);
+        }
         else {
-            for (var _i = 0, stroke_1 = stroke; _i < stroke_1.length; _i++) {
-                var point = stroke_1[_i];
+            for (var _i = 0, shortenedStroke_1 = shortenedStroke; _i < shortenedStroke_1.length; _i++) {
+                var point = shortenedStroke_1[_i];
                 ctx.arc(point[0], point[1], 60, 0, Math.PI * 2);
                 ctx.fill();
             }
@@ -73,6 +80,23 @@ var Graphics;
         ctx.stroke();
     }
     Graphics.update = update;
+    function replaceWithLine() {
+        var imageToDraw = new Image();
+        imageToDraw.src = whiteboardHistory[whiteboardHistory.length - 1 - historyLocation];
+        imageToDraw.onload = function () {
+            ctx.drawImage(imageToDraw, 0, 0);
+            ctx.beginPath();
+            ctx.moveTo(stroke[0][0], stroke[0][1]);
+            ctx.lineTo(stroke[stroke.length - 1][0], stroke[stroke.length - 1][1]);
+            ctx.stroke();
+            stroke = [];
+            strokes++;
+            whiteboardHistory.splice(whiteboardHistory.length - historyLocation);
+            historyLocation = 0;
+            whiteboardHistory.push(canvas.toDataURL());
+        };
+    }
+    Graphics.replaceWithLine = replaceWithLine;
     function exportImage(width, height, quality) {
         if (width === void 0) { width = 800; }
         if (height === void 0) { height = 600; }
@@ -115,6 +139,7 @@ var Graphics;
 var Functionality;
 (function (Functionality) {
     function undo() {
+        closeBrushMenu();
         if (whiteboardHistory.length - historyLocation > 1) {
             var imageToDraw_1 = new Image();
             historyLocation++;
@@ -125,6 +150,7 @@ var Functionality;
     }
     Functionality.undo = undo;
     function redo() {
+        closeBrushMenu();
         if (historyLocation > 0) {
             var imageToDraw_2 = new Image();
             historyLocation--;
@@ -145,32 +171,63 @@ var Functionality;
         ];
     }
     Functionality.getCoords = getCoords;
-    function selectColor() {
-        if (tool === "brush")
-            document.querySelector("input[type='color']").click();
+    function closeBrushMenu() {
+        var extendedBrush = document.querySelector("div.extendedBrush");
+        extendedBrush.classList.remove("enlarged");
+    }
+    Functionality.closeBrushMenu = closeBrushMenu;
+    function openBrushMenu() {
+        if (tool === "brush") {
+            var extendedBrush = document.querySelector("div.extendedBrush");
+            if (extendedBrush.classList.contains("enlarged"))
+                extendedBrush.classList.remove("enlarged");
+            else
+                extendedBrush.classList.add("enlarged");
+        }
         else {
             tool = "brush";
             document.querySelector("div.toolbar").className = "toolbar brush";
         }
     }
-    Functionality.selectColor = selectColor;
+    Functionality.openBrushMenu = openBrushMenu;
     function selectEraser() {
+        closeBrushMenu();
         tool = "eraser";
         eraserAuto = false;
         document.querySelector("div.toolbar").className = "toolbar eraser";
     }
     Functionality.selectEraser = selectEraser;
+    function selectColor() {
+        document.querySelector("input[type='color']").click();
+    }
+    Functionality.selectColor = selectColor;
     function updateStrokeStyle() {
         var input = document.querySelector("input[type='color']");
         document.querySelector("#colorIcon").style.color = input.value;
         color = input.value;
     }
     Functionality.updateStrokeStyle = updateStrokeStyle;
+    function toggleLineWidth() {
+        if (lineWidthMultiplier !== 2)
+            lineWidthMultiplier = lineWidthMultiplier * 2;
+        else
+            lineWidthMultiplier = 0.5;
+        var iconScale = 0.8 + (0.2 * Math.log2(lineWidthMultiplier));
+        document.querySelector("#widthIcon").style.transform = "scale(" + iconScale + ")";
+    }
+    Functionality.toggleLineWidth = toggleLineWidth;
+    function toggleStraightLine() {
+        straightLine = !straightLine;
+        document.querySelector("#straightIcon").style.opacity = straightLine ? "1" : ".2";
+    }
+    Functionality.toggleStraightLine = toggleStraightLine;
     function forcePaste() {
+        closeBrushMenu();
         navigator.clipboard.read().then(function (data) { Events.handlePasteButton(data); });
     }
     Functionality.forcePaste = forcePaste;
     function forceCopy() {
+        closeBrushMenu();
         canvas.toBlob(function (blob) {
             var _a;
             navigator.clipboard.write([new ClipboardItem((_a = {}, _a[blob.type] = blob, _a))]);
@@ -178,6 +235,7 @@ var Functionality;
     }
     Functionality.forceCopy = forceCopy;
     function clearBoard() {
+        closeBrushMenu();
         Swal.fire({
             icon: "question",
             title: "Are you sure you want to clear your board?",
@@ -200,25 +258,28 @@ var Functionality;
     function placeToolbar() {
         var toolbar = document.querySelector("div.toolbar");
         var colorInput = document.querySelector("input[type='color']");
+        var extendedToolbar = document.querySelector("div.extended.extendedBrush");
         var canvasRect = canvas.getBoundingClientRect();
         if (window.matchMedia("(orientation: landscape)").matches && (!Client.Chat.visible || window.innerWidth > window.innerHeight * 1.5)) {
             toolbar.style.top = canvasRect.y + 40 + "px";
-            colorInput.style.top = canvasRect.y + 40 + "px";
+            colorInput.style.top = canvasRect.y + 80 + "px";
             toolbar.style.left = canvasRect.x + canvasRect.width + "px";
             colorInput.style.left = canvasRect.x + canvasRect.width + "px";
             toolbar.style.height = "unset";
             toolbar.style.width = "50px";
             toolbar.style.borderRadius = "0 5px 5px 0";
+            extendedToolbar.classList.remove("portrait");
         }
         else {
             toolbar.style.top = canvasRect.y + canvasRect.height + "px";
             colorInput.style.top = canvasRect.y + canvasRect.height + "px";
-            toolbar.style.left = canvasRect.x + 40 + "px";
-            colorInput.style.left = canvasRect.x + 40 + "px";
+            toolbar.style.left = canvasRect.x + 30 + "px";
+            colorInput.style.left = canvasRect.x + 80 + "px";
             toolbar.style.height = "35px";
-            toolbar.style.width = canvasRect.width - 80 + "px";
+            toolbar.style.width = canvasRect.width - 60 + "px";
             toolbar.style.borderRadius = "0 0 10px 10px";
             toolbar.style.paddingTop = "8px";
+            extendedToolbar.classList.add("portrait");
         }
         var main = document.querySelector("div.main");
         canvas.style.maxHeight = "min(1200px, " + main.clientWidth * 0.675 + "px)";
@@ -234,39 +295,49 @@ var Events;
         if (pointerId === -1 && (e.pressure !== 0 || e.buttons === 1))
             pointerId = e.pointerId;
         if (pointerId === e.pointerId) {
-            if (surfaceMode) {
-                if (e.buttons === 32) {
-                    tool = "eraser";
-                    eraserAuto = true;
-                    document.querySelector("div.toolbar").className = "toolbar eraser";
-                }
-                else if (eraserAuto) {
-                    tool = "brush";
-                    document.querySelector("div.toolbar").className = "toolbar brush";
-                }
+            if (!straightLine)
+                Functionality.closeBrushMenu();
+            if (e.buttons === 32) {
+                tool = "eraser";
+                eraserAuto = true;
+                document.querySelector("div.toolbar").className = "toolbar eraser";
             }
-            if (e.pointerType === "pen" && navigator.userAgent.indexOf("Firefox") === -1 && e.pressure !== 0)
-                ctx.lineWidth = lineWidth * e.pressure;
+            else if (eraserAuto) {
+                tool = "brush";
+                document.querySelector("div.toolbar").className = "toolbar brush";
+            }
+            if (e.pointerType === "pen" && navigator.userAgent.indexOf("Firefox") === -1 && e.pressure !== 0) {
+                ctx.lineWidth = lineWidth * e.pressure * lineWidthMultiplier;
+            }
             else
-                ctx.lineWidth = lineWidth;
+                ctx.lineWidth = lineWidth * lineWidthMultiplier;
             stroke.push(Functionality.getCoords(e.pageX, e.pageY));
-            if (stroke.length >= 5)
-                stroke.splice(0, 1);
+            //if (stroke.length >= 5) stroke.splice(0, 1);
             Graphics.update();
         }
     }
     Events.handlePointerMove = handlePointerMove;
     function handlePointerUp(e) {
-        e.preventDefault();
-        if (pointerId === e.pointerId) {
-            pointerId = -1;
-            stroke = [];
-            strokes++;
-            whiteboardHistory.splice(whiteboardHistory.length - historyLocation);
-            historyLocation = 0;
-            whiteboardHistory.push(canvas.toDataURL());
-            Client.analytics.setUserProperties({ inputType: e.pointerType });
-        }
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                e.preventDefault();
+                if (pointerId === e.pointerId) {
+                    pointerId = -1;
+                    if (straightLine) {
+                        Graphics.replaceWithLine();
+                    }
+                    else {
+                        stroke = [];
+                        strokes++;
+                        whiteboardHistory.splice(whiteboardHistory.length - historyLocation);
+                        historyLocation = 0;
+                        whiteboardHistory.push(canvas.toDataURL());
+                    }
+                    Client.analytics.setUserProperties({ inputType: e.pointerType });
+                }
+                return [2 /*return*/];
+            });
+        });
     }
     Events.handlePointerUp = handlePointerUp;
     function handlePasteHotkey(e) {
