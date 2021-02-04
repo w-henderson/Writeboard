@@ -124,6 +124,52 @@ namespace UI {
     });
   }
 
+  function updateLatestUpdates() {
+    let updateList: HTMLUListElement = document.querySelector("#updateList");
+
+    window.fetch("https://api.github.com/repos/w-henderson/Writeboard/commits")
+      .then(data => {
+        if (data.ok) return data.json();
+        else {
+          updateList.innerHTML = "<li>An error occurred. This has been automatically reported to us, so we'll work on fixing it right away!</li>";
+          firebase.analytics().logEvent("latestUpdatesError", { "errorType": "404" });
+          return false;
+        }
+      })
+      .then(data => {
+        if (!data) return;
+        updateList.innerHTML = "";
+
+        for (let commit of data) {
+          let commitMessage: string = commit.commit.message;
+          if (commitMessage.substr(0, 20) === "Merge pull request #") continue; // Ignore merge commits
+          else commitMessage = commitMessage.split("\n")[0];
+
+          let commitDate = new Date(commit.commit.author.date);
+          let commitDateString = commitDate.toLocaleDateString() + ": ";
+
+          let li = document.createElement("li");
+          let a = document.createElement("a");
+          let date = document.createTextNode(commitDateString);
+          a.href = commit.html_url;
+          a.target = "_blank";
+          a.textContent = commitMessage;
+          li.appendChild(date);
+          li.appendChild(a);
+          updateList.appendChild(li);
+
+          if (updateList.childElementCount === 5) return;
+        }
+      })
+      .catch((e) => {
+        updateList.innerHTML = "<li>An error occurred. This has been automatically reported to us, so we'll work on fixing it right away!</li>";
+        firebase.analytics().logEvent("latestUpdatesError", { errorType: "unknown" });
+      });
+  }
+
   window.onresize = updateSizing;
-  window.onload = updateSizing;
+  window.onload = () => {
+    updateSizing();
+    updateLatestUpdates();
+  };
 }

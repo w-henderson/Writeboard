@@ -165,6 +165,51 @@ var UI;
             div.style.left = "calc(50% - " + height * 2 + "px)";
         });
     }
+    function updateLatestUpdates() {
+        var updateList = document.querySelector("#updateList");
+        window.fetch("https://api.github.com/repos/w-henderson/Writeboard/commits")
+            .then(function (data) {
+            if (data.ok)
+                return data.json();
+            else {
+                updateList.innerHTML = "<li>An error occurred. This has been automatically reported to us, so we'll work on fixing it right away!</li>";
+                firebase.analytics().logEvent("latestUpdatesError", { "errorType": "404" });
+                return false;
+            }
+        })
+            .then(function (data) {
+            if (!data)
+                return;
+            updateList.innerHTML = "";
+            for (var _i = 0, data_1 = data; _i < data_1.length; _i++) {
+                var commit = data_1[_i];
+                var commitMessage = commit.commit.message;
+                if (commitMessage.substr(0, 20) === "Merge pull request #")
+                    continue; // Ignore merge commits
+                else
+                    commitMessage = commitMessage.split("\n")[0];
+                var commitDate = new Date(commit.commit.author.date);
+                var commitDateString = commitDate.toLocaleDateString() + ": ";
+                var li = document.createElement("li");
+                var a = document.createElement("a");
+                var date = document.createTextNode(commitDateString);
+                a.href = commit.html_url;
+                a.target = "_blank";
+                a.textContent = commitMessage;
+                li.appendChild(date);
+                li.appendChild(a);
+                updateList.appendChild(li);
+                if (updateList.childElementCount === 5)
+                    return;
+            }
+        })["catch"](function (e) {
+            updateList.innerHTML = "<li>An error occurred. This has been automatically reported to us, so we'll work on fixing it right away!</li>";
+            firebase.analytics().logEvent("latestUpdatesError", { errorType: "unknown" });
+        });
+    }
     window.onresize = updateSizing;
-    window.onload = updateSizing;
+    window.onload = function () {
+        updateSizing();
+        updateLatestUpdates();
+    };
 })(UI || (UI = {}));
