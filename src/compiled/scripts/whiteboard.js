@@ -149,7 +149,7 @@ var Functionality;
     Functionality.getCoords = getCoords;
     function closeBrushMenu() {
         var extendedBrush = document.querySelector("div.extendedBrush");
-        extendedBrush.className = "extended extendedBrush";
+        extendedBrush.classList.remove("enlarged");
     }
     Functionality.closeBrushMenu = closeBrushMenu;
     function openBrushMenu() {

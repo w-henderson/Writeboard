@@ -114,7 +114,7 @@ namespace Functionality {
 
   export function closeBrushMenu() {
     let extendedBrush: HTMLDivElement = document.querySelector("div.extendedBrush");
-    extendedBrush.className = "extended extendedBrush";
+    extendedBrush.classList.remove("enlarged");
   }
 
   export function openBrushMenu() {
