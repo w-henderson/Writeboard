@@ -10,6 +10,7 @@ var lineWidth = 10;
 var lineWidthMultiplier = 1;
 var color = "#ffffff";
 var tool = "brush";
+var straightLine = false;
 
 var eraserAuto = false;
 
@@ -25,18 +26,41 @@ namespace Graphics {
   export function update(quality = 20) {
     if (stroke.length < 2) return;
 
+    let shortenedStroke: number[][];
+    if (stroke.length >= 5) shortenedStroke = stroke.slice(stroke.length - 5, stroke.length);
+    else shortenedStroke = stroke;
+
     ctx.beginPath();
     ctx.strokeStyle = tool === "brush" ? color : "#1f2324";
-    ctx.moveTo(stroke[0][0], stroke[0][1]);
+    ctx.moveTo(shortenedStroke[0][0], shortenedStroke[0][1]);
 
-    if (tool === "brush") (<any>ctx).curve(stroke.flat(), 0.5, quality);
-    else {
-      for (let point of stroke) {
+    if (tool === "brush") {
+      (<any>ctx).curve(shortenedStroke.flat(), 0.5, quality)
+    } else {
+      for (let point of shortenedStroke) {
         ctx.arc(point[0], point[1], 60, 0, Math.PI * 2);
         ctx.fill();
       }
     }
     ctx.stroke();
+  }
+
+  export function replaceWithLine() {
+    let imageToDraw = new Image();
+    imageToDraw.src = whiteboardHistory[whiteboardHistory.length - 1 - historyLocation];
+    imageToDraw.onload = () => {
+      ctx.drawImage(imageToDraw, 0, 0);
+      ctx.beginPath();
+      ctx.moveTo(stroke[0][0], stroke[0][1]);
+      ctx.lineTo(stroke[stroke.length - 1][0], stroke[stroke.length - 1][1]);
+      ctx.stroke();
+
+      stroke = [];
+      strokes++;
+      whiteboardHistory.splice(whiteboardHistory.length - historyLocation);
+      historyLocation = 0;
+      whiteboardHistory.push(canvas.toDataURL());
+    }
   }
 
   export function exportImage(width = 800, height = 600, quality = 0.5): string {
@@ -153,6 +177,11 @@ namespace Functionality {
     (<HTMLElement>document.querySelector("#widthIcon")).style.transform = `scale(${iconScale})`;
   }
 
+  export function toggleStraightLine() {
+    straightLine = !straightLine;
+    (<HTMLElement>document.querySelector("#straightIcon")).style.opacity = straightLine ? "1" : ".2";
+  }
+
   export function forcePaste() {
     closeBrushMenu();
     (<any>navigator.clipboard).read().then((data) => { Events.handlePasteButton(data) });
@@ -226,7 +255,7 @@ namespace Events {
     e.preventDefault();
     if (pointerId === -1 && (e.pressure !== 0 || e.buttons === 1)) pointerId = e.pointerId;
     if (pointerId === e.pointerId) {
-      Functionality.closeBrushMenu();
+      if (!straightLine) Functionality.closeBrushMenu();
 
       if (e.buttons === 32) {
         tool = "eraser";
@@ -241,21 +270,25 @@ namespace Events {
         ctx.lineWidth = lineWidth * e.pressure * lineWidthMultiplier;
       } else ctx.lineWidth = lineWidth * lineWidthMultiplier;
       stroke.push(Functionality.getCoords(e.pageX, e.pageY));
-      if (stroke.length >= 5) stroke.splice(0, 1);
+      //if (stroke.length >= 5) stroke.splice(0, 1);
       Graphics.update();
     }
   }
 
-  export function handlePointerUp(e: PointerEvent) {
+  export async function handlePointerUp(e: PointerEvent) {
     e.preventDefault();
     if (pointerId === e.pointerId) {
       pointerId = -1;
-      stroke = [];
-      strokes++;
-      whiteboardHistory.splice(whiteboardHistory.length - historyLocation);
-      historyLocation = 0;
-      whiteboardHistory.push(canvas.toDataURL());
-      Client.analytics.setUserProperties({ inputType: e.pointerType })
+      if (straightLine) {
+        Graphics.replaceWithLine();
+      } else {
+        stroke = [];
+        strokes++;
+        whiteboardHistory.splice(whiteboardHistory.length - historyLocation);
+        historyLocation = 0;
+        whiteboardHistory.push(canvas.toDataURL());
+      }
+      Client.analytics.setUserProperties({ inputType: e.pointerType });
     }
   }
 
