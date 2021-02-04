@@ -155,7 +155,10 @@ var Functionality;
     function openBrushMenu() {
         if (tool === "brush") {
             var extendedBrush = document.querySelector("div.extendedBrush");
-            extendedBrush.className = extendedBrush.classList.contains("enlarged") ? "extended extendedBrush" : "extended extendedBrush enlarged";
+            if (extendedBrush.classList.contains("enlarged"))
+                extendedBrush.classList.remove("enlarged");
+            else
+                extendedBrush.classList.add("enlarged");
         }
         else {
             tool = "brush";
@@ -175,7 +178,6 @@ var Functionality;
     }
     Functionality.selectColor = selectColor;
     function updateStrokeStyle() {
-        closeBrushMenu();
         var input = document.querySelector("input[type='color']");
         document.querySelector("#colorIcon").style.color = input.value;
         color = input.value;
@@ -218,6 +220,7 @@ var Functionality;
     function placeToolbar() {
         var toolbar = document.querySelector("div.toolbar");
         var colorInput = document.querySelector("input[type='color']");
+        var extendedToolbar = document.querySelector("div.extended.extendedBrush");
         var canvasRect = canvas.getBoundingClientRect();
         if (window.matchMedia("(orientation: landscape)").matches && (!Client.Chat.visible || window.innerWidth > window.innerHeight * 1.5)) {
             toolbar.style.top = canvasRect.y + 40 + "px";
@@ -227,6 +230,7 @@ var Functionality;
             toolbar.style.height = "unset";
             toolbar.style.width = "50px";
             toolbar.style.borderRadius = "0 5px 5px 0";
+            extendedToolbar.classList.remove("portrait");
         }
         else {
             toolbar.style.top = canvasRect.y + canvasRect.height + "px";
@@ -237,6 +241,7 @@ var Functionality;
             toolbar.style.width = canvasRect.width - 60 + "px";
             toolbar.style.borderRadius = "0 0 10px 10px";
             toolbar.style.paddingTop = "8px";
+            extendedToolbar.classList.add("portrait");
         }
         var main = document.querySelector("div.main");
         canvas.style.maxHeight = "min(1200px, " + main.clientWidth * 0.675 + "px)";

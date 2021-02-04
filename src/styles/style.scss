@@ -138,7 +138,7 @@ div.main {
                 padding: 10px 0;
             }
 
-            @media (orientation: portrait) {
+            &.portrait {
                 display: inline-block;
                 width: 0px;
                 height: 32px;

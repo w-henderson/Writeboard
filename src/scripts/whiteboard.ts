@@ -120,7 +120,8 @@ namespace Functionality {
   export function openBrushMenu() {
     if (tool === "brush") {
       let extendedBrush: HTMLDivElement = document.querySelector("div.extendedBrush");
-      extendedBrush.className = extendedBrush.classList.contains("enlarged") ? "extended extendedBrush" : "extended extendedBrush enlarged";
+      if (extendedBrush.classList.contains("enlarged")) extendedBrush.classList.remove("enlarged");
+      else extendedBrush.classList.add("enlarged");
     } else {
       tool = "brush";
       document.querySelector("div.toolbar").className = "toolbar brush";
@@ -139,7 +140,6 @@ namespace Functionality {
   }
 
   export function updateStrokeStyle() {
-    closeBrushMenu();
     let input = (<HTMLInputElement>document.querySelector("input[type='color']"));
     (<HTMLElement>document.querySelector("#colorIcon")).style.color = input.value;
     color = input.value;
@@ -181,6 +181,7 @@ namespace Functionality {
   export function placeToolbar() {
     let toolbar: HTMLDivElement = document.querySelector("div.toolbar");
     let colorInput: HTMLInputElement = document.querySelector("input[type='color']");
+    let extendedToolbar: HTMLDivElement = document.querySelector("div.extended.extendedBrush");
     let canvasRect = canvas.getBoundingClientRect();
 
     if (window.matchMedia("(orientation: landscape)").matches && (!Client.Chat.visible || window.innerWidth > window.innerHeight * 1.5)) {
@@ -191,6 +192,7 @@ namespace Functionality {
       toolbar.style.height = "unset";
       toolbar.style.width = "50px";
       toolbar.style.borderRadius = "0 5px 5px 0";
+      extendedToolbar.classList.remove("portrait");
     } else {
       toolbar.style.top = `${canvasRect.y + canvasRect.height}px`;
       colorInput.style.top = `${canvasRect.y + canvasRect.height}px`;
@@ -200,6 +202,7 @@ namespace Functionality {
       toolbar.style.width = `${canvasRect.width - 60}px`;
       toolbar.style.borderRadius = "0 0 10px 10px";
       toolbar.style.paddingTop = "8px";
+      extendedToolbar.classList.add("portrait");
     }
 
     let main: HTMLDivElement = document.querySelector("div.main");
