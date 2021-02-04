@@ -7,10 +7,10 @@ var whiteboardHistory: string[] = [];
 var historyLocation = 0;
 
 var lineWidth = 10;
+var lineWidthMultiplier = 1;
 var color = "#ffffff";
 var tool = "brush";
 
-var surfaceMode = true;
 var eraserAuto = false;
 
 ctx.lineWidth = lineWidth;
@@ -145,6 +145,14 @@ namespace Functionality {
     color = input.value;
   }
 
+  export function toggleLineWidth() {
+    if (lineWidthMultiplier !== 2) lineWidthMultiplier = lineWidthMultiplier * 2;
+    else lineWidthMultiplier = 0.5;
+
+    let iconScale = 0.8 + (0.2 * Math.log2(lineWidthMultiplier));
+    (<HTMLElement>document.querySelector("#widthIcon")).style.transform = `scale(${iconScale})`;
+  }
+
   export function forcePaste() {
     closeBrushMenu();
     (<any>navigator.clipboard).read().then((data) => { Events.handlePasteButton(data) });
@@ -220,19 +228,18 @@ namespace Events {
     if (pointerId === e.pointerId) {
       Functionality.closeBrushMenu();
 
-      if (surfaceMode) {
-        if (e.buttons === 32) {
-          tool = "eraser";
-          eraserAuto = true;
-          document.querySelector("div.toolbar").className = "toolbar eraser";
-        } else if (eraserAuto) {
-          tool = "brush";
-          document.querySelector("div.toolbar").className = "toolbar brush";
-        }
+      if (e.buttons === 32) {
+        tool = "eraser";
+        eraserAuto = true;
+        document.querySelector("div.toolbar").className = "toolbar eraser";
+      } else if (eraserAuto) {
+        tool = "brush";
+        document.querySelector("div.toolbar").className = "toolbar brush";
       }
 
-      if (e.pointerType === "pen" && navigator.userAgent.indexOf("Firefox") === -1 && e.pressure !== 0) ctx.lineWidth = lineWidth * e.pressure;
-      else ctx.lineWidth = lineWidth;
+      if (e.pointerType === "pen" && navigator.userAgent.indexOf("Firefox") === -1 && e.pressure !== 0) {
+        ctx.lineWidth = lineWidth * e.pressure * lineWidthMultiplier;
+      } else ctx.lineWidth = lineWidth * lineWidthMultiplier;
       stroke.push(Functionality.getCoords(e.pageX, e.pageY));
       if (stroke.length >= 5) stroke.splice(0, 1);
       Graphics.update();

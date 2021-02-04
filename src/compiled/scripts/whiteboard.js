@@ -42,9 +42,9 @@ var strokes = 0;
 var whiteboardHistory = [];
 var historyLocation = 0;
 var lineWidth = 10;
+var lineWidthMultiplier = 1;
 var color = "#ffffff";
 var tool = "brush";
-var surfaceMode = true;
 var eraserAuto = false;
 ctx.lineWidth = lineWidth;
 ctx.lineCap = "round";
@@ -183,6 +183,15 @@ var Functionality;
         color = input.value;
     }
     Functionality.updateStrokeStyle = updateStrokeStyle;
+    function toggleLineWidth() {
+        if (lineWidthMultiplier !== 2)
+            lineWidthMultiplier = lineWidthMultiplier * 2;
+        else
+            lineWidthMultiplier = 0.5;
+        var iconScale = 0.8 + (0.2 * Math.log2(lineWidthMultiplier));
+        document.querySelector("#widthIcon").style.transform = "scale(" + iconScale + ")";
+    }
+    Functionality.toggleLineWidth = toggleLineWidth;
     function forcePaste() {
         closeBrushMenu();
         navigator.clipboard.read().then(function (data) { Events.handlePasteButton(data); });
@@ -258,21 +267,20 @@ var Events;
             pointerId = e.pointerId;
         if (pointerId === e.pointerId) {
             Functionality.closeBrushMenu();
-            if (surfaceMode) {
-                if (e.buttons === 32) {
-                    tool = "eraser";
-                    eraserAuto = true;
-                    document.querySelector("div.toolbar").className = "toolbar eraser";
-                }
-                else if (eraserAuto) {
-                    tool = "brush";
-                    document.querySelector("div.toolbar").className = "toolbar brush";
-                }
+            if (e.buttons === 32) {
+                tool = "eraser";
+                eraserAuto = true;
+                document.querySelector("div.toolbar").className = "toolbar eraser";
             }
-            if (e.pointerType === "pen" && navigator.userAgent.indexOf("Firefox") === -1 && e.pressure !== 0)
-                ctx.lineWidth = lineWidth * e.pressure;
+            else if (eraserAuto) {
+                tool = "brush";
+                document.querySelector("div.toolbar").className = "toolbar brush";
+            }
+            if (e.pointerType === "pen" && navigator.userAgent.indexOf("Firefox") === -1 && e.pressure !== 0) {
+                ctx.lineWidth = lineWidth * e.pressure * lineWidthMultiplier;
+            }
             else
-                ctx.lineWidth = lineWidth;
+                ctx.lineWidth = lineWidth * lineWidthMultiplier;
             stroke.push(Functionality.getCoords(e.pageX, e.pageY));
             if (stroke.length >= 5)
                 stroke.splice(0, 1);
