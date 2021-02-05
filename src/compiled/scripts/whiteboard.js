@@ -323,7 +323,7 @@ var Events;
                 e.preventDefault();
                 if (pointerId === e.pointerId) {
                     pointerId = -1;
-                    if (straightLine) {
+                    if (straightLine && tool === "brush") {
                         Graphics.replaceWithLine();
                     }
                     else {
