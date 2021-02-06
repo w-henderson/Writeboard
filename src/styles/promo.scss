@@ -42,6 +42,54 @@ input.swal2-file:focus, input.swal2-input:focus, textarea.swal2-textarea:focus, 
     box-shadow: 0 0 0 3px rgba(226, 105, 89, 0.5) !important;
 }
 
+div.navigation {
+    position: absolute;
+    width: 100%;
+    height: 10vh;
+    z-index: 2;
+    color: var(--text-color);
+    font-weight: 700;
+    box-sizing: border-box;
+    text-transform: capitalize;
+    padding: 2vh;
+    font-size: 3vh;
+    white-space: nowrap;
+    overflow: auto hidden;
+    text-align: right;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0));
+
+    @media (orientation: portrait) {
+        display: none;
+    }
+
+    span a {
+        float: left;
+        font-weight: 700 !important;
+    }
+
+    a:link, a:visited, a:active, a {
+        color: var(--text-color);
+        margin: 0 1.5vh;
+        cursor: pointer;
+        transition: color 150ms;
+    }
+
+    a:hover {
+        color: var(--alternate-accent);
+    }
+
+    a::after {
+        content: "\2022";
+        color: var(--text-color);
+        margin: 0 -2vh 0 2vh;
+    }
+
+    a:nth-last-child(1)::after {
+        content: "";
+        margin: initial;
+    }
+}
+
 div.hero {
     display: flex;
     flex-direction: column;
@@ -139,7 +187,7 @@ section {
     }
 }
 
-section:nth-child(2n+1) {
+section:nth-child(4n+1) {
     background-color: var(--background-lighter);
 }
 

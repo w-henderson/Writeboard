@@ -318,26 +318,21 @@ var Events;
     }
     Events.handlePointerMove = handlePointerMove;
     function handlePointerUp(e) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                e.preventDefault();
-                if (pointerId === e.pointerId) {
-                    pointerId = -1;
-                    if (straightLine && tool === "brush") {
-                        Graphics.replaceWithLine();
-                    }
-                    else {
-                        stroke = [];
-                        strokes++;
-                        whiteboardHistory.splice(whiteboardHistory.length - historyLocation);
-                        historyLocation = 0;
-                        whiteboardHistory.push(canvas.toDataURL());
-                    }
-                    Client.analytics.setUserProperties({ inputType: e.pointerType });
-                }
-                return [2 /*return*/];
-            });
-        });
+        e.preventDefault();
+        if (pointerId === e.pointerId) {
+            pointerId = -1;
+            if (straightLine && tool === "brush") {
+                Graphics.replaceWithLine();
+            }
+            else {
+                stroke = [];
+                strokes++;
+                whiteboardHistory.splice(whiteboardHistory.length - historyLocation);
+                historyLocation = 0;
+                whiteboardHistory.push(canvas.toDataURL());
+            }
+            Client.analytics.setUserProperties({ inputType: e.pointerType });
+        }
     }
     Events.handlePointerUp = handlePointerUp;
     function handlePasteHotkey(e) {

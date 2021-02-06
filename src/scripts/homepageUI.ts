@@ -9,6 +9,12 @@ namespace UI {
     else return `${r}.html`;
   }
 
+  export function scrollToAnchor(name: string) {
+    document.querySelector(".navigation").className = "navigation";
+    document.querySelector(`a[name="${name}"]`).scrollIntoView({ behavior: "smooth" });
+    window.history.replaceState(null, null, `#${name}`);
+  }
+
   export function joinRoom() {
     Swal.fire({
       title: 'Enter the room ID.',

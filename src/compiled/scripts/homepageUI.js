@@ -45,6 +45,12 @@ var UI;
         else
             return r + ".html";
     }
+    function scrollToAnchor(name) {
+        document.querySelector(".navigation").className = "navigation";
+        document.querySelector("a[name=\"" + name + "\"]").scrollIntoView({ behavior: "smooth" });
+        window.history.replaceState(null, null, "#" + name);
+    }
+    UI.scrollToAnchor = scrollToAnchor;
     function joinRoom() {
         Swal.fire({
             title: 'Enter the room ID.',

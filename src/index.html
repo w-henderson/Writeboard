@@ -19,6 +19,14 @@
 </head>
 
 <body>
+    <div class="navigation">
+        <span><a href="/">Writeboard</a></span>
+        <a onclick="UI.scrollToAnchor('about')">About Us</a>
+        <a onclick="UI.scrollToAnchor('features')">Features</a>
+        <a onclick="UI.scrollToAnchor('updates')">Updates</a>
+        <a onclick="UI.scrollToAnchor('pricing')" class="bold">Pricing</a>
+    </div>
+
     <div class="hero">
         <img src="images/logo.png" alt="Writeboard logo">
         <h1>Writeboard</h1>
@@ -40,11 +48,13 @@
         <img src="images/banner/laptop.png" alt="Laptop mockup">
     </div>
 
+    <a name="about"></a>
     <section style="padding-top:max(15vh,12vw);animation: animateInSection 1500ms forwards;">
         <h1>What is Writeboard?</h1>
         Writeboard is a simple yet stylish whiteboard web app which allows any team to share their ideas easily and instantly. Brought to you by the developers of the critically-acclaimed education apps Sadlet and Kascreech, Writeboard offers a user-friendly and intuitive platform for collaboration and communication, powered by Google's Firebase backend system.
     </section>
 
+    <a name="features"></a>
     <section>
         <h1>Features</h1>
         Here at Writeboard, we believe that everyone should have a top-quality collaborative experience, which is why we built Writeboard from the ground up using state-of-the-art web technologies to optimise the user's experience. Here are just a few features of Writeboard which we believe makes it a true contender in the world of team software.
@@ -58,6 +68,7 @@
         </ul>
     </section>
 
+    <a name="updates"></a>
     <section>
         <h1>Latest Updates</h1>
         We're constantly updating Writeboard to bring you the best possible experience. This involves fixing bugs, adding new features, and more. Here are the latest few things we've changed!
@@ -66,6 +77,7 @@
         </ul>
     </section>
 
+    <a name="pricing"></a>
     <section>
         <h1>How much does Writeboard cost?</h1>
         The core features of Writeboard are and will always be completely free. Our hosting, however, is not, so we have a single advertisment on this page in order to break even. If you want to support the development of Writeboard, please make sure you turn your ad blocker off!

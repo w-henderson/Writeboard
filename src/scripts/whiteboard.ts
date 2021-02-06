@@ -275,7 +275,7 @@ namespace Events {
     }
   }
 
-  export async function handlePointerUp(e: PointerEvent) {
+  export function handlePointerUp(e: PointerEvent) {
     e.preventDefault();
     if (pointerId === e.pointerId) {
       pointerId = -1;
