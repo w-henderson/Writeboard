@@ -1,35 +1,90 @@
-var firebase: any;
-var Swal: any;
+var firebase;
+var Swal;
 
-namespace Client {
-  var database = firebase.database();
-  export var analytics = firebase.analytics();
-  export var roomId = window.location.search.substr(1);
-  export var username;
-  export var userId;
-  export var userRef;
-  var maximisedRef;
-  var messageRef;
-  var titleRef;
-  var ref;
+let wb: any = {}; // main Writeboard object
 
-  var messageCache: any = {
-    read: 0,
-    data: null
+function initClient() {
+  wb.CANVAS = document.querySelector("canvas");
+  wb.CTX = wb.CANVAS.getContext("2d");
+
+  wb.HISTORY = new WhiteboardHistory();
+  wb.GRAPHICS = new Graphics(wb.CTX, wb.HISTORY);
+  wb.UI = new ClientUI(wb.GRAPHICS);
+  wb.TOOLS = new Tools(wb.GRAPHICS, wb.HISTORY, wb.UI);
+  wb.EVENTS = new Events(wb.GRAPHICS, wb.UI);
+
+  wb.CLIENT = new Client(wb.GRAPHICS);
+  wb.CHAT = new Chat(wb.CLIENT, wb.UI);
+
+  wb.UI.linkChat(wb.CHAT);
+  wb.HISTORY.linkCtx(wb.CTX, wb.UI);
+
+  wb.CLIENT.init(wb.CHAT);
+
+  document.onpaste = (e) => { wb.EVENTS.handlePasteHotkey(e); };
+  document.oncopy = () => { wb.EVENTS.forceCopy(); };
+  window.onresize = () => { wb.UI.placeToolbar(); };
+  wb.UI.placeToolbar();
+
+  wb.CANVAS.onpointermove = (e) => { wb.EVENTS.handlePointerMove(e); };
+  wb.CANVAS.onpointerup = (e) => { wb.EVENTS.handlePointerUp(e); };
+  wb.CANVAS.onpointerout = (e) => { wb.EVENTS.handlePointerUp(e); };
+}
+
+window.onload = initClient;
+
+class Client {
+  database: any;
+  analytics: any;
+  graphics: Graphics;
+  chat: Chat;
+
+  roomId: string;
+  username: string;
+  userId: string;
+  userRef: any;
+  maximisedRef: any;
+  messageRef: any;
+  titleRef: any;
+  ref: any;
+
+  messageCache: {
+    read: number,
+    data: any
   }
 
-  var lastStrokeUpdate = -1;
-  export var maximised = false;
+  lastStrokeUpdate: number;
+  maximised: boolean;
 
-  window.onload = () => {
-    titleRef = database.ref(`rooms/${roomId}/name`);
-    ref = database.ref(`rooms/${roomId}/users`);
+  constructor(graphics: Graphics) {
+    this.database = firebase.database();
+    this.analytics = firebase.analytics();
+    this.graphics = graphics;
+    this.roomId = window.location.search.substr(1);
+    this.lastStrokeUpdate = -1;
+    this.maximised = false;
 
-    titleRef.on("value", updateTitle);
-    (<HTMLInputElement>document.querySelector("input#messageInput")).onkeyup = Chat.sendMessage;
+    this.messageCache = {
+      read: 0,
+      data: null
+    }
   }
 
-  function updateTitle(e) {
+  init(chat: Chat) {
+    this.chat = chat;
+    this.titleRef = this.database.ref(`rooms/${this.roomId}/name`);
+    this.ref = this.database.ref(`rooms/${this.roomId}/users`);
+
+    this.titleRef.on("value", this.updateTitle);
+    (<HTMLInputElement>document.querySelector("input#messageInput")).onkeyup = (e) => { wb.CHAT.sendMessage(e); };
+
+    window.addEventListener("beforeunload", () => {
+      wb.CLIENT.analytics.logEvent("leave", { roomId: wb.CLIENT.roomId, username: wb.CLIENT.username });
+      return wb.CLIENT.userRef.remove().then(() => { return });
+    });
+  }
+
+  updateTitle(e) {
     let data = e.val();
 
     if (data !== null) {
@@ -44,7 +99,7 @@ namespace Client {
         background: "var(--background)",
         showLoaderOnConfirm: true,
         preConfirm: (login) => {
-          return ref.once("value").then((snapshot) => {
+          return wb.CLIENT.ref.once("value").then((snapshot) => {
             if (snapshot.val() !== null && _snakeCase(login) in snapshot.val()) {
               Swal.showValidationMessage("Username already taken!");
               return false;
@@ -59,25 +114,25 @@ namespace Client {
         allowOutsideClick: false
       }).then((result) => {
         if (result.isConfirmed) {
-          username = result.value;
-          userId = _snakeCase(result.value);
+          wb.CLIENT.username = result.value;
+          wb.CLIENT.userId = _snakeCase(result.value);
 
-          analytics.logEvent("join", { roomId, username });
+          wb.CLIENT.analytics.logEvent("join", { roomId: wb.CLIENT.roomId, username: wb.CLIENT.username });
 
-          userRef = database.ref(`rooms/${roomId}/users/${userId}`);
-          userRef.set({
-            name: username,
-            board: Graphics.exportImage(400, 300),
+          wb.CLIENT.userRef = wb.CLIENT.database.ref(`rooms/${wb.CLIENT.roomId}/users/${wb.CLIENT.userId}`);
+          wb.CLIENT.userRef.set({
+            name: wb.CLIENT.username,
+            board: wb.CLIENT.graphics.exportImage(400, 300),
             maximised: false,
             messages: []
           });
 
-          messageRef = database.ref(`rooms/${roomId}/users/${userId}/messages`);
-          maximisedRef = database.ref(`rooms/${roomId}/users/${userId}/maximised`);
-          messageRef.on("value", Chat.messageHandler);
-          maximisedRef.on("value", updateMaximised);
+          wb.CLIENT.messageRef = wb.CLIENT.database.ref(`rooms/${wb.CLIENT.roomId}/users/${wb.CLIENT.userId}/messages`);
+          wb.CLIENT.maximisedRef = wb.CLIENT.database.ref(`rooms/${wb.CLIENT.roomId}/users/${wb.CLIENT.userId}/maximised`);
+          wb.CLIENT.messageRef.on("value", (e) => { wb.CLIENT.chat.messageHandler(e); });
+          wb.CLIENT.maximisedRef.on("value", (e) => { wb.CLIENT.updateMaximised(e); });
 
-          window.setTimeout(updateBoard, 5000);
+          window.setTimeout(() => { wb.CLIENT.updateBoard() }, 5000);
         }
       })
     } else {
@@ -87,111 +142,114 @@ namespace Client {
         icon: "error",
         background: "var(--background)"
       }).then(() => {
-        analytics.logEvent("failJoin", { roomId });
+        wb.CLIENT.analytics.logEvent("failJoin", { roomId: wb.CLIENT.roomId });
         window.location.href = "/";
       });
     }
   }
 
-  function updateBoard(force = false) {
-    if (lastStrokeUpdate !== strokes || force) {
-      userRef.update({
-        board: maximised ? Graphics.exportImage(800, 600, 0.8) : Graphics.exportImage(400, 300)
+  updateBoard(force = false) {
+    if (this.lastStrokeUpdate !== this.graphics.history.strokes || force) {
+      this.userRef.update({
+        board: this.maximised ? this.graphics.exportImage(800, 600, 0.8) : this.graphics.exportImage(400, 300)
       });
-      lastStrokeUpdate = strokes;
+      this.lastStrokeUpdate = this.graphics.history.strokes;
     }
 
-    window.setTimeout(updateBoard, maximised ? 1000 : 5000); // update more frequently if maximised
+    window.setTimeout(() => { wb.CLIENT.updateBoard(); }, this.maximised ? 1000 : 5000); // update more frequently if maximised
   }
 
-  function updateMaximised(e) {
-    maximised = e.val();
-    if (maximised) {
-      updateBoard(true);
+  updateMaximised(e) {
+    this.maximised = e.val();
+    if (this.maximised) {
+      this.updateBoard(true);
     }
   }
+}
 
-  window.addEventListener("beforeunload", () => {
-    analytics.logEvent("leave", { roomId, username });
-    return userRef.remove().then(() => { return });
-  });
+class Chat {
+  client: Client;
+  ui: ClientUI;
+  visible: boolean;
 
-  export namespace Chat {
-    export var visible = false;
+  constructor(client: Client, ui: ClientUI) {
+    this.client = client;
+    this.ui = ui;
+    this.visible = false;
+  }
 
-    export function sendMessage(e) {
-      e.preventDefault();
-      if (e.keyCode !== 13) return;
+  sendMessage(e) {
+    e.preventDefault();
+    if (e.keyCode !== 13) return;
 
-      let input: HTMLInputElement = document.querySelector("input#messageInput");
-      let messageText = input.value;
-      input.value = "";
+    let input: HTMLInputElement = document.querySelector("input#messageInput");
+    let messageText = input.value;
+    input.value = "";
 
-      messageRef.push().set({
-        sender: "user",
-        content: messageText
-      });
-    }
+    this.client.messageRef.push().set({
+      sender: "user",
+      content: messageText
+    });
+  }
 
-    export function updateMessages() {
-      if (visible) {
-        let messagesDiv = document.querySelector("div.messages");
-        messagesDiv.innerHTML = "";
-        if (messageCache.data) {
-          for (let messageId in messageCache.data) {
-            let outerSpan = document.createElement("span");
-            let innerSpan = document.createElement("span");
-            outerSpan.className = messageCache.data[messageId].sender + "Message";
-            innerSpan.textContent = messageCache.data[messageId].content;
-            outerSpan.appendChild(innerSpan);
-            messagesDiv.appendChild(outerSpan);
-          }
-
-          if (messagesDiv.getBoundingClientRect().right === window.innerWidth) {
-            (<HTMLSpanElement>messagesDiv.lastChild).scrollIntoView();
-          }
-          messageCache.read = Object.keys(messageCache.data).length;
+  updateMessages() {
+    if (this.visible) {
+      let messagesDiv = document.querySelector("div.messages");
+      messagesDiv.innerHTML = "";
+      if (this.client.messageCache.data) {
+        for (let messageId in this.client.messageCache.data) {
+          let outerSpan = document.createElement("span");
+          let innerSpan = document.createElement("span");
+          outerSpan.className = this.client.messageCache.data[messageId].sender + "Message";
+          innerSpan.textContent = this.client.messageCache.data[messageId].content;
+          outerSpan.appendChild(innerSpan);
+          messagesDiv.appendChild(outerSpan);
         }
-      }
 
-      let notification: HTMLDivElement = document.querySelector("div.notification");
-      if (messageCache.data && Object.keys(messageCache.data).length > messageCache.read) {
-        let unread = Object.keys(messageCache.data).length - messageCache.read;
-        notification.style.display = "block";
-        notification.textContent = unread.toString();
-      } else {
-        notification.style.display = "none";
+        if (messagesDiv.getBoundingClientRect().right === window.innerWidth) {
+          (<HTMLSpanElement>messagesDiv.lastChild).scrollIntoView();
+        }
+        this.client.messageCache.read = Object.keys(this.client.messageCache.data).length;
       }
     }
 
-    export function messageHandler(e) {
-      messageCache.data = e.val();
-      updateMessages();
+    let notification: HTMLDivElement = document.querySelector("div.notification");
+    if (this.client.messageCache.data && Object.keys(this.client.messageCache.data).length > this.client.messageCache.read) {
+      let unread = Object.keys(this.client.messageCache.data).length - this.client.messageCache.read;
+      notification.style.display = "block";
+      notification.textContent = unread.toString();
+    } else {
+      notification.style.display = "none";
     }
+  }
 
-    export function showChat() {
-      document.querySelector("div.main").className = "main chatShown";
-      document.querySelector("div.clientChat").className = "clientChat chatShown";
-      document.querySelector("div.clientChat i").textContent = "clear";
-      (<HTMLDivElement>document.querySelector("div.clientChat div.toggle")).onclick = hideChat;
-      visible = true;
-      updateMessages();
-      toolbarTransition();
-    }
+  messageHandler(e) {
+    wb.CLIENT.messageCache.data = e.val();
+    wb.CHAT.updateMessages();
+  }
 
-    export function hideChat() {
-      document.querySelector("div.main").className = "main";
-      document.querySelector("div.clientChat").className = "clientChat";
-      document.querySelector("div.clientChat i").textContent = "message";
-      (<HTMLDivElement>document.querySelector("div.clientChat div.toggle")).onclick = showChat;
-      visible = false;
-      toolbarTransition();
-    }
+  showChat() {
+    document.querySelector("div.main").className = "main chatShown";
+    document.querySelector("div.clientChat").className = "clientChat chatShown";
+    document.querySelector("div.clientChat i").textContent = "clear";
+    (<HTMLDivElement>document.querySelector("div.clientChat div.toggle")).onclick = () => { wb.CHAT.hideChat(); };
+    this.visible = true;
+    this.updateMessages();
+    this.toolbarTransition();
+  }
 
-    function toolbarTransition() {
-      window.setInterval(Functionality.placeToolbar, 16.7);
-      window.setTimeout(window.clearInterval, 500);
-    }
+  hideChat() {
+    document.querySelector("div.main").className = "main";
+    document.querySelector("div.clientChat").className = "clientChat";
+    document.querySelector("div.clientChat i").textContent = "message";
+    (<HTMLDivElement>document.querySelector("div.clientChat div.toggle")).onclick = () => { wb.CHAT.showChat(); };
+    this.visible = false;
+    this.toolbarTransition();
+  }
+
+  toolbarTransition() {
+    window.setInterval(() => { wb.UI.placeToolbar(); }, 16.7);
+    window.setTimeout(window.clearInterval, 500);
   }
 }
 

@@ -1,81 +1,134 @@
-var canvas = document.querySelector("canvas");
-var ctx = canvas.getContext("2d");
-var pointerId = -1;
-var stroke: number[][] = [];
-var strokes = 0;
-var whiteboardHistory: string[] = [];
-var historyLocation = 0;
+var Swal;
 
-var lineWidth = 10;
-var lineWidthMultiplier = 1;
-var color = "#ffffff";
-var tool = "brush";
-var straightLine = false;
+class WhiteboardHistory {
+  limit: number;
+  items: string[];
+  strokes: number;
+  location: number;
+  context: CanvasRenderingContext2D;
+  ui: ClientUI;
 
-var eraserAuto = false;
+  constructor() {
+    this.limit = 10;
+    this.items = [];
+    this.strokes = 0;
+    this.location = 0;
+  }
 
-ctx.lineWidth = lineWidth;
-ctx.lineCap = "round";
-ctx.fillStyle = "#1f2324";
-ctx.strokeStyle = "#ffffff";
+  linkCtx(context: CanvasRenderingContext2D, ui: ClientUI) {
+    this.context = context;
+    this.ui = ui;
 
-ctx.fillRect(0, 0, canvas.width, canvas.height);
-whiteboardHistory.push(canvas.toDataURL());
+    this.items.push(this.context.canvas.toDataURL());
+  }
 
-namespace Graphics {
-  export function update(quality = 20) {
+  push(...items: string[]) {
+    this.strokes++;
+    this.items.splice(this.items.length - this.location);
+    this.location = 0;
+    this.items.push(...items);
+  }
+
+  undo() {
+    this.ui.closeBrushMenu();
+    if (this.items.length - this.location > 1) {
+      let imageToDraw = new Image();
+      this.location++;
+      imageToDraw.src = this.items[this.items.length - 1 - this.location];
+      imageToDraw.onload = () => { this.context.drawImage(imageToDraw, 0, 0) }
+      this.strokes--;
+    }
+  }
+
+  redo() {
+    this.ui.closeBrushMenu();
+    if (this.location > 0) {
+      let imageToDraw = new Image();
+      this.location--;
+      imageToDraw.src = this.items[this.items.length - 1 - this.location];
+      imageToDraw.onload = () => { this.context.drawImage(imageToDraw, 0, 0) }
+      this.strokes--;
+    }
+  }
+}
+
+class Graphics {
+  context: CanvasRenderingContext2D;
+  history: WhiteboardHistory;
+  lineWidth: number;
+  lineWidthMultiplier: number;
+  color: string;
+  tool: string;
+  straightLine: boolean;
+  eraserAuto: boolean;
+
+  constructor(context: CanvasRenderingContext2D, history: WhiteboardHistory) {
+    this.context = context;
+    this.history = history;
+    this.lineWidth = 10;
+    this.lineWidthMultiplier = 1;
+    this.color = "#ffffff";
+    this.tool = "brush";
+    this.straightLine = false;
+    this.eraserAuto = false;
+
+    this.context.lineWidth = this.lineWidth;
+    this.context.lineCap = "round";
+    this.context.fillStyle = "#1f2324";
+    this.context.strokeStyle = "#ffffff";
+
+    this.context.fillRect(0, 0, context.canvas.width, context.canvas.height);
+  }
+
+  update(stroke: number[][], quality: number = 20) {
     if (stroke.length < 2) return;
 
     let shortenedStroke: number[][];
     if (stroke.length >= 5) shortenedStroke = stroke.slice(stroke.length - 5, stroke.length);
     else shortenedStroke = stroke;
 
-    ctx.beginPath();
-    ctx.strokeStyle = tool === "brush" ? color : "#1f2324";
-    ctx.moveTo(shortenedStroke[0][0], shortenedStroke[0][1]);
+    this.context.beginPath();
+    this.context.strokeStyle = this.tool === "brush" ? this.color : "#1f2324";
+    this.context.moveTo(shortenedStroke[0][0], shortenedStroke[0][1]);
 
-    if (tool === "brush") {
-      (<any>ctx).curve(shortenedStroke.flat(), 0.5, quality)
+    if (this.tool === "brush") {
+      (<any>this.context).curve(shortenedStroke.flat(), 0.5, quality)
     } else {
       for (let point of shortenedStroke) {
-        ctx.arc(point[0], point[1], 60, 0, Math.PI * 2);
-        ctx.fill();
+        this.context.arc(point[0], point[1], 60, 0, Math.PI * 2);
+        this.context.fill();
       }
     }
-    ctx.stroke();
+    this.context.stroke();
   }
 
-  export function replaceWithLine() {
+  replaceWithLine(stroke: number[][]) {
     let imageToDraw = new Image();
-    imageToDraw.src = whiteboardHistory[whiteboardHistory.length - 1 - historyLocation];
+    imageToDraw.src = this.history[this.history.items.length - 1 - this.history.location];
     imageToDraw.onload = () => {
-      ctx.drawImage(imageToDraw, 0, 0);
-      ctx.beginPath();
-      ctx.moveTo(stroke[0][0], stroke[0][1]);
-      ctx.lineTo(stroke[stroke.length - 1][0], stroke[stroke.length - 1][1]);
-      ctx.stroke();
+      this.context.drawImage(imageToDraw, 0, 0);
+      this.context.beginPath();
+      this.context.moveTo(stroke[0][0], stroke[0][1]);
+      this.context.lineTo(stroke[stroke.length - 1][0], stroke[stroke.length - 1][1]);
+      this.context.stroke();
 
-      stroke = [];
-      strokes++;
-      whiteboardHistory.splice(whiteboardHistory.length - historyLocation);
-      historyLocation = 0;
-      whiteboardHistory.push(canvas.toDataURL());
+      this.history.push(this.context.canvas.toDataURL());
     }
   }
 
-  export function exportImage(width = 800, height = 600, quality = 0.5): string {
-    let tempCanvas = <HTMLCanvasElement>canvas.cloneNode(true);
+  exportImage(width: number = 800, height: number = 600, quality: number = 0.5): string {
+    let tempCanvas = <HTMLCanvasElement>this.context.canvas.cloneNode(true);
     let tempCtx = tempCanvas.getContext("2d");
 
     tempCanvas.width = width;
     tempCanvas.height = height;
 
-    tempCtx.drawImage(canvas, 0, 0, width, height);
+    tempCtx.drawImage(this.context.canvas, 0, 0, width, height);
 
     return tempCanvas.toDataURL("image/jpeg", quality);
   }
 
-  export function addImageToCanvas(dataURL: string) {
+  addImageToCanvas(dataURL: string) {
     let image = new Image();
 
     image.onload = () => {
@@ -96,132 +149,50 @@ namespace Graphics {
       let anchorX = (1600 - width) / 2;
       let anchorY = (1200 - height) / 2;
 
-      ctx.drawImage(image, anchorX, anchorY, width, height);
-      whiteboardHistory.splice(whiteboardHistory.length - historyLocation);
-      historyLocation = 0;
-      whiteboardHistory.push(canvas.toDataURL());
+      this.context.drawImage(image, anchorX, anchorY, width, height);
+      this.history.push(this.context.canvas.toDataURL());
     }
 
     image.src = dataURL;
   }
 }
 
-namespace Functionality {
-  export function undo() {
-    closeBrushMenu();
-    if (whiteboardHistory.length - historyLocation > 1) {
-      let imageToDraw = new Image();
-      historyLocation++;
-      imageToDraw.src = whiteboardHistory[whiteboardHistory.length - 1 - historyLocation];
-      imageToDraw.onload = () => { ctx.drawImage(imageToDraw, 0, 0) }
-      strokes--;
-    }
+class ClientUI {
+  graphics: Graphics;
+  chat: Chat;
+
+  constructor(graphics: Graphics) {
+    this.graphics = graphics;
+    this.graphics.history.ui = this;
   }
 
-  export function redo() {
-    closeBrushMenu();
-    if (historyLocation > 0) {
-      let imageToDraw = new Image();
-      historyLocation--;
-      imageToDraw.src = whiteboardHistory[whiteboardHistory.length - 1 - historyLocation];
-      imageToDraw.onload = () => { ctx.drawImage(imageToDraw, 0, 0) }
-      strokes--;
-    }
+  linkChat(chat: Chat) {
+    this.chat = chat;
   }
 
-  export function getCoords(...screenCoords: number[]): number[] {
-    return [
-      (screenCoords[0] - canvas.getBoundingClientRect().x) * (canvas.width / canvas.getBoundingClientRect().width),
-      (screenCoords[1] - canvas.getBoundingClientRect().y) * (canvas.height / canvas.getBoundingClientRect().height)
-    ]
-  }
-
-  export function closeBrushMenu() {
+  closeBrushMenu() {
     let extendedBrush: HTMLDivElement = document.querySelector("div.extendedBrush");
     extendedBrush.classList.remove("enlarged");
   }
 
-  export function openBrushMenu() {
-    if (tool === "brush") {
+  openBrushMenu() {
+    if (this.graphics.tool === "brush") {
       let extendedBrush: HTMLDivElement = document.querySelector("div.extendedBrush");
       if (extendedBrush.classList.contains("enlarged")) extendedBrush.classList.remove("enlarged");
       else extendedBrush.classList.add("enlarged");
     } else {
-      tool = "brush";
+      this.graphics.tool = "brush";
       document.querySelector("div.toolbar").className = "toolbar brush";
     }
   }
 
-  export function selectEraser() {
-    closeBrushMenu();
-    tool = "eraser";
-    eraserAuto = false;
-    document.querySelector("div.toolbar").className = "toolbar eraser";
-  }
-
-  export function selectColor() {
-    (<HTMLInputElement>document.querySelector("input[type='color']")).click();
-  }
-
-  export function updateStrokeStyle() {
-    let input = (<HTMLInputElement>document.querySelector("input[type='color']"));
-    (<HTMLElement>document.querySelector("#colorIcon")).style.color = input.value;
-    color = input.value;
-  }
-
-  export function toggleLineWidth() {
-    if (lineWidthMultiplier !== 2) lineWidthMultiplier = lineWidthMultiplier * 2;
-    else lineWidthMultiplier = 0.5;
-
-    let iconScale = 0.8 + (0.2 * Math.log2(lineWidthMultiplier));
-    (<HTMLElement>document.querySelector("#widthIcon")).style.transform = `scale(${iconScale})`;
-  }
-
-  export function toggleStraightLine() {
-    straightLine = !straightLine;
-    (<HTMLElement>document.querySelector("#straightIcon")).style.opacity = straightLine ? "1" : ".2";
-  }
-
-  export function forcePaste() {
-    closeBrushMenu();
-    (<any>navigator.clipboard).read().then((data) => { Events.handlePasteButton(data) });
-  }
-
-  export function forceCopy() {
-    closeBrushMenu();
-    canvas.toBlob((blob) => {
-      (<any>navigator.clipboard).write([new ClipboardItem({ [blob.type]: blob })]);
-    });
-  }
-
-  export function clearBoard() {
-    closeBrushMenu();
-    Swal.fire({
-      icon: "question",
-      title: "Are you sure you want to clear your board?",
-      text: "This cannot be undone.",
-      showDenyButton: true,
-      confirmButtonText: `Clear`,
-      denyButtonText: `Don't clear`,
-      background: "var(--background)"
-    }).then((result) => {
-      if (result.isConfirmed) {
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        strokes = 0;
-        whiteboardHistory.splice(whiteboardHistory.length - historyLocation);
-        historyLocation = 0;
-        whiteboardHistory.push(canvas.toDataURL());
-      }
-    });
-  }
-
-  export function placeToolbar() {
+  placeToolbar() {
     let toolbar: HTMLDivElement = document.querySelector("div.toolbar");
     let colorInput: HTMLInputElement = document.querySelector("input[type='color']");
     let extendedToolbar: HTMLDivElement = document.querySelector("div.extended.extendedBrush");
-    let canvasRect = canvas.getBoundingClientRect();
+    let canvasRect = this.graphics.context.canvas.getBoundingClientRect();
 
-    if (window.matchMedia("(orientation: landscape)").matches && (!Client.Chat.visible || window.innerWidth > window.innerHeight * 1.5)) {
+    if (window.matchMedia("(orientation: landscape)").matches && (!this.chat.visible || window.innerWidth > window.innerHeight * 1.5)) {
       toolbar.style.top = `${canvasRect.y + 40}px`;
       colorInput.style.top = `${canvasRect.y + 80}px`;
       toolbar.style.left = `${canvasRect.x + canvasRect.width}px`;
@@ -243,56 +214,144 @@ namespace Functionality {
     }
 
     let main: HTMLDivElement = document.querySelector("div.main");
-    canvas.style.maxHeight = `min(1200px, ${main.clientWidth * 0.675}px)`;
+    this.graphics.context.canvas.style.maxHeight = `min(1200px, ${main.clientWidth * 0.675}px)`;
   }
-
-  window.addEventListener("load", placeToolbar);
-  window.addEventListener("resize", placeToolbar);
 }
 
-namespace Events {
-  export function handlePointerMove(e: PointerEvent) {
+class Tools {
+  graphics: Graphics;
+  history: WhiteboardHistory;
+  ui: ClientUI;
+
+  constructor(graphics: Graphics, history: WhiteboardHistory, ui: ClientUI) {
+    this.graphics = graphics;
+    this.history = history;
+    this.ui = ui;
+  }
+
+  selectEraser() {
+    this.ui.closeBrushMenu();
+    this.graphics.tool = "eraser";
+    this.graphics.eraserAuto = false;
+    document.querySelector("div.toolbar").className = "toolbar eraser";
+  }
+
+  selectColor() {
+    (<HTMLInputElement>document.querySelector("input[type='color']")).click();
+  }
+
+  updateStrokeStyle() {
+    let input = (<HTMLInputElement>document.querySelector("input[type='color']"));
+    (<HTMLElement>document.querySelector("#colorIcon")).style.color = input.value;
+    this.graphics.color = input.value;
+  }
+
+  toggleLineWidth() {
+    if (this.graphics.lineWidthMultiplier !== 2) this.graphics.lineWidthMultiplier = this.graphics.lineWidthMultiplier * 2;
+    else this.graphics.lineWidthMultiplier = 0.5;
+
+    let iconScale = 0.8 + (0.2 * Math.log2(this.graphics.lineWidthMultiplier));
+    (<HTMLElement>document.querySelector("#widthIcon")).style.transform = `scale(${iconScale})`;
+  }
+
+  toggleStraightLine() {
+    this.graphics.straightLine = !this.graphics.straightLine;
+    (<HTMLElement>document.querySelector("#straightIcon")).style.opacity = this.graphics.straightLine ? "1" : ".2";
+  }
+
+  clearBoard() {
+    this.ui.closeBrushMenu();
+    Swal.fire({
+      icon: "question",
+      title: "Are you sure you want to clear your board?",
+      text: "This cannot be undone.",
+      showDenyButton: true,
+      confirmButtonText: `Clear`,
+      denyButtonText: `Don't clear`,
+      background: "var(--background)"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.graphics.context.fillRect(0, 0, this.graphics.context.canvas.width, this.graphics.context.canvas.height);
+
+        this.history.strokes = 0;
+        this.history.push(this.graphics.context.canvas.toDataURL());
+      }
+    });
+  }
+}
+
+class Events {
+  graphics: Graphics;
+  ui: ClientUI;
+  stroke: number[][];
+  pointerId: number;
+
+  constructor(graphics: Graphics, ui: ClientUI) {
+    this.graphics = graphics;
+    this.stroke = [];
+    this.pointerId = -1;
+    this.ui = ui;
+  }
+
+  forcePaste() {
+    this.ui.closeBrushMenu();
+    (<any>navigator.clipboard).read().then((data) => { this.handlePasteButton(data) });
+  }
+
+  forceCopy() {
+    this.ui.closeBrushMenu();
+    this.graphics.context.canvas.toBlob((blob) => {
+      (<any>navigator.clipboard).write([new ClipboardItem({ [blob.type]: blob })]);
+    });
+  }
+
+  getCoords(...screenCoords: number[]): number[] {
+    return [
+      (screenCoords[0] - this.graphics.context.canvas.getBoundingClientRect().x) * (this.graphics.context.canvas.width / this.graphics.context.canvas.getBoundingClientRect().width),
+      (screenCoords[1] - this.graphics.context.canvas.getBoundingClientRect().y) * (this.graphics.context.canvas.height / this.graphics.context.canvas.getBoundingClientRect().height)
+    ]
+  }
+
+  handlePointerMove(e: PointerEvent) {
     e.preventDefault();
-    if (pointerId === -1 && (e.pressure !== 0 || e.buttons === 1)) pointerId = e.pointerId;
-    if (pointerId === e.pointerId) {
-      if (!straightLine) Functionality.closeBrushMenu();
+    if (this.pointerId === -1 && (e.pressure !== 0 || e.buttons === 1)) this.pointerId = e.pointerId;
+    if (this.pointerId === e.pointerId) {
+      if (!this.graphics.straightLine) this.ui.closeBrushMenu();
 
       if (e.buttons === 32) {
-        tool = "eraser";
-        eraserAuto = true;
+        this.graphics.tool = "eraser";
+        this.graphics.eraserAuto = true;
         document.querySelector("div.toolbar").className = "toolbar eraser";
-      } else if (eraserAuto) {
-        tool = "brush";
+      } else if (this.graphics.eraserAuto) {
+        this.graphics.tool = "brush";
         document.querySelector("div.toolbar").className = "toolbar brush";
       }
 
       if (e.pointerType === "pen" && navigator.userAgent.indexOf("Firefox") === -1 && e.pressure !== 0) {
-        ctx.lineWidth = lineWidth * e.pressure * lineWidthMultiplier;
-      } else ctx.lineWidth = lineWidth * lineWidthMultiplier;
-      stroke.push(Functionality.getCoords(e.pageX, e.pageY));
+        this.graphics.context.lineWidth = this.graphics.lineWidth * e.pressure * this.graphics.lineWidthMultiplier;
+      } else this.graphics.context.lineWidth = this.graphics.lineWidth * this.graphics.lineWidthMultiplier;
+      this.stroke.push(this.getCoords(e.pageX, e.pageY));
       //if (stroke.length >= 5) stroke.splice(0, 1);
-      Graphics.update();
+      this.graphics.update(this.stroke);
     }
   }
 
-  export function handlePointerUp(e: PointerEvent) {
+  handlePointerUp(e: PointerEvent) {
     e.preventDefault();
-    if (pointerId === e.pointerId) {
-      pointerId = -1;
-      if (straightLine && tool === "brush") {
-        Graphics.replaceWithLine();
+    if (this.pointerId === e.pointerId) {
+      this.pointerId = -1;
+      if (this.graphics.straightLine && this.graphics.tool === "brush") {
+        this.graphics.replaceWithLine(this.stroke);
+        this.stroke = [];
       } else {
-        stroke = [];
-        strokes++;
-        whiteboardHistory.splice(whiteboardHistory.length - historyLocation);
-        historyLocation = 0;
-        whiteboardHistory.push(canvas.toDataURL());
+        this.stroke = [];
+        this.graphics.history.push(this.graphics.context.canvas.toDataURL());
       }
-      Client.analytics.setUserProperties({ inputType: e.pointerType });
+      wb.CLIENT.analytics.setUserProperties({ inputType: e.pointerType });
     }
   }
 
-  export function handlePasteHotkey(e: ClipboardEvent) {
+  handlePasteHotkey(e: ClipboardEvent) {
     let data = e.clipboardData;
     if (!data || !data.items) return;
 
@@ -303,25 +362,19 @@ namespace Events {
       if (IMAGE_MIME_REGEX.test(items[i].type)) {
         let fileReader = new FileReader();
         fileReader.onload = (e) => {
-          Graphics.addImageToCanvas((<string>e.target.result));
+          this.graphics.addImageToCanvas((<string>e.target.result));
         }
         fileReader.readAsDataURL(items[i].getAsFile());
       }
     }
   }
 
-  export async function handlePasteButton(e) {
+  async handlePasteButton(e) {
     for (let item of e) {
       for (let type of item.types) {
         let blob = await item.getType(type);
-        Graphics.addImageToCanvas(URL.createObjectURL(blob));
+        this.graphics.addImageToCanvas(URL.createObjectURL(blob));
       }
     }
   }
 }
-
-document.onpaste = Events.handlePasteHotkey;
-document.oncopy = Functionality.forceCopy;
-canvas.onpointermove = Events.handlePointerMove;
-canvas.onpointerup = Events.handlePointerUp;
-canvas.onpointerout = Events.handlePointerUp;
