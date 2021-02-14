@@ -1,5 +1,9 @@
 var Swal;
 
+/**
+ * Class for managing history operations. This includes undo, redo, and push to history.
+ * It also counts how many strokes have been made in order to optimise how often the server is sent the board state.
+ */
 class WhiteboardHistory {
   limit: number;
   items: string[];
@@ -15,6 +19,7 @@ class WhiteboardHistory {
     this.location = 0;
   }
 
+  /** Link the canvas context and UI to the history because the history object must be instantiated first. */
   linkCtx(context: CanvasRenderingContext2D, ui: ClientUI) {
     this.context = context;
     this.ui = ui;
@@ -22,6 +27,7 @@ class WhiteboardHistory {
     this.items.push(this.context.canvas.toDataURL());
   }
 
+  /** Add a new item to the history and override any redone operations. */
   push(...items: string[]) {
     this.strokes++;
     this.items.splice(this.items.length - this.location);
@@ -29,6 +35,7 @@ class WhiteboardHistory {
     this.items.push(...items);
   }
 
+  /** Step back one stage in history without changing it. */
   undo() {
     this.ui.closeBrushMenu();
     if (this.items.length - this.location > 1) {
@@ -40,6 +47,7 @@ class WhiteboardHistory {
     }
   }
 
+  /** Step forward one stage in history without changing it. */
   redo() {
     this.ui.closeBrushMenu();
     if (this.location > 0) {
@@ -52,6 +60,13 @@ class WhiteboardHistory {
   }
 }
 
+/**
+ * Class for managing all things graphical, including rendering and pen graphics.
+ * Constructed by linking the graphical context and the history.
+ * 
+ * @param {CanvasRenderingContext2D} context - The graphical context to update and read
+ * @param {WhiteboardHistory} history - The history to update every time a change is made
+ */
 class Graphics {
   context: CanvasRenderingContext2D;
   history: WhiteboardHistory;
@@ -80,6 +95,7 @@ class Graphics {
     this.context.fillRect(0, 0, context.canvas.width, context.canvas.height);
   }
 
+  /** Adds a stroke to the board at the given quality. */
   update(stroke: number[][], quality: number = 20) {
     if (stroke.length < 2) return;
 
@@ -102,6 +118,10 @@ class Graphics {
     this.context.stroke();
   }
 
+  /** 
+   * Replaces the preview line stroke with a perfectly straight line between the start and end.
+   * Updates the history to forget the preview line.
+   */
   replaceWithLine(stroke: number[][]) {
     let imageToDraw = new Image();
     imageToDraw.src = this.history[this.history.items.length - 1 - this.history.location];
@@ -116,6 +136,7 @@ class Graphics {
     }
   }
 
+  /** Exports an image with the given dimensions and compression quality. */
   exportImage(width: number = 800, height: number = 600, quality: number = 0.5): string {
     let tempCanvas = <HTMLCanvasElement>this.context.canvas.cloneNode(true);
     let tempCtx = tempCanvas.getContext("2d");
@@ -128,6 +149,11 @@ class Graphics {
     return tempCanvas.toDataURL("image/jpeg", quality);
   }
 
+  /** 
+   * Adds an image to the canvas, currently only called when an image is pasted in.
+   * If the image is too big, automatically scale it to the maximum size that will fit.
+   * Currently no way for the user to resize it, although this is a potential future feature.
+   */
   addImageToCanvas(dataURL: string) {
     let image = new Image();
 
@@ -157,6 +183,14 @@ class Graphics {
   }
 }
 
+/**
+ * Class managing the client UI.
+ * This involves managing menu states and some complex dynamic positioning that CSS can't do.
+ * Basically, everything that a framework would've done had I seen sense when I started the project and used one.
+ * Constructed with the graphics object.
+ * 
+ * @param {Graphics} graphics - The graphics object
+ */
 class ClientUI {
   graphics: Graphics;
   chat: Chat;
@@ -166,15 +200,12 @@ class ClientUI {
     this.graphics.history.ui = this;
   }
 
+  /** Link the chat object which is instantiated after the client UI object. */
   linkChat(chat: Chat) {
     this.chat = chat;
   }
 
-  closeBrushMenu() {
-    let extendedBrush: HTMLDivElement = document.querySelector("div.extendedBrush");
-    extendedBrush.classList.remove("enlarged");
-  }
-
+  /** Open the brush menu if the brush is already selected, or simply select the brush. */
   openBrushMenu() {
     if (this.graphics.tool === "brush") {
       let extendedBrush: HTMLDivElement = document.querySelector("div.extendedBrush");
@@ -186,6 +217,17 @@ class ClientUI {
     }
   }
 
+  /** Close the brush menu. */
+  closeBrushMenu() {
+    let extendedBrush: HTMLDivElement = document.querySelector("div.extendedBrush");
+    extendedBrush.classList.remove("enlarged");
+  }
+
+  /**
+   * Place the whiteboard toolbar depending on screen size and orientation.
+   * This should probably be done with some advanced CSS but it's much easier to do it like this.
+   * This also allows for complete customisation and responsivity.
+   */
   placeToolbar() {
     let toolbar: HTMLDivElement = document.querySelector("div.toolbar");
     let colorInput: HTMLInputElement = document.querySelector("input[type='color']");
@@ -218,6 +260,15 @@ class ClientUI {
   }
 }
 
+/**
+ * Class to manage the user's tools.
+ * This is basically everything on the toolbar.
+ * Constructed by linking the graphics object, the history object, and the client UI.
+ * 
+ * @param {Graphics} graphics - The graphics object to modify tools and settings on
+ * @param {WhiteboardHistory} history - The history to update every time a change is made
+ * @param {ClientUI} ui - The UI object to manipulate
+ */
 class Tools {
   graphics: Graphics;
   history: WhiteboardHistory;
@@ -229,6 +280,7 @@ class Tools {
     this.ui = ui;
   }
 
+  /** Select the eraser tool and update the UI to show. */
   selectEraser() {
     this.ui.closeBrushMenu();
     this.graphics.tool = "eraser";
@@ -236,16 +288,26 @@ class Tools {
     document.querySelector("div.toolbar").className = "toolbar eraser";
   }
 
+  /**
+   * Click on the hidden HTML color input to trigger the browser's default color picker.
+   * This is somewhat buggy on Chromium because the eyedropper tool doesn't choose the correct monitor or window.
+   * However, this is a Chromium bug and we can't do anything about it.
+   */
   selectColor() {
     (<HTMLInputElement>document.querySelector("input[type='color']")).click();
   }
 
+  /** Update the color of the stroke, and update the color tool to show. */
   updateStrokeStyle() {
     let input = (<HTMLInputElement>document.querySelector("input[type='color']"));
     (<HTMLElement>document.querySelector("#colorIcon")).style.color = input.value;
     this.graphics.color = input.value;
   }
 
+  /**
+   * Toggle the line width between thin, medium, and thicc.
+   * Uses logarithms so it can be done in one line, because why not.
+   */
   toggleLineWidth() {
     if (this.graphics.lineWidthMultiplier !== 2) this.graphics.lineWidthMultiplier = this.graphics.lineWidthMultiplier * 2;
     else this.graphics.lineWidthMultiplier = 0.5;
@@ -254,11 +316,16 @@ class Tools {
     (<HTMLElement>document.querySelector("#widthIcon")).style.transform = `scale(${iconScale})`;
   }
 
+  /** Toggle the straight line tool and update the UI to show. */
   toggleStraightLine() {
     this.graphics.straightLine = !this.graphics.straightLine;
     (<HTMLElement>document.querySelector("#straightIcon")).style.opacity = this.graphics.straightLine ? "1" : ".2";
   }
 
+  /**
+   * Open a confirm prompt using `sweetalert2`, then clear the user's board if approved.
+   * If the prompt is cancelled, nothing happens.
+   */
   clearBoard() {
     this.ui.closeBrushMenu();
     Swal.fire({
@@ -280,6 +347,13 @@ class Tools {
   }
 }
 
+/**
+ * Class managing event handlers as well as utility functions for them.
+ * Constructed with the graphics object and UI object.
+ * 
+ * @param {Graphics} graphics - graphics object
+ * @param {ClientUI} ui - client UI, pretty much just to toggle the brush menu
+ */
 class Events {
   graphics: Graphics;
   ui: ClientUI;
@@ -293,11 +367,17 @@ class Events {
     this.ui = ui;
   }
 
+  /**
+   * Force the browser to paste the clipbord contents onto the board.
+   * This is done differently to the hotkey version because for no apparent reason,
+   * the `navigator.clipboard` API gives a different format to just the regular `onpaste` event.
+   */
   forcePaste() {
     this.ui.closeBrushMenu();
     (<any>navigator.clipboard).read().then((data) => { this.handlePasteButton(data) });
   }
 
+  /** Read the canvas and put it on the clipboard. */
   forceCopy() {
     this.ui.closeBrushMenu();
     this.graphics.context.canvas.toBlob((blob) => {
@@ -305,13 +385,23 @@ class Events {
     });
   }
 
+  /** Convert the screen coordinates into canvas coordinates. */
   getCoords(...screenCoords: number[]): number[] {
+    let canvasRect = this.graphics.context.canvas.getBoundingClientRect();
     return [
-      (screenCoords[0] - this.graphics.context.canvas.getBoundingClientRect().x) * (this.graphics.context.canvas.width / this.graphics.context.canvas.getBoundingClientRect().width),
-      (screenCoords[1] - this.graphics.context.canvas.getBoundingClientRect().y) * (this.graphics.context.canvas.height / this.graphics.context.canvas.getBoundingClientRect().height)
+      (screenCoords[0] - canvasRect.x) * (this.graphics.context.canvas.width / canvasRect.width),
+      (screenCoords[1] - canvasRect.y) * (this.graphics.context.canvas.height / canvasRect.height)
     ]
   }
 
+  /**
+   * Handle pointer move events.
+   * This manages pen pressure, tool detection, and has some sketchy cross-browser bug fixes.
+   * Supports all modern browsers, but some have less features.
+   * 
+   * - Firefox doesn't support pen pressure at all
+   * - Safari pretends to, then defaults it to zero instead of 0.5 which is really useful, thanks Apple
+   */
   handlePointerMove(e: PointerEvent) {
     e.preventDefault();
     if (this.pointerId === -1 && (e.pressure !== 0 || e.buttons === 1)) this.pointerId = e.pointerId;
@@ -336,6 +426,7 @@ class Events {
     }
   }
 
+  /** Handle the pointer up event, ending a stroke and updating the history with it. */
   handlePointerUp(e: PointerEvent) {
     e.preventDefault();
     if (this.pointerId === e.pointerId) {
@@ -347,10 +438,11 @@ class Events {
         this.stroke = [];
         this.graphics.history.push(this.graphics.context.canvas.toDataURL());
       }
-      wb.CLIENT.analytics.setUserProperties({ inputType: e.pointerType });
+      _wb.CLIENT.analytics.setUserProperties({ inputType: e.pointerType });
     }
   }
 
+  /** Handle the CTRL+V key combination, checking if the clipboard contains an image and pasting it if so. */
   handlePasteHotkey(e: ClipboardEvent) {
     let data = e.clipboardData;
     if (!data || !data.items) return;
@@ -369,6 +461,7 @@ class Events {
     }
   }
 
+  /** Handle the paste button event, pasting any image on the clipboard onto the canvas. */
   async handlePasteButton(e) {
     for (let item of e) {
       for (let type of item.types) {

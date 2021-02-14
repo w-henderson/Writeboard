@@ -9,6 +9,7 @@
             "ES2019",
             "dom"
         ],
+        "removeComments": true
     },
     "files": [
         "src/scripts/types.d.ts",

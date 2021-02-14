@@ -1,29 +1,29 @@
 var firebase;
 var Swal;
-var wb = {}; // main Writeboard object
+var _wb = {};
 function initClient() {
-    wb.CANVAS = document.querySelector("canvas");
-    wb.CTX = wb.CANVAS.getContext("2d");
-    wb.HISTORY = new WhiteboardHistory();
-    wb.GRAPHICS = new Graphics(wb.CTX, wb.HISTORY);
-    wb.UI = new ClientUI(wb.GRAPHICS);
-    wb.TOOLS = new Tools(wb.GRAPHICS, wb.HISTORY, wb.UI);
-    wb.EVENTS = new Events(wb.GRAPHICS, wb.UI);
-    wb.CLIENT = new Client(wb.GRAPHICS);
-    wb.CHAT = new Chat(wb.CLIENT, wb.UI);
-    wb.UI.linkChat(wb.CHAT);
-    wb.HISTORY.linkCtx(wb.CTX, wb.UI);
-    wb.CLIENT.init(wb.CHAT);
-    document.onpaste = function (e) { wb.EVENTS.handlePasteHotkey(e); };
-    document.oncopy = function () { wb.EVENTS.forceCopy(); };
-    window.onresize = function () { wb.UI.placeToolbar(); };
-    wb.UI.placeToolbar();
-    wb.CANVAS.onpointermove = function (e) { wb.EVENTS.handlePointerMove(e); };
-    wb.CANVAS.onpointerup = function (e) { wb.EVENTS.handlePointerUp(e); };
-    wb.CANVAS.onpointerout = function (e) { wb.EVENTS.handlePointerUp(e); };
+    _wb.CANVAS = document.querySelector("canvas");
+    _wb.CTX = _wb.CANVAS.getContext("2d");
+    _wb.HISTORY = new WhiteboardHistory();
+    _wb.GRAPHICS = new Graphics(_wb.CTX, _wb.HISTORY);
+    _wb.UI = new ClientUI(_wb.GRAPHICS);
+    _wb.TOOLS = new Tools(_wb.GRAPHICS, _wb.HISTORY, _wb.UI);
+    _wb.EVENTS = new Events(_wb.GRAPHICS, _wb.UI);
+    _wb.CLIENT = new Client(_wb.GRAPHICS);
+    _wb.CHAT = new Chat(_wb.CLIENT);
+    _wb.UI.linkChat(_wb.CHAT);
+    _wb.HISTORY.linkCtx(_wb.CTX, _wb.UI);
+    _wb.CLIENT.init(_wb.CHAT);
+    document.onpaste = function (e) { _wb.EVENTS.handlePasteHotkey(e); };
+    document.oncopy = function () { _wb.EVENTS.forceCopy(); };
+    window.onresize = function () { _wb.UI.placeToolbar(); };
+    _wb.UI.placeToolbar();
+    _wb.CANVAS.onpointermove = function (e) { _wb.EVENTS.handlePointerMove(e); };
+    _wb.CANVAS.onpointerup = function (e) { _wb.EVENTS.handlePointerUp(e); };
+    _wb.CANVAS.onpointerout = function (e) { _wb.EVENTS.handlePointerUp(e); };
 }
 window.onload = initClient;
-var Client = /** @class */ (function () {
+var Client = (function () {
     function Client(graphics) {
         this.database = firebase.database();
         this.analytics = firebase.analytics();
@@ -40,14 +40,14 @@ var Client = /** @class */ (function () {
         this.chat = chat;
         this.titleRef = this.database.ref("rooms/" + this.roomId + "/name");
         this.ref = this.database.ref("rooms/" + this.roomId + "/users");
-        this.titleRef.on("value", this.updateTitle);
-        document.querySelector("input#messageInput").onkeyup = function (e) { wb.CHAT.sendMessage(e); };
+        this.titleRef.on("value", this.firstConnection);
+        document.querySelector("input#messageInput").onkeyup = function (e) { _wb.CHAT.sendMessage(e); };
         window.addEventListener("beforeunload", function () {
-            wb.CLIENT.analytics.logEvent("leave", { roomId: wb.CLIENT.roomId, username: wb.CLIENT.username });
-            return wb.CLIENT.userRef.remove().then(function () { return; });
+            _wb.CLIENT.analytics.logEvent("leave", { roomId: _wb.CLIENT.roomId, username: _wb.CLIENT.username });
+            return _wb.CLIENT.userRef.remove().then(function () { return; });
         });
     };
-    Client.prototype.updateTitle = function (e) {
+    Client.prototype.firstConnection = function (e) {
         var data = e.val();
         if (data !== null) {
             document.querySelector("h1").textContent = "Writeboard: " + data;
@@ -60,7 +60,7 @@ var Client = /** @class */ (function () {
                 background: "var(--background)",
                 showLoaderOnConfirm: true,
                 preConfirm: function (login) {
-                    return wb.CLIENT.ref.once("value").then(function (snapshot) {
+                    return _wb.CLIENT.ref.once("value").then(function (snapshot) {
                         if (snapshot.val() !== null && _snakeCase(login) in snapshot.val()) {
                             Swal.showValidationMessage("Username already taken!");
                             return false;
@@ -75,25 +75,26 @@ var Client = /** @class */ (function () {
                     });
                 },
                 allowOutsideClick: false
-            }).then(function (result) {
+            }).then((function (result) {
+                var _this = this;
                 if (result.isConfirmed) {
-                    wb.CLIENT.username = result.value;
-                    wb.CLIENT.userId = _snakeCase(result.value);
-                    wb.CLIENT.analytics.logEvent("join", { roomId: wb.CLIENT.roomId, username: wb.CLIENT.username });
-                    wb.CLIENT.userRef = wb.CLIENT.database.ref("rooms/" + wb.CLIENT.roomId + "/users/" + wb.CLIENT.userId);
-                    wb.CLIENT.userRef.set({
-                        name: wb.CLIENT.username,
-                        board: wb.CLIENT.graphics.exportImage(400, 300),
+                    this.username = result.value;
+                    this.userId = _snakeCase(result.value);
+                    this.analytics.logEvent("join", { roomId: this.roomId, username: this.username });
+                    this.userRef = this.database.ref("rooms/" + this.roomId + "/users/" + this.userId);
+                    this.userRef.set({
+                        name: this.username,
+                        board: this.graphics.exportImage(400, 300),
                         maximised: false,
                         messages: []
                     });
-                    wb.CLIENT.messageRef = wb.CLIENT.database.ref("rooms/" + wb.CLIENT.roomId + "/users/" + wb.CLIENT.userId + "/messages");
-                    wb.CLIENT.maximisedRef = wb.CLIENT.database.ref("rooms/" + wb.CLIENT.roomId + "/users/" + wb.CLIENT.userId + "/maximised");
-                    wb.CLIENT.messageRef.on("value", function (e) { wb.CLIENT.chat.messageHandler(e); });
-                    wb.CLIENT.maximisedRef.on("value", function (e) { wb.CLIENT.updateMaximised(e); });
-                    window.setTimeout(function () { wb.CLIENT.updateBoard(); }, 5000);
+                    this.messageRef = this.database.ref("rooms/" + this.roomId + "/users/" + this.userId + "/messages");
+                    this.maximisedRef = this.database.ref("rooms/" + this.roomId + "/users/" + this.userId + "/maximised");
+                    this.messageRef.on("value", function (e) { _this.chat.messageHandler(e); });
+                    this.maximisedRef.on("value", function (e) { _this.updateMaximised(e); });
+                    window.setTimeout(function () { _wb.CLIENT.updateBoard(); }, 5000);
                 }
-            });
+            }).bind(_wb.CLIENT));
         }
         else {
             Swal.fire({
@@ -102,7 +103,7 @@ var Client = /** @class */ (function () {
                 icon: "error",
                 background: "var(--background)"
             }).then(function () {
-                wb.CLIENT.analytics.logEvent("failJoin", { roomId: wb.CLIENT.roomId });
+                _wb.CLIENT.analytics.logEvent("failJoin", { roomId: _wb.CLIENT.roomId });
                 window.location.href = "/";
             });
         }
@@ -115,7 +116,7 @@ var Client = /** @class */ (function () {
             });
             this.lastStrokeUpdate = this.graphics.history.strokes;
         }
-        window.setTimeout(function () { wb.CLIENT.updateBoard(); }, this.maximised ? 1000 : 5000); // update more frequently if maximised
+        window.setTimeout(function () { _wb.CLIENT.updateBoard(); }, this.maximised ? 1000 : 5000);
     };
     Client.prototype.updateMaximised = function (e) {
         this.maximised = e.val();
@@ -125,10 +126,9 @@ var Client = /** @class */ (function () {
     };
     return Client;
 }());
-var Chat = /** @class */ (function () {
-    function Chat(client, ui) {
+var Chat = (function () {
+    function Chat(client) {
         this.client = client;
-        this.ui = ui;
         this.visible = false;
     }
     Chat.prototype.sendMessage = function (e) {
@@ -173,14 +173,14 @@ var Chat = /** @class */ (function () {
         }
     };
     Chat.prototype.messageHandler = function (e) {
-        wb.CLIENT.messageCache.data = e.val();
-        wb.CHAT.updateMessages();
+        _wb.CLIENT.messageCache.data = e.val();
+        _wb.CHAT.updateMessages();
     };
     Chat.prototype.showChat = function () {
         document.querySelector("div.main").className = "main chatShown";
         document.querySelector("div.clientChat").className = "clientChat chatShown";
         document.querySelector("div.clientChat i").textContent = "clear";
-        document.querySelector("div.clientChat div.toggle").onclick = function () { wb.CHAT.hideChat(); };
+        document.querySelector("div.clientChat div.toggle").onclick = function () { _wb.CHAT.hideChat(); };
         this.visible = true;
         this.updateMessages();
         this.toolbarTransition();
@@ -189,12 +189,12 @@ var Chat = /** @class */ (function () {
         document.querySelector("div.main").className = "main";
         document.querySelector("div.clientChat").className = "clientChat";
         document.querySelector("div.clientChat i").textContent = "message";
-        document.querySelector("div.clientChat div.toggle").onclick = function () { wb.CHAT.showChat(); };
+        document.querySelector("div.clientChat div.toggle").onclick = function () { _wb.CHAT.showChat(); };
         this.visible = false;
         this.toolbarTransition();
     };
     Chat.prototype.toolbarTransition = function () {
-        window.setInterval(function () { wb.UI.placeToolbar(); }, 16.7);
+        window.setInterval(function () { _wb.UI.placeToolbar(); }, 16.7);
         window.setTimeout(window.clearInterval, 500);
     };
     return Chat;

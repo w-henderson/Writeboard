@@ -35,7 +35,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 var Swal;
-var WhiteboardHistory = /** @class */ (function () {
+var WhiteboardHistory = (function () {
     function WhiteboardHistory() {
         this.limit = 10;
         this.items = [];
@@ -82,7 +82,7 @@ var WhiteboardHistory = /** @class */ (function () {
     };
     return WhiteboardHistory;
 }());
-var Graphics = /** @class */ (function () {
+var Graphics = (function () {
     function Graphics(context, history) {
         this.context = context;
         this.history = history;
@@ -172,17 +172,13 @@ var Graphics = /** @class */ (function () {
     };
     return Graphics;
 }());
-var ClientUI = /** @class */ (function () {
+var ClientUI = (function () {
     function ClientUI(graphics) {
         this.graphics = graphics;
         this.graphics.history.ui = this;
     }
     ClientUI.prototype.linkChat = function (chat) {
         this.chat = chat;
-    };
-    ClientUI.prototype.closeBrushMenu = function () {
-        var extendedBrush = document.querySelector("div.extendedBrush");
-        extendedBrush.classList.remove("enlarged");
     };
     ClientUI.prototype.openBrushMenu = function () {
         if (this.graphics.tool === "brush") {
@@ -196,6 +192,10 @@ var ClientUI = /** @class */ (function () {
             this.graphics.tool = "brush";
             document.querySelector("div.toolbar").className = "toolbar brush";
         }
+    };
+    ClientUI.prototype.closeBrushMenu = function () {
+        var extendedBrush = document.querySelector("div.extendedBrush");
+        extendedBrush.classList.remove("enlarged");
     };
     ClientUI.prototype.placeToolbar = function () {
         var toolbar = document.querySelector("div.toolbar");
@@ -228,7 +228,7 @@ var ClientUI = /** @class */ (function () {
     };
     return ClientUI;
 }());
-var Tools = /** @class */ (function () {
+var Tools = (function () {
     function Tools(graphics, history, ui) {
         this.graphics = graphics;
         this.history = history;
@@ -281,7 +281,7 @@ var Tools = /** @class */ (function () {
     };
     return Tools;
 }());
-var Events = /** @class */ (function () {
+var Events = (function () {
     function Events(graphics, ui) {
         this.graphics = graphics;
         this.stroke = [];
@@ -305,9 +305,10 @@ var Events = /** @class */ (function () {
         for (var _i = 0; _i < arguments.length; _i++) {
             screenCoords[_i] = arguments[_i];
         }
+        var canvasRect = this.graphics.context.canvas.getBoundingClientRect();
         return [
-            (screenCoords[0] - this.graphics.context.canvas.getBoundingClientRect().x) * (this.graphics.context.canvas.width / this.graphics.context.canvas.getBoundingClientRect().width),
-            (screenCoords[1] - this.graphics.context.canvas.getBoundingClientRect().y) * (this.graphics.context.canvas.height / this.graphics.context.canvas.getBoundingClientRect().height)
+            (screenCoords[0] - canvasRect.x) * (this.graphics.context.canvas.width / canvasRect.width),
+            (screenCoords[1] - canvasRect.y) * (this.graphics.context.canvas.height / canvasRect.height)
         ];
     };
     Events.prototype.handlePointerMove = function (e) {
@@ -332,7 +333,6 @@ var Events = /** @class */ (function () {
             else
                 this.graphics.context.lineWidth = this.graphics.lineWidth * this.graphics.lineWidthMultiplier;
             this.stroke.push(this.getCoords(e.pageX, e.pageY));
-            //if (stroke.length >= 5) stroke.splice(0, 1);
             this.graphics.update(this.stroke);
         }
     };
@@ -348,7 +348,7 @@ var Events = /** @class */ (function () {
                 this.stroke = [];
                 this.graphics.history.push(this.graphics.context.canvas.toDataURL());
             }
-            wb.CLIENT.analytics.setUserProperties({ inputType: e.pointerType });
+            _wb.CLIENT.analytics.setUserProperties({ inputType: e.pointerType });
         }
     };
     Events.prototype.handlePasteHotkey = function (e) {
@@ -377,25 +377,25 @@ var Events = /** @class */ (function () {
                         _i = 0, e_1 = e;
                         _c.label = 1;
                     case 1:
-                        if (!(_i < e_1.length)) return [3 /*break*/, 6];
+                        if (!(_i < e_1.length)) return [3, 6];
                         item = e_1[_i];
                         _a = 0, _b = item.types;
                         _c.label = 2;
                     case 2:
-                        if (!(_a < _b.length)) return [3 /*break*/, 5];
+                        if (!(_a < _b.length)) return [3, 5];
                         type = _b[_a];
-                        return [4 /*yield*/, item.getType(type)];
+                        return [4, item.getType(type)];
                     case 3:
                         blob = _c.sent();
                         this.graphics.addImageToCanvas(URL.createObjectURL(blob));
                         _c.label = 4;
                     case 4:
                         _a++;
-                        return [3 /*break*/, 2];
+                        return [3, 2];
                     case 5:
                         _i++;
-                        return [3 /*break*/, 1];
-                    case 6: return [2 /*return*/];
+                        return [3, 1];
+                    case 6: return [2];
                 }
             });
         });

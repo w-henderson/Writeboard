@@ -1,38 +1,60 @@
 var firebase;
 var Swal;
 
-let wb: any = {}; // main Writeboard object
+/** Variable to hold every class instance to prevent cluttering up globals. */
+let _wb: {
+  CANVAS?: HTMLCanvasElement,
+  CTX?: CanvasRenderingContext2D,
+  HISTORY?: WhiteboardHistory,
+  GRAPHICS?: Graphics,
+  UI?: ClientUI,
+  TOOLS?: Tools,
+  EVENTS?: Events,
+  CLIENT?: Client,
+  CHAT?: Chat
+} = {};
 
+/**
+ * Initialise the client, assigning all the different classes to properties of `_wb`.
+ * Also register event handlers, and update the toolbar position once.
+ */
 function initClient() {
-  wb.CANVAS = document.querySelector("canvas");
-  wb.CTX = wb.CANVAS.getContext("2d");
+  _wb.CANVAS = document.querySelector("canvas");
+  _wb.CTX = _wb.CANVAS.getContext("2d");
 
-  wb.HISTORY = new WhiteboardHistory();
-  wb.GRAPHICS = new Graphics(wb.CTX, wb.HISTORY);
-  wb.UI = new ClientUI(wb.GRAPHICS);
-  wb.TOOLS = new Tools(wb.GRAPHICS, wb.HISTORY, wb.UI);
-  wb.EVENTS = new Events(wb.GRAPHICS, wb.UI);
+  _wb.HISTORY = new WhiteboardHistory();
+  _wb.GRAPHICS = new Graphics(_wb.CTX, _wb.HISTORY);
+  _wb.UI = new ClientUI(_wb.GRAPHICS);
+  _wb.TOOLS = new Tools(_wb.GRAPHICS, _wb.HISTORY, _wb.UI);
+  _wb.EVENTS = new Events(_wb.GRAPHICS, _wb.UI);
 
-  wb.CLIENT = new Client(wb.GRAPHICS);
-  wb.CHAT = new Chat(wb.CLIENT, wb.UI);
+  _wb.CLIENT = new Client(_wb.GRAPHICS);
+  _wb.CHAT = new Chat(_wb.CLIENT);
 
-  wb.UI.linkChat(wb.CHAT);
-  wb.HISTORY.linkCtx(wb.CTX, wb.UI);
+  _wb.UI.linkChat(_wb.CHAT);
+  _wb.HISTORY.linkCtx(_wb.CTX, _wb.UI);
 
-  wb.CLIENT.init(wb.CHAT);
+  _wb.CLIENT.init(_wb.CHAT);
 
-  document.onpaste = (e) => { wb.EVENTS.handlePasteHotkey(e); };
-  document.oncopy = () => { wb.EVENTS.forceCopy(); };
-  window.onresize = () => { wb.UI.placeToolbar(); };
-  wb.UI.placeToolbar();
+  document.onpaste = (e) => { _wb.EVENTS.handlePasteHotkey(e); };
+  document.oncopy = () => { _wb.EVENTS.forceCopy(); };
+  window.onresize = () => { _wb.UI.placeToolbar(); };
+  _wb.UI.placeToolbar();
 
-  wb.CANVAS.onpointermove = (e) => { wb.EVENTS.handlePointerMove(e); };
-  wb.CANVAS.onpointerup = (e) => { wb.EVENTS.handlePointerUp(e); };
-  wb.CANVAS.onpointerout = (e) => { wb.EVENTS.handlePointerUp(e); };
+  _wb.CANVAS.onpointermove = (e) => { _wb.EVENTS.handlePointerMove(e); };
+  _wb.CANVAS.onpointerup = (e) => { _wb.EVENTS.handlePointerUp(e); };
+  _wb.CANVAS.onpointerout = (e) => { _wb.EVENTS.handlePointerUp(e); };
 }
 
 window.onload = initClient;
 
+/**
+ * Class to manage all client-server operations.
+ * This is basically just communicating with Firebase RTDB.
+ * Constructed by linking in the graphics object to export the canvas to send to Firebase.
+ * 
+ * @param {Graphics} graphics - graphics object for canvas export
+ */
 class Client {
   database: any;
   analytics: any;
@@ -70,21 +92,31 @@ class Client {
     }
   }
 
+  /**
+   * Initialise the client-server connection and link the chat.
+   * This involves creating references to the database and making the first connection.
+   * It also adds event handlers for sending chat messages and alerting the database when the user leaves.
+   */
   init(chat: Chat) {
     this.chat = chat;
     this.titleRef = this.database.ref(`rooms/${this.roomId}/name`);
     this.ref = this.database.ref(`rooms/${this.roomId}/users`);
 
-    this.titleRef.on("value", this.updateTitle);
-    (<HTMLInputElement>document.querySelector("input#messageInput")).onkeyup = (e) => { wb.CHAT.sendMessage(e); };
+    this.titleRef.on("value", this.firstConnection);
+    (<HTMLInputElement>document.querySelector("input#messageInput")).onkeyup = (e) => { _wb.CHAT.sendMessage(e); };
 
     window.addEventListener("beforeunload", () => {
-      wb.CLIENT.analytics.logEvent("leave", { roomId: wb.CLIENT.roomId, username: wb.CLIENT.username });
-      return wb.CLIENT.userRef.remove().then(() => { return });
+      _wb.CLIENT.analytics.logEvent("leave", { roomId: _wb.CLIENT.roomId, username: _wb.CLIENT.username });
+      return _wb.CLIENT.userRef.remove().then(() => { return });
     });
   }
 
-  updateTitle(e) {
+  /**
+   * Manage the first connection to the database.
+   * If it is successful, ask the user for a username, check it's not taken, then register all the database event handlers.
+   * If it's not successful, alert the user that the room is invalid or closed, and redirect back to the homepage.
+   */
+  firstConnection(e) {
     let data = e.val();
 
     if (data !== null) {
@@ -99,7 +131,7 @@ class Client {
         background: "var(--background)",
         showLoaderOnConfirm: true,
         preConfirm: (login) => {
-          return wb.CLIENT.ref.once("value").then((snapshot) => {
+          return _wb.CLIENT.ref.once("value").then((snapshot) => {
             if (snapshot.val() !== null && _snakeCase(login) in snapshot.val()) {
               Swal.showValidationMessage("Username already taken!");
               return false;
@@ -112,29 +144,29 @@ class Client {
           });
         },
         allowOutsideClick: false
-      }).then((result) => {
+      }).then((function (result) {
         if (result.isConfirmed) {
-          wb.CLIENT.username = result.value;
-          wb.CLIENT.userId = _snakeCase(result.value);
+          this.username = result.value;
+          this.userId = _snakeCase(result.value);
 
-          wb.CLIENT.analytics.logEvent("join", { roomId: wb.CLIENT.roomId, username: wb.CLIENT.username });
+          this.analytics.logEvent("join", { roomId: this.roomId, username: this.username });
 
-          wb.CLIENT.userRef = wb.CLIENT.database.ref(`rooms/${wb.CLIENT.roomId}/users/${wb.CLIENT.userId}`);
-          wb.CLIENT.userRef.set({
-            name: wb.CLIENT.username,
-            board: wb.CLIENT.graphics.exportImage(400, 300),
+          this.userRef = this.database.ref(`rooms/${this.roomId}/users/${this.userId}`);
+          this.userRef.set({
+            name: this.username,
+            board: this.graphics.exportImage(400, 300),
             maximised: false,
             messages: []
           });
 
-          wb.CLIENT.messageRef = wb.CLIENT.database.ref(`rooms/${wb.CLIENT.roomId}/users/${wb.CLIENT.userId}/messages`);
-          wb.CLIENT.maximisedRef = wb.CLIENT.database.ref(`rooms/${wb.CLIENT.roomId}/users/${wb.CLIENT.userId}/maximised`);
-          wb.CLIENT.messageRef.on("value", (e) => { wb.CLIENT.chat.messageHandler(e); });
-          wb.CLIENT.maximisedRef.on("value", (e) => { wb.CLIENT.updateMaximised(e); });
+          this.messageRef = this.database.ref(`rooms/${this.roomId}/users/${this.userId}/messages`);
+          this.maximisedRef = this.database.ref(`rooms/${this.roomId}/users/${this.userId}/maximised`);
+          this.messageRef.on("value", (e) => { this.chat.messageHandler(e); });
+          this.maximisedRef.on("value", (e) => { this.updateMaximised(e); });
 
-          window.setTimeout(() => { wb.CLIENT.updateBoard() }, 5000);
+          window.setTimeout(() => { _wb.CLIENT.updateBoard() }, 5000);
         }
-      })
+      }).bind(_wb.CLIENT));
     } else {
       Swal.fire({
         title: "Whiteboard Doesn't Exist",
@@ -142,12 +174,19 @@ class Client {
         icon: "error",
         background: "var(--background)"
       }).then(() => {
-        wb.CLIENT.analytics.logEvent("failJoin", { roomId: wb.CLIENT.roomId });
+        _wb.CLIENT.analytics.logEvent("failJoin", { roomId: _wb.CLIENT.roomId });
         window.location.href = "/";
       });
     }
   }
 
+  /**
+   * Update the board server-side.
+   * If the client is maximised by the host, send it in much better quality and more frequently.
+   * If the client is not maximised, send it at a very low resolution with heavy JPEG compression.
+   * 
+   * @param {boolean} force - whether to force the update, if `false` will only update if the board has changed
+   */
   updateBoard(force = false) {
     if (this.lastStrokeUpdate !== this.graphics.history.strokes || force) {
       this.userRef.update({
@@ -156,9 +195,10 @@ class Client {
       this.lastStrokeUpdate = this.graphics.history.strokes;
     }
 
-    window.setTimeout(() => { wb.CLIENT.updateBoard(); }, this.maximised ? 1000 : 5000); // update more frequently if maximised
+    window.setTimeout(() => { _wb.CLIENT.updateBoard(); }, this.maximised ? 1000 : 5000); // update more frequently if maximised
   }
 
+  /** Event handler for the board's maximisation state changing. */
   updateMaximised(e) {
     this.maximised = e.val();
     if (this.maximised) {
@@ -167,17 +207,27 @@ class Client {
   }
 }
 
+/**
+ * Class managing all the chat features.
+ * This is event handlers for incoming messages and for sending messages.
+ * It also includes UI logic for hiding and showing the chat.
+ * Constructed by linking to the client object.
+ * 
+ * @param {Client} client - client object to communicate with the database
+ */
 class Chat {
   client: Client;
-  ui: ClientUI;
   visible: boolean;
 
-  constructor(client: Client, ui: ClientUI) {
+  constructor(client: Client) {
     this.client = client;
-    this.ui = ui;
     this.visible = false;
   }
 
+  /**
+   * Message send handler, called when user presses return in the chat box.
+   * Sends the message to the server.
+   */
   sendMessage(e) {
     e.preventDefault();
     if (e.keyCode !== 13) return;
@@ -192,6 +242,11 @@ class Chat {
     });
   }
 
+  /**
+   * Update incoming messages, called from the incoming message event handler.
+   * If the chat is visible, put it in the chat.
+   * If the chat is not visible, add the notification dot to tell the user a new message has arrived.
+   */
   updateMessages() {
     if (this.visible) {
       let messagesDiv = document.querySelector("div.messages");
@@ -223,36 +278,44 @@ class Chat {
     }
   }
 
+  /** 
+   * Event handler for incoming messages.
+   * Caches the messages to save data, then updates them from the cache.
+   */
   messageHandler(e) {
-    wb.CLIENT.messageCache.data = e.val();
-    wb.CHAT.updateMessages();
+    _wb.CLIENT.messageCache.data = e.val();
+    _wb.CHAT.updateMessages();
   }
 
+  /** Manipulate the UI to show the chat, then update the messages. */
   showChat() {
     document.querySelector("div.main").className = "main chatShown";
     document.querySelector("div.clientChat").className = "clientChat chatShown";
     document.querySelector("div.clientChat i").textContent = "clear";
-    (<HTMLDivElement>document.querySelector("div.clientChat div.toggle")).onclick = () => { wb.CHAT.hideChat(); };
+    (<HTMLDivElement>document.querySelector("div.clientChat div.toggle")).onclick = () => { _wb.CHAT.hideChat(); };
     this.visible = true;
     this.updateMessages();
     this.toolbarTransition();
   }
 
+  /** Manipulate the UI to hide the chat. */
   hideChat() {
     document.querySelector("div.main").className = "main";
     document.querySelector("div.clientChat").className = "clientChat";
     document.querySelector("div.clientChat i").textContent = "message";
-    (<HTMLDivElement>document.querySelector("div.clientChat div.toggle")).onclick = () => { wb.CHAT.showChat(); };
+    (<HTMLDivElement>document.querySelector("div.clientChat div.toggle")).onclick = () => { _wb.CHAT.showChat(); };
     this.visible = false;
     this.toolbarTransition();
   }
 
+  /** Animate the toolbar positioning for 30 frames over 500ms as the chat animates out. */
   toolbarTransition() {
-    window.setInterval(() => { wb.UI.placeToolbar(); }, 16.7);
+    window.setInterval(() => { _wb.UI.placeToolbar(); }, 16.7);
     window.setTimeout(window.clearInterval, 500);
   }
 }
 
+/** Utility function to convert a username to snake case. */
 const _snakeCase = string => {
   return string.replace(/\W+/g, " ")
     .split(/ |\B(?=[A-Z])/)

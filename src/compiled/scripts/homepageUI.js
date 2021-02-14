@@ -105,7 +105,7 @@ var UI;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0:
-                                if (!result.isConfirmed) return [3 /*break*/, 4];
+                                if (!result.isConfirmed) return [3, 4];
                                 roomName = result.value;
                                 alphabet_1 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
                                 valid_1 = false;
@@ -114,8 +114,8 @@ var UI;
                                     code_1 += alphabet_1[Math.floor(Math.random() * 26)];
                                 _a.label = 1;
                             case 1:
-                                if (!!valid_1) return [3 /*break*/, 3];
-                                return [4 /*yield*/, database.ref("rooms/" + code_1).once("value", function (snapshot) {
+                                if (!!valid_1) return [3, 3];
+                                return [4, database.ref("rooms/" + code_1).once("value", function (snapshot) {
                                         if (snapshot.val() === null) {
                                             valid_1 = true;
                                         }
@@ -127,7 +127,7 @@ var UI;
                                     })];
                             case 2:
                                 _a.sent();
-                                return [3 /*break*/, 1];
+                                return [3, 1];
                             case 3:
                                 database.ref("rooms/" + code_1).set({
                                     name: roomName,
@@ -143,11 +143,11 @@ var UI;
                                     });
                                 });
                                 _a.label = 4;
-                            case 4: return [2 /*return*/];
+                            case 4: return [2];
                         }
                     });
                 }); });
-                return [2 /*return*/];
+                return [2];
             });
         });
     }
@@ -164,7 +164,7 @@ var UI;
     }
     UI.privacy = privacy;
     function updateSizing() {
-        var height = (window.visualViewport.width * 0.176) + 170; // it works, don't mess it up
+        var height = (window.visualViewport.width * 0.176) + 170;
         document.querySelector("div.banner").style.height = height + "px";
         document.querySelectorAll("div.banner img").forEach(function (div) {
             div.style.height = height + "px";
@@ -191,7 +191,7 @@ var UI;
                 var commit = data_1[_i];
                 var commitMessage = commit.commit.message;
                 if (commitMessage.substr(0, 20) === "Merge pull request #")
-                    continue; // Ignore merge commits
+                    continue;
                 else
                     commitMessage = commitMessage.split("\n")[0];
                 var commitDate = new Date(commit.commit.author.date);
