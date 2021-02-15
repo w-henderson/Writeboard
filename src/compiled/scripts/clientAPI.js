@@ -31,6 +31,7 @@ var Client = (function () {
         this.roomId = window.location.search.substr(1);
         this.lastStrokeUpdate = -1;
         this.maximised = false;
+        this.allowedNotifications = false;
         this.messageCache = {
             read: 0,
             data: null
@@ -92,6 +93,9 @@ var Client = (function () {
                     this.maximisedRef = this.database.ref("rooms/" + this.roomId + "/users/" + this.userId + "/maximised");
                     this.messageRef.on("value", function (e) { _this.chat.messageHandler(e); });
                     this.maximisedRef.on("value", function (e) { _this.updateMaximised(e); });
+                    Notification.requestPermission().then(function (result) {
+                        _this.allowedNotifications = result === "granted";
+                    });
                     window.setTimeout(function () { _wb.CLIENT.updateBoard(); }, 5000);
                 }
             }).bind(_wb.CLIENT));
@@ -144,6 +148,8 @@ var Chat = (function () {
         });
     };
     Chat.prototype.updateMessages = function () {
+        var _a;
+        var messageKeys = Object.keys((_a = this.client.messageCache.data) !== null && _a !== void 0 ? _a : {});
         if (this.visible) {
             var messagesDiv = document.querySelector("div.messages");
             messagesDiv.innerHTML = "";
@@ -159,8 +165,11 @@ var Chat = (function () {
                 if (messagesDiv.getBoundingClientRect().right === window.innerWidth) {
                     messagesDiv.lastChild.scrollIntoView();
                 }
-                this.client.messageCache.read = Object.keys(this.client.messageCache.data).length;
+                this.client.messageCache.read = messageKeys.length;
             }
+        }
+        else if (this.client.allowedNotifications && document.hidden) {
+            new Notification("New Writeboard Message", { body: this.client.messageCache.data[messageKeys[messageKeys.length - 1]].content });
         }
         var notification = document.querySelector("div.notification");
         if (this.client.messageCache.data && Object.keys(this.client.messageCache.data).length > this.client.messageCache.read) {

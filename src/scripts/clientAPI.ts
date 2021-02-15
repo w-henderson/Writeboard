@@ -78,6 +78,8 @@ class Client {
   lastStrokeUpdate: number;
   maximised: boolean;
 
+  allowedNotifications: boolean;
+
   constructor(graphics: Graphics) {
     this.database = firebase.database();
     this.analytics = firebase.analytics();
@@ -85,6 +87,7 @@ class Client {
     this.roomId = window.location.search.substr(1);
     this.lastStrokeUpdate = -1;
     this.maximised = false;
+    this.allowedNotifications = false;
 
     this.messageCache = {
       read: 0,
@@ -163,6 +166,10 @@ class Client {
           this.maximisedRef = this.database.ref(`rooms/${this.roomId}/users/${this.userId}/maximised`);
           this.messageRef.on("value", (e) => { this.chat.messageHandler(e); });
           this.maximisedRef.on("value", (e) => { this.updateMaximised(e); });
+
+          Notification.requestPermission().then((result: NotificationPermission) => {
+            this.allowedNotifications = result === "granted";
+          });
 
           window.setTimeout(() => { _wb.CLIENT.updateBoard() }, 5000);
         }
@@ -248,6 +255,8 @@ class Chat {
    * If the chat is not visible, add the notification dot to tell the user a new message has arrived.
    */
   updateMessages() {
+    let messageKeys = Object.keys(this.client.messageCache.data ?? {});
+
     if (this.visible) {
       let messagesDiv = document.querySelector("div.messages");
       messagesDiv.innerHTML = "";
@@ -264,8 +273,13 @@ class Chat {
         if (messagesDiv.getBoundingClientRect().right === window.innerWidth) {
           (<HTMLSpanElement>messagesDiv.lastChild).scrollIntoView();
         }
-        this.client.messageCache.read = Object.keys(this.client.messageCache.data).length;
+        this.client.messageCache.read = messageKeys.length;
       }
+    } else if (this.client.allowedNotifications && document.hidden) {
+      new Notification(
+        "New Writeboard Message",
+        { body: this.client.messageCache.data[messageKeys[messageKeys.length - 1]].content }
+      );
     }
 
     let notification: HTMLDivElement = document.querySelector("div.notification");

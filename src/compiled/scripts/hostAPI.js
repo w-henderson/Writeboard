@@ -13,6 +13,7 @@ var Host = (function () {
         this.analytics = firebase.analytics();
         this.roomId = window.localStorage.getItem("writeboardTempId");
         this.userCache = {};
+        this.allowedNotifications = false;
         if (!this.roomId) {
             Swal.fire({
                 title: "Error 404",
@@ -31,6 +32,9 @@ var Host = (function () {
             this.ref.on("child_added", function (e) { _wb_host.HOST.addWhiteboard(e); });
             this.ref.on("child_changed", function (e) { _wb_host.HOST.updateWhiteboard(e); });
             this.ref.on("child_removed", function (e) { _wb_host.HOST.removeWhiteboard(e); });
+            Notification.requestPermission().then(function (result) {
+                _this.allowedNotifications = result === "granted";
+            });
             window.localStorage.removeItem("writeboardTempId");
         }
         document.querySelector("input#messageInput").onkeyup = function (e) { _wb_host.CHAT.sendMessage(e); };
@@ -73,11 +77,18 @@ var Host = (function () {
         userNode.querySelector("img").src = data.board;
         userNode.querySelector("span").firstChild.textContent = data.name;
         this.userCache[e.key].data = e.val();
+        var messageKeys = Object.keys(this.userCache[e.key].data.messages);
         if (e.key === this.maximisedUser)
             _wb_host.CHAT.updateMaximised();
-        if (this.userCache[e.key].data.messages && Object.keys(this.userCache[e.key].data.messages).length > this.userCache[e.key].seenMessages) {
+        else if (this.allowedNotifications && data.messages && messageKeys.length > this.userCache[e.key].seenMessages && document.hidden) {
+            new Notification("New Writeboard Message from " + data.name, {
+                body: data.messages[messageKeys[messageKeys.length - 1]].content,
+                image: data.board
+            });
+        }
+        if (this.userCache[e.key].data.messages && messageKeys.length > this.userCache[e.key].seenMessages) {
             userNode.querySelector("div").style.display = "block";
-            userNode.querySelector("div").textContent = (Object.keys(this.userCache[e.key].data.messages).length - this.userCache[e.key].seenMessages).toString();
+            userNode.querySelector("div").textContent = (messageKeys.length - this.userCache[e.key].seenMessages).toString();
         }
         else {
             userNode.querySelector("div").style.display = "none";
