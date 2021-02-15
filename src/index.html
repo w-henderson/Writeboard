@@ -21,10 +21,10 @@
 <body>
     <div class="navigation">
         <span><a href="/">Writeboard</a></span>
-        <a onclick="UI.scrollToAnchor('about')">About Us</a>
-        <a onclick="UI.scrollToAnchor('features')">Features</a>
-        <a onclick="UI.scrollToAnchor('updates')">Updates</a>
-        <a onclick="UI.scrollToAnchor('pricing')" class="bold">Pricing</a>
+        <a onclick="_wb_home.UI.scrollToAnchor('about')">About Us</a>
+        <a onclick="_wb_home.UI.scrollToAnchor('features')">Features</a>
+        <a onclick="_wb_home.UI.scrollToAnchor('updates')">Updates</a>
+        <a onclick="_wb_home.UI.scrollToAnchor('pricing')" class="bold">Pricing</a>
     </div>
 
     <div class="hero">
@@ -36,8 +36,8 @@
         </span>
 
         <div class="buttons">
-            <button onclick="UI.joinRoom();">Join Room</button>
-            <button onclick="UI.hostRoom();">Host Room</button>
+            <button onclick="_wb_home.UI.joinRoom();">Join Room</button>
+            <button onclick="_wb_home.UI.hostRoom();">Host Room</button>
         </div>
     </div>
 
@@ -75,6 +75,7 @@
         <ul id="updateList">
             <li>Loading...</li>
         </ul>
+        Click <a href="https://github.com/w-henderson/Writeboard/commits">here</a> to see more.
     </section>
 
     <a name="pricing"></a>
@@ -98,7 +99,7 @@
     </section>
 
     <footer>
-        Writeboard &bull; <a href="mailto:william-henderson@outlook.com">Contact Us</a> &bull; <a onclick="UI.privacy();">Privacy Policy</a>
+        Writeboard &bull; <a href="mailto:william-henderson@outlook.com">Contact Us</a> &bull; <a onclick="_wb_home.UI.privacy();">Privacy Policy</a>
         <span>&copy; William Henderson 2021</span>
     </footer>
 

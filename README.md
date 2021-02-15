@@ -1,4 +1,4 @@
-![Writeboard Mockups](src/images/banner/full.png)
+[![Writeboard Mockups](src/images/banner/full.png)](https://writeboard.ga)
 
 # Writeboard
 Writeboard is a simple yet stylish whiteboard web app which allows any team to share their ideas easily and instantly. Brought to you by the developers of the critically-acclaimed education apps [Sadlet](https://github.com/w-henderson/Sadlet) and [Kascreech](https://github.com/w-henderson/Kascreech), Writeboard offers a user-friendly and intuitive platform for collaboration and communication, powered by Google's Firebase backend system.
@@ -8,8 +8,9 @@ Here at Writeboard, we believe that everyone should have a top-quality collabora
 
 - Intuitive whiteboard interface with numerous tools
 - Support for pen pressure and pens with erasers
-- Less than five seconds latency between your board and the host
-- Committed to privacy: all your data is deleted as soon as the room is closed
+- Instant two-way messaging between the host and the client
+- Less than five seconds image latency, reduced to one when the board is maximised
+- Committed to privacy: all your board data is deleted as soon as the room is closed
 - Completely free for everyone
 
 ## Technologies Used
@@ -29,3 +30,4 @@ Here at Writeboard, we believe that everyone should have a top-quality collabora
 
 - [Firebase Realtime Database](https://firebase.google.com/docs/database) for pretty much everything
 - [Netlify](https://www.netlify.com) for hosting
+- [Freenom](https://www.freenom.com/) for the domain name

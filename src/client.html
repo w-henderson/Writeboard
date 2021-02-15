@@ -17,32 +17,32 @@
         <canvas width=1600 height=1200></canvas>
         
         <div class="toolbar brush">
-            <i class="material-icons-round" onclick="Functionality.openBrushMenu();" title="Brush">brush</i>
+            <i class="material-icons-round" onclick="_wb.UI.openBrushMenu();" title="Brush">brush</i>
             <div class="extended extendedBrush enlarged">
                 <i class="material-icons-round"
-                   onclick="Functionality.selectColor();"
+                   onclick="_wb.TOOLS.selectColor();"
                    id="colorIcon"
                    title="Change pen colour">opacity</i>
                 <i class="material-icons-round"
-                   onclick="Functionality.toggleLineWidth();"
+                   onclick="_wb.TOOLS.toggleLineWidth();"
                    style="transform:scale(0.8);"
                    id="widthIcon"
                    title="Switch between line widths">line_weight</i>
                 <i class="material-icons-round"
-                   onclick="Functionality.toggleStraightLine();"
+                   onclick="_wb.TOOLS.toggleStraightLine();"
                    id="straightIcon"
                    title="Straight line tool"
                    style="opacity:.2">straighten</i>
             </div>
 
-            <img src="images/eraser.svg" onclick="Functionality.selectEraser();" title="Eraser">
+            <img src="images/eraser.svg" onclick="_wb.TOOLS.selectEraser();" title="Eraser">
 
-            <i class="material-icons-round" onclick="Functionality.undo();" title="Undo">undo</i>
-            <i class="material-icons-round" onclick="Functionality.redo();" title="Redo">redo</i>
-            <i class="material-icons-round" onclick="Functionality.clearBoard();" title="Clear board">clear</i>
+            <i class="material-icons-round" onclick="_wb.HISTORY.undo();" title="Undo">undo</i>
+            <i class="material-icons-round" onclick="_wb.HISTORY.redo();" title="Redo">redo</i>
+            <i class="material-icons-round" onclick="_wb.TOOLS.clearBoard();" title="Clear board">clear</i>
 
-            <i class="material-icons-round smaller" onclick="Functionality.forceCopy();" title="Copy board">copy</i>
-            <i class="material-icons-round smaller" onclick="Functionality.forcePaste();" title="Paste onto board">paste</i>
+            <i class="material-icons-round smaller" onclick="_wb.EVENTS.forceCopy();" title="Copy board">copy</i>
+            <i class="material-icons-round smaller" onclick="_wb.EVENTS.forcePaste();" title="Paste onto board">paste</i>
         </div>
     </div>
 
@@ -51,13 +51,13 @@
         <div class="messages"></div>
         <input type="text" placeholder="Message" id="messageInput">
 
-        <div class="toggle" onclick="Client.Chat.showChat();" title="Show/hide chat">
+        <div class="toggle" onclick="_wb.CHAT.showChat();" title="Show/hide chat">
             <i class="material-icons-round">message</i>
             <div class="notification" style="display:none"></div>
         </div>
     </div>
 
-    <input type="color" value="#ffffff" onchange="Functionality.updateStrokeStyle();">
+    <input type="color" value="#ffffff" onchange="_wb.TOOLS.updateStrokeStyle();">
 
     <!-- Firebase Scripts -->
     <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-app.js"></script>
@@ -70,8 +70,8 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 
     <!-- Main Scripts -->
-    <script src="compiled/scripts/clientAPI.js"></script>
     <script src="compiled/scripts/whiteboard.js"></script>
+    <script src="compiled/scripts/clientAPI.js"></script>
 </body>
 
 </html>

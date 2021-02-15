@@ -1,53 +1,87 @@
 var Swal: any;
 var firebase: any;
 
-namespace Host {
-  var database = firebase.database();
-  var analytics = firebase.analytics();
-  export var roomId = window.localStorage.getItem("writeboardTempId");
-  export var maximisedUser;
+/** Variable to hold all the class instances to prevent cluttering up globals. */
+let _wb_host: {
+  HOST?: Host,
+  CHAT?: HostChat
+} = {};
 
-  export var userCache: any = {};
+/** Initialises the host and the chat. */
+function initHost() {
+  _wb_host.HOST = new Host();
+  _wb_host.CHAT = new HostChat(_wb_host.HOST);
+}
 
-  var ref;
-  var titleRef;
-  var maximisedRef;
+window.onload = initHost;
 
-  window.addEventListener("load", () => {
-    if (!roomId) {
+/**
+ * Class managing all the host activities.
+ * This includes board management and room management.
+ * Chat is managed in `HostChat`.
+ */
+class Host {
+  database: any;
+  analytics: any;
+  roomId: string;
+  maximisedUser: string;
+  userCache: any;
+  ref: any;
+  titleRef: any;
+  maximisedRef: any;
+
+  constructor() {
+    this.database = firebase.database();
+    this.analytics = firebase.analytics();
+    this.roomId = window.localStorage.getItem("writeboardTempId");
+    this.userCache = {};
+
+    if (!this.roomId) {
       Swal.fire({
         title: "Error 404",
         text: "Writeboard Not Found",
         icon: "error",
         background: "var(--background)"
       }).then(() => {
-        analytics.logEvent("failHost", {});
+        this.analytics.logEvent("failHost", {});
         window.location.href = "/";
       });
     } else {
-      ref = database.ref(`rooms/${roomId}/users`);
-      titleRef = database.ref(`rooms/${roomId}/name`);
-      titleRef.once("value", updateTitle);
+      this.ref = this.database.ref(`rooms/${this.roomId}/users`);
+      this.titleRef = this.database.ref(`rooms/${this.roomId}/name`);
+      this.titleRef.once("value", (e) => { _wb_host.HOST.updateTitle(e); });
 
-      ref.on("child_added", addWhiteboard);
-      ref.on("child_changed", updateWhiteboard);
-      ref.on("child_removed", removeWhiteboard);
+      this.ref.on("child_added", (e) => { _wb_host.HOST.addWhiteboard(e); });
+      this.ref.on("child_changed", (e) => { _wb_host.HOST.updateWhiteboard(e); });
+      this.ref.on("child_removed", (e) => { _wb_host.HOST.removeWhiteboard(e); });
 
       window.localStorage.removeItem("writeboardTempId");
     }
 
-    (<HTMLInputElement>document.querySelector("input#messageInput")).onkeyup = Chat.sendMessage;
-  });
-
-  function updateTitle(e) {
-    let data = e.val();
-    document.title = `${data} - Writeboard`;
-    document.querySelector("h1").textContent = `${data} (${roomId})`;
-
-    analytics.logEvent("host", { roomId, title: data });
+    (<HTMLInputElement>document.querySelector("input#messageInput")).onkeyup = (e) => { _wb_host.CHAT.sendMessage(e); };
+    window.addEventListener("beforeunload", () => {
+      _wb_host.HOST.analytics.logEvent("closeRoom", { roomId: _wb_host.HOST.roomId });
+      return _wb_host.HOST.database.ref(`rooms/${_wb_host.HOST.roomId}`).remove().then(() => { return });
+    });
   }
 
-  function addWhiteboard(e) {
+  /**
+   * Updates the title of the board and logs the host event.
+   * This is called once when the room is created.
+   */
+  updateTitle(e) {
+    let data = e.val();
+    document.title = `${data} - Writeboard`;
+    document.querySelector("h1").textContent = `${data} (${this.roomId})`;
+
+    this.analytics.logEvent("host", { roomId: this.roomId, title: data });
+  }
+
+  /**
+   * Adds a whiteboard to the room.
+   * The whiteboard is then cached so it can be easily accessed if maximised.
+   */
+  addWhiteboard(e) {
     let whiteboards = document.querySelector("div.whiteboards");
     if (whiteboards.textContent.trim() === "Waiting for people to connect...") whiteboards.innerHTML = "";
 
@@ -57,7 +91,7 @@ namespace Host {
     let messageIndicator = document.createElement("div");
 
     userWhiteboard.src = e.val().board;
-    userWhiteboard.onclick = Chat.clickHandler;
+    userWhiteboard.onclick = (e) => { _wb_host.CHAT.clickHandler(e); };
     userName.textContent = e.val().name;
     userNode.id = e.key;
     messageIndicator.style.display = "none";
@@ -67,132 +101,148 @@ namespace Host {
     userNode.appendChild(messageIndicator);
     whiteboards.appendChild(userNode);
 
-    userCache[e.key] = {
+    this.userCache[e.key] = {
       data: e.val(),
       seenMessages: 0
     }
   }
 
-  function updateWhiteboard(e) {
+  /** Updates a whiteboard already in the room. */
+  updateWhiteboard(e) {
     let data = e.val();
     let userNode = document.querySelector(`div.whiteboards div#${e.key}`);
     userNode.querySelector("img").src = data.board;
     userNode.querySelector("span").firstChild.textContent = data.name;
 
-    userCache[e.key].data = e.val();
+    this.userCache[e.key].data = e.val();
 
-    if (e.key === maximisedUser) Chat.updateMaximised();
+    if (e.key === this.maximisedUser) _wb_host.CHAT.updateMaximised();
 
-    if (userCache[e.key].data.messages && Object.keys(userCache[e.key].data.messages).length > userCache[e.key].seenMessages) {
+    if (this.userCache[e.key].data.messages && Object.keys(this.userCache[e.key].data.messages).length > this.userCache[e.key].seenMessages) {
       userNode.querySelector("div").style.display = "block";
-      userNode.querySelector("div").textContent = (Object.keys(userCache[e.key].data.messages).length - userCache[e.key].seenMessages).toString();
+      userNode.querySelector("div").textContent = (Object.keys(this.userCache[e.key].data.messages).length - this.userCache[e.key].seenMessages).toString();
     } else {
       userNode.querySelector("div").style.display = "none";
     }
   }
 
-  function removeWhiteboard(e) {
+  /** Removes a whiteboard from the room. */
+  removeWhiteboard(e) {
     let userNode = document.querySelector(`div.whiteboards div#${e.key}`);
     userNode.remove();
 
-    if (e.key === maximisedUser) Chat.hideMaximised(true);
+    if (e.key === this.maximisedUser) _wb_host.CHAT.hideMaximised(true);
 
-    delete userCache[e.key];
+    delete this.userCache[e.key];
 
     if (document.querySelector("div.whiteboards").innerHTML === "") document.querySelector("div.whiteboards").textContent = "Waiting for people to connect...";
   }
+}
 
-  window.addEventListener("beforeunload", () => {
-    analytics.logEvent("closeRoom", { roomId });
-    return database.ref(`rooms/${roomId}`).remove().then(() => { return });
-  });
+/**
+ * Class managing chat features for the host.
+ * This includes maximising and minimising boards, as well as chat.
+ * Constructed by passing in the host instance.
+ * 
+ * @param {Host} host - host instance to connect to
+ */
+class HostChat {
+  seenMessages: any;
+  host: Host;
 
-  export namespace Chat {
-    export var seenMessages: any = {};
+  constructor(host: Host) {
+    this.seenMessages = {};
+    this.host = host;
+  }
 
-    export function showMaximisedBoard(id: string) {
-      let div: HTMLElement = document.querySelector("div.maximised");
+  /** Toggles the specified user ID's board to become maximised. */
+  showMaximisedBoard(id: string) {
+    let div: HTMLElement = document.querySelector("div.maximised");
 
-      div.querySelector("img").src = (<HTMLImageElement>document.querySelector(`div#${id} img`)).src;
-      div.querySelector("span").textContent = document.querySelector(`div#${id} span`).firstChild.textContent;
-      div.onclick = closeClickHandler;
+    div.querySelector("img").src = (<HTMLImageElement>document.querySelector(`div#${id} img`)).src;
+    div.querySelector("span").textContent = document.querySelector(`div#${id} span`).firstChild.textContent;
+    div.onclick = (e) => { _wb_host.CHAT.closeClickHandler(e); };
 
-      div.className = "maximised shown";
-      maximisedUser = id;
+    div.className = "maximised shown";
+    this.host.maximisedUser = id;
 
-      updateMaximised();
+    this.updateMaximised();
 
-      maximisedRef = database.ref(`rooms/${roomId}/users/${maximisedUser}`);
-      maximisedRef.update({
-        maximised: true
+    this.host.maximisedRef = this.host.database.ref(`rooms/${this.host.roomId}/users/${this.host.maximisedUser}`);
+    this.host.maximisedRef.update({
+      maximised: true
+    });
+  }
+
+  /** Updates a maximised board. This also updates messages. */
+  updateMaximised() {
+    let div: HTMLElement = document.querySelector("div.maximised");
+    div.querySelector("img").src = this.host.userCache[this.host.maximisedUser].data.board;
+
+    let messagesDiv = document.querySelector("div.messages");
+    messagesDiv.innerHTML = "";
+    if (this.host.userCache[this.host.maximisedUser].data.messages) {
+      for (let messageId in this.host.userCache[this.host.maximisedUser].data.messages) {
+        let outerSpan = document.createElement("span");
+        let innerSpan = document.createElement("span");
+        outerSpan.className = this.host.userCache[this.host.maximisedUser].data.messages[messageId].sender + "Message";
+        innerSpan.textContent = this.host.userCache[this.host.maximisedUser].data.messages[messageId].content;
+        outerSpan.appendChild(innerSpan);
+        messagesDiv.appendChild(outerSpan);
+      }
+
+      (<HTMLSpanElement>messagesDiv.lastChild).scrollIntoView();
+      this.host.userCache[this.host.maximisedUser].seenMessages = Object.keys(this.host.userCache[this.host.maximisedUser].data.messages).length;
+    }
+  }
+
+  /** Hides the maximised board. If it was deleted, inform the host. */
+  hideMaximised(deleted = false) {
+    let div: HTMLElement = document.querySelector("div.maximised");
+    div.className = "maximised";
+    div.onclick = null;
+
+    if (!deleted) {
+      this.host.maximisedRef.update({
+        maximised: false
+      });
+    } else {
+      Swal.fire({
+        title: "User left the room.",
+        text: "The user you were viewing has just left the room, so the connection to their board has been lost.",
+        icon: "warning",
+        background: "var(--background)"
       });
     }
 
-    export function updateMaximised() {
-      let div: HTMLElement = document.querySelector("div.maximised");
-      div.querySelector("img").src = userCache[maximisedUser].data.board;
+    this.host.maximisedRef.off();
+    this.host.maximisedRef = undefined;
+    this.host.maximisedUser = undefined;
+  }
 
-      let messagesDiv = document.querySelector("div.messages");
-      messagesDiv.innerHTML = "";
-      if (userCache[maximisedUser].data.messages) {
-        for (let messageId in userCache[maximisedUser].data.messages) {
-          let outerSpan = document.createElement("span");
-          let innerSpan = document.createElement("span");
-          outerSpan.className = userCache[maximisedUser].data.messages[messageId].sender + "Message";
-          innerSpan.textContent = userCache[maximisedUser].data.messages[messageId].content;
-          outerSpan.appendChild(innerSpan);
-          messagesDiv.appendChild(outerSpan);
-        }
+  /** Send a message to the client. This is called on pressing the return key in the message box. */
+  sendMessage(e) {
+    e.preventDefault();
+    if (e.keyCode !== 13) return;
 
-        (<HTMLSpanElement>messagesDiv.lastChild).scrollIntoView();
-        userCache[maximisedUser].seenMessages = Object.keys(userCache[maximisedUser].data.messages).length;
-      }
-    }
+    let input: HTMLInputElement = document.querySelector("input#messageInput");
+    let messageText = input.value;
+    input.value = "";
 
-    export function hideMaximised(deleted = false) {
-      let div: HTMLElement = document.querySelector("div.maximised");
-      div.className = "maximised";
-      div.onclick = null;
+    let messagesRef = this.host.database.ref(`rooms/${this.host.roomId}/users/${this.host.maximisedUser}/messages`).push();
+    messagesRef.set({
+      sender: "host",
+      content: messageText
+    });
+  }
 
-      if (!deleted) {
-        maximisedRef.update({
-          maximised: false
-        });
-      } else {
-        Swal.fire({
-          title: "User left the room.",
-          text: "The user you were viewing has just left the room, so the connection to their board has been lost.",
-          icon: "warning",
-          background: "var(--background)"
-        });
-      }
+  /** Handles clicks on each board. */
+  clickHandler(e) {
+    this.showMaximisedBoard(e.target.parentNode.id);
+  }
 
-      maximisedRef.off();
-      maximisedRef = undefined;
-      maximisedUser = undefined;
-    }
-
-    export function sendMessage(e) {
-      e.preventDefault();
-      if (e.keyCode !== 13) return;
-
-      let input: HTMLInputElement = document.querySelector("input#messageInput");
-      let messageText = input.value;
-      input.value = "";
-
-      let messagesRef = database.ref(`rooms/${roomId}/users/${maximisedUser}/messages`).push();
-      messagesRef.set({
-        sender: "host",
-        content: messageText
-      });
-    }
-
-    export function clickHandler(e) {
-      showMaximisedBoard(e.target.parentNode.id);
-    }
-
-    export function closeClickHandler(e) {
-      if (e.target.className === "maximised shown") hideMaximised();
-    }
+  /** Handles clicks outside the maximised board. */
+  closeClickHandler(e) {
+    if (e.target.className === "maximised shown") this.hideMaximised();
   }
 }
