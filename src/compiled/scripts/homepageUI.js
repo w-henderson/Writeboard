@@ -36,22 +36,31 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 var Swal;
 var firebase;
-var UI;
-(function (UI) {
-    var database = firebase.database();
-    function route(r) {
+var _wb_home = {};
+function initHome() {
+    _wb_home.UI = new HomepageUI();
+}
+window.onload = initHome;
+var HomepageUI = (function () {
+    function HomepageUI() {
+        this.database = firebase.database();
+        this.updateSizing();
+        this.updateLatestUpdates();
+        window.onresize = function () { _wb_home.UI.updateSizing(); };
+    }
+    HomepageUI.prototype.route = function (r) {
         if (window.location.hostname !== "localhost" && window.location.hostname !== "192.168.1.1")
             return r;
         else
             return r + ".html";
-    }
-    function scrollToAnchor(name) {
+    };
+    HomepageUI.prototype.scrollToAnchor = function (name) {
         document.querySelector(".navigation").className = "navigation";
         document.querySelector("a[name=\"" + name + "\"]").scrollIntoView({ behavior: "smooth" });
         window.history.replaceState(null, null, "#" + name);
-    }
-    UI.scrollToAnchor = scrollToAnchor;
-    function joinRoom() {
+    };
+    HomepageUI.prototype.joinRoom = function () {
+        var _this = this;
         Swal.fire({
             title: 'Enter the room ID.',
             text: "Ask the room host if you don't know the room ID.",
@@ -74,12 +83,11 @@ var UI;
         }).then(function (result) {
             if (result.isConfirmed) {
                 var roomId = result.value;
-                window.location.href = "/" + route("client") + "?" + roomId;
+                window.location.href = "/" + _this.route("client") + "?" + roomId;
             }
         });
-    }
-    UI.joinRoom = joinRoom;
-    function hostRoom() {
+    };
+    HomepageUI.prototype.hostRoom = function () {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_a) {
@@ -102,6 +110,7 @@ var UI;
                     }
                 }).then(function (result) { return __awaiter(_this, void 0, void 0, function () {
                     var roomName, alphabet_1, valid_1, code_1, i;
+                    var _this = this;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0:
@@ -115,7 +124,7 @@ var UI;
                                 _a.label = 1;
                             case 1:
                                 if (!!valid_1) return [3, 3];
-                                return [4, database.ref("rooms/" + code_1).once("value", function (snapshot) {
+                                return [4, this.database.ref("rooms/" + code_1).once("value", function (snapshot) {
                                         if (snapshot.val() === null) {
                                             valid_1 = true;
                                         }
@@ -129,12 +138,12 @@ var UI;
                                 _a.sent();
                                 return [3, 1];
                             case 3:
-                                database.ref("rooms/" + code_1).set({
+                                this.database.ref("rooms/" + code_1).set({
                                     name: roomName,
                                     users: {}
                                 }).then(function () {
                                     window.localStorage.setItem("writeboardTempId", code_1);
-                                    window.location.href = "/" + route("host");
+                                    window.location.href = "/" + _this.route("host");
                                 })["catch"](function () {
                                     Swal.fire({
                                         title: "An error occurred.",
@@ -150,9 +159,8 @@ var UI;
                 return [2];
             });
         });
-    }
-    UI.hostRoom = hostRoom;
-    function privacy() {
+    };
+    HomepageUI.prototype.privacy = function () {
         Swal.fire({
             icon: "info",
             width: 800,
@@ -161,17 +169,16 @@ var UI;
             confirmButtonText: "Close",
             background: "var(--background)"
         });
-    }
-    UI.privacy = privacy;
-    function updateSizing() {
+    };
+    HomepageUI.prototype.updateSizing = function () {
         var height = (window.visualViewport.width * 0.176) + 170;
         document.querySelector("div.banner").style.height = height + "px";
         document.querySelectorAll("div.banner img").forEach(function (div) {
             div.style.height = height + "px";
             div.style.left = "calc(50% - " + height * 2 + "px)";
         });
-    }
-    function updateLatestUpdates() {
+    };
+    HomepageUI.prototype.updateLatestUpdates = function () {
         var updateList = document.querySelector("#updateList");
         window.fetch("https://api.github.com/repos/w-henderson/Writeboard/commits")
             .then(function (data) {
@@ -212,10 +219,6 @@ var UI;
             updateList.innerHTML = "<li>An error occurred. This has been automatically reported to us, so we'll work on fixing it right away!</li>";
             firebase.analytics().logEvent("latestUpdatesError", { errorType: "unknown" });
         });
-    }
-    window.onresize = updateSizing;
-    window.onload = function () {
-        updateSizing();
-        updateLatestUpdates();
     };
-})(UI || (UI = {}));
+    return HomepageUI;
+}());

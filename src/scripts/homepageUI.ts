@@ -1,21 +1,51 @@
 var Swal: any;
 var firebase: any;
 
-namespace UI {
-  var database = firebase.database();
+/** Variable to hold all the class instances to prevent cluttering up globals. */
+let _wb_home: {
+  UI?: HomepageUI
+} = {};
 
-  function route(r: string) {
+/** Initialises the homepage UI manager. */
+function initHome() {
+  _wb_home.UI = new HomepageUI();
+}
+
+window.onload = initHome;
+
+/**
+ * Class to manage the homepage UI.
+ * This involves scrolling to anchors as well as room management.
+ */
+class HomepageUI {
+  database: any;
+
+  constructor() {
+    this.database = firebase.database();
+    this.updateSizing();
+    this.updateLatestUpdates();
+    window.onresize = () => { _wb_home.UI.updateSizing(); };
+  }
+
+  /**
+   * Netlify's asset optimisation means the user doesn't need the `.html` at the end of the URL.
+   * On my local development server, I do need this.
+   * This is basically a janky workaround.
+   */
+  route(r: string) {
     if (window.location.hostname !== "localhost" && window.location.hostname !== "192.168.1.1") return r;
     else return `${r}.html`;
   }
 
-  export function scrollToAnchor(name: string) {
+  /** Scrolls smoothly to an anchor on the page and updates the URL without reloading. */
+  scrollToAnchor(name: string) {
     document.querySelector(".navigation").className = "navigation";
     document.querySelector(`a[name="${name}"]`).scrollIntoView({ behavior: "smooth" });
     window.history.replaceState(null, null, `#${name}`);
   }
 
-  export function joinRoom() {
+  /** Starts and manages the join room flow with `sweetalert2`. */
+  joinRoom() {
     Swal.fire({
       title: 'Enter the room ID.',
       text: "Ask the room host if you don't know the room ID.",
@@ -37,12 +67,13 @@ namespace UI {
     }).then((result) => {
       if (result.isConfirmed) {
         let roomId = result.value;
-        window.location.href = `/${route("client")}?${roomId}`;
+        window.location.href = `/${this.route("client")}?${roomId}`;
       }
     });
   }
 
-  export async function hostRoom() {
+  /** Starts and manages the host room flow with `sweetalert2`. */
+  async hostRoom() {
     Swal.fire({
       title: 'Name your room.',
       text: "This will appear at the top of your screen along with the room code.",
@@ -68,8 +99,9 @@ namespace UI {
         let code = "";
         for (let i = 0; i < 6; i++) code += alphabet[Math.floor(Math.random() * 26)];
 
+        // sketchy room ID generation
         while (!valid) {
-          await database.ref(`rooms/${code}`).once("value", (snapshot) => {
+          await this.database.ref(`rooms/${code}`).once("value", (snapshot) => {
             if (snapshot.val() === null) {
               valid = true;
             } else {
@@ -79,12 +111,12 @@ namespace UI {
           });
         }
 
-        database.ref(`rooms/${code}`).set({
+        this.database.ref(`rooms/${code}`).set({
           name: roomName,
           users: {}
         }).then(() => {
           window.localStorage.setItem("writeboardTempId", code);
-          window.location.href = "/" + route("host");
+          window.location.href = "/" + this.route("host");
         }).catch(() => {
           Swal.fire({
             title: "An error occurred.",
@@ -96,7 +128,8 @@ namespace UI {
     });
   }
 
-  export function privacy() {
+  /** Shows the privacy policy. */
+  privacy() {
     Swal.fire({
       icon: "info",
       width: 800,
@@ -121,7 +154,11 @@ namespace UI {
     })
   }
 
-  function updateSizing() {
+  /**
+   * Updates the sizing of the screenshots for different devices.
+   * This is done with some very random-looking line equation which I calculated.
+   */
+  updateSizing() {
     let height = (window.visualViewport.width * 0.176) + 170; // it works, don't mess it up
     (<HTMLDivElement>document.querySelector("div.banner")).style.height = `${height}px`;
     document.querySelectorAll("div.banner img").forEach((div) => {
@@ -130,7 +167,12 @@ namespace UI {
     });
   }
 
-  function updateLatestUpdates() {
+  /**
+   * Updates the "Latest Updates" section of the homepage.
+   * This queries the GitHub API to get the latest commits.
+   * These are then formatted and put into the HTML list.
+   */
+  updateLatestUpdates() {
     let updateList: HTMLUListElement = document.querySelector("#updateList");
 
     window.fetch("https://api.github.com/repos/w-henderson/Writeboard/commits")
@@ -172,10 +214,4 @@ namespace UI {
         firebase.analytics().logEvent("latestUpdatesError", { errorType: "unknown" });
       });
   }
-
-  window.onresize = updateSizing;
-  window.onload = () => {
-    updateSizing();
-    updateLatestUpdates();
-  };
 }
