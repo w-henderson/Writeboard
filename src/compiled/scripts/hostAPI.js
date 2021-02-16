@@ -4,6 +4,7 @@ var _wb_host = {};
 function initHost() {
     _wb_host.HOST = new Host();
     _wb_host.CHAT = new HostChat(_wb_host.HOST);
+    _wb_host.UI = new HostUI();
 }
 window.onload = initHost;
 var Host = (function () {
@@ -72,12 +73,13 @@ var Host = (function () {
         };
     };
     Host.prototype.updateWhiteboard = function (e) {
+        var _a;
         var data = e.val();
         var userNode = document.querySelector("div.whiteboards div#" + e.key);
         userNode.querySelector("img").src = data.board;
         userNode.querySelector("span").firstChild.textContent = data.name;
         this.userCache[e.key].data = e.val();
-        var messageKeys = Object.keys(this.userCache[e.key].data.messages);
+        var messageKeys = Object.keys((_a = this.userCache[e.key].data.messages) !== null && _a !== void 0 ? _a : {});
         if (e.key === this.maximisedUser)
             _wb_host.CHAT.updateMaximised();
         else if (this.allowedNotifications && data.messages && messageKeys.length > this.userCache[e.key].seenMessages && document.hidden) {
@@ -184,4 +186,19 @@ var HostChat = (function () {
             this.hideMaximised();
     };
     return HostChat;
+}());
+var HostUI = (function () {
+    function HostUI() {
+        this.zoomLevel = 3;
+        this.whiteboards = document.querySelector("div.whiteboards");
+    }
+    HostUI.prototype.setZoomLevel = function (zoomLevel) {
+        this.zoomLevel = zoomLevel;
+        this.whiteboards.className = "whiteboards zoom" + zoomLevel;
+    };
+    HostUI.prototype.zoomIn = function () { if (this.zoomLevel < 4)
+        this.setZoomLevel(this.zoomLevel + 1); };
+    HostUI.prototype.zoomOut = function () { if (this.zoomLevel > 1)
+        this.setZoomLevel(this.zoomLevel - 1); };
+    return HostUI;
 }());

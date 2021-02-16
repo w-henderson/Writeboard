@@ -4,13 +4,15 @@ var firebase: any;
 /** Variable to hold all the class instances to prevent cluttering up globals. */
 let _wb_host: {
   HOST?: Host,
-  CHAT?: HostChat
+  CHAT?: HostChat,
+  UI?: HostUI
 } = {};
 
 /** Initialises the host and the chat. */
 function initHost() {
   _wb_host.HOST = new Host();
   _wb_host.CHAT = new HostChat(_wb_host.HOST);
+  _wb_host.UI = new HostUI();
 }
 
 window.onload = initHost;
@@ -125,7 +127,7 @@ class Host {
 
     this.userCache[e.key].data = e.val();
 
-    let messageKeys = Object.keys(this.userCache[e.key].data.messages);
+    let messageKeys = Object.keys(this.userCache[e.key].data.messages ?? {});
 
     if (e.key === this.maximisedUser) _wb_host.CHAT.updateMaximised();
     else if (this.allowedNotifications && data.messages && messageKeys.length > this.userCache[e.key].seenMessages && document.hidden) {
@@ -265,4 +267,31 @@ class HostChat {
   closeClickHandler(e) {
     if (e.target.className === "maximised shown") this.hideMaximised();
   }
+}
+
+/**
+ * Class to manage the UI of the host page.
+ * This includes zooming in and out of the boards as well as other buttons.
+ */
+class HostUI {
+  zoomLevel: number;
+  whiteboards: HTMLDivElement;
+
+  constructor() {
+    this.zoomLevel = 3;
+    this.whiteboards = document.querySelector("div.whiteboards");
+  }
+
+  /**
+   * Sets the zoom level to the specified number.
+   * Does not validate, this must be done in `zoomIn()` and `zoomOut()`.
+   * @param {Number} zoomLevel - the zoom level to set
+   */
+  setZoomLevel(zoomLevel: number) {
+    this.zoomLevel = zoomLevel;
+    this.whiteboards.className = `whiteboards zoom${zoomLevel}`;
+  }
+
+  zoomIn() { if (this.zoomLevel < 4) this.setZoomLevel(this.zoomLevel + 1); }
+  zoomOut() { if (this.zoomLevel > 1) this.setZoomLevel(this.zoomLevel - 1); }
 }
