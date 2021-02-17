@@ -68,6 +68,7 @@ class Client {
   maximisedRef: any;
   messageRef: any;
   titleRef: any;
+  kickRef: any;
   ref: any;
 
   messageCache: {
@@ -77,6 +78,7 @@ class Client {
 
   lastStrokeUpdate: number;
   maximised: boolean;
+  kicked: boolean;
 
   allowedNotifications: boolean;
 
@@ -87,6 +89,7 @@ class Client {
     this.roomId = window.location.search.substr(1);
     this.lastStrokeUpdate = -1;
     this.maximised = false;
+    this.kicked = false;
     this.allowedNotifications = false;
 
     this.messageCache = {
@@ -107,11 +110,6 @@ class Client {
 
     this.titleRef.on("value", this.firstConnection);
     (<HTMLInputElement>document.querySelector("input#messageInput")).onkeyup = (e) => { _wb.CHAT.sendMessage(e); };
-
-    window.addEventListener("beforeunload", () => {
-      _wb.CLIENT.analytics.logEvent("leave", { roomId: _wb.CLIENT.roomId, username: _wb.CLIENT.username });
-      return _wb.CLIENT.userRef.remove().then(() => { return });
-    });
   }
 
   /**
@@ -159,16 +157,26 @@ class Client {
             name: this.username,
             board: this.graphics.exportImage(400, 300),
             maximised: false,
+            kicked: false,
             messages: []
           });
 
           this.messageRef = this.database.ref(`rooms/${this.roomId}/users/${this.userId}/messages`);
           this.maximisedRef = this.database.ref(`rooms/${this.roomId}/users/${this.userId}/maximised`);
+          this.kickRef = this.database.ref(`rooms/${this.roomId}/users/${this.userId}/kicked`);
           this.messageRef.on("value", (e) => { this.chat.messageHandler(e); });
           this.maximisedRef.on("value", (e) => { this.updateMaximised(e); });
+          this.kickRef.on("value", (e) => { this.kickCallback(e); });
 
           Notification.requestPermission().then((result: NotificationPermission) => {
             this.allowedNotifications = result === "granted";
+          });
+
+          window.addEventListener("beforeunload", () => {
+            if (!_wb.CLIENT.kicked) {
+              _wb.CLIENT.analytics.logEvent("leave", { roomId: _wb.CLIENT.roomId, username: _wb.CLIENT.username });
+              return _wb.CLIENT.userRef.remove().then(() => { return });
+            }
           });
 
           window.setTimeout(() => { _wb.CLIENT.updateBoard() }, 5000);
@@ -210,6 +218,32 @@ class Client {
     this.maximised = e.val();
     if (this.maximised) {
       this.updateBoard(true);
+    }
+  }
+
+  /** Event handler for the `kicked` database field changing. */
+  kickCallback(e) {
+    if (e.val() === true) {
+      this.userRef.off();
+      this.maximisedRef.off();
+      this.messageRef.off();
+      this.titleRef.off();
+      this.kickRef.off();
+      this.ref.off();
+      this.kicked = true;
+      window.clearTimeout();
+
+      this.userRef.remove();
+
+      Swal.fire({
+        title: "You have been kicked.",
+        text: "You have been kicked from the room by the host.",
+        icon: "error",
+        background: "var(--background)",
+        allowOutsideClick: false
+      }).then(() => {
+        window.location.href = "/";
+      });
     }
   }
 }

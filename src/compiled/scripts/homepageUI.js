@@ -70,16 +70,30 @@ var HomepageUI = (function () {
             background: "var(--background)",
             showLoaderOnConfirm: true,
             allowOutsideClick: true,
-            preConfirm: function (id) {
-                var regex = new RegExp("^[a-zA-Z]{6}$");
-                if (!regex.test(id)) {
-                    Swal.showValidationMessage("Room ID should be six letters.");
-                    return false;
-                }
-                else {
-                    return id.toUpperCase();
-                }
-            }
+            preConfirm: function (id) { return __awaiter(_this, void 0, void 0, function () {
+                var regex, valid_1;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            regex = new RegExp("^[a-zA-Z]{6}$");
+                            if (!!regex.test(id)) return [3, 1];
+                            Swal.showValidationMessage("Room ID should be six letters.");
+                            return [2, false];
+                        case 1:
+                            valid_1 = false;
+                            return [4, this.database.ref("rooms/" + id.toUpperCase()).once("value", function (snapshot) {
+                                    if (snapshot.val() !== null) {
+                                        valid_1 = true;
+                                    }
+                                })];
+                        case 2:
+                            _a.sent();
+                            if (!valid_1)
+                                Swal.showValidationMessage("Room cannot be found.");
+                            return [2, valid_1 ? id.toUpperCase() : false];
+                    }
+                });
+            }); }
         }).then(function (result) {
             if (result.isConfirmed) {
                 var roomId = result.value;
@@ -109,7 +123,7 @@ var HomepageUI = (function () {
                         }
                     }
                 }).then(function (result) { return __awaiter(_this, void 0, void 0, function () {
-                    var roomName, alphabet_1, valid_1, code_1, i;
+                    var roomName, alphabet_1, valid_2, code_1, i;
                     var _this = this;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
@@ -117,16 +131,16 @@ var HomepageUI = (function () {
                                 if (!result.isConfirmed) return [3, 4];
                                 roomName = result.value;
                                 alphabet_1 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-                                valid_1 = false;
+                                valid_2 = false;
                                 code_1 = "";
                                 for (i = 0; i < 6; i++)
                                     code_1 += alphabet_1[Math.floor(Math.random() * 26)];
                                 _a.label = 1;
                             case 1:
-                                if (!!valid_1) return [3, 3];
+                                if (!!valid_2) return [3, 3];
                                 return [4, this.database.ref("rooms/" + code_1).once("value", function (snapshot) {
                                         if (snapshot.val() === null) {
-                                            valid_1 = true;
+                                            valid_2 = true;
                                         }
                                         else {
                                             code_1 = "";

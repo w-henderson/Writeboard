@@ -97,13 +97,18 @@ class Host {
     let userWhiteboard = document.createElement("img");
     let userName = document.createElement("span");
     let messageIndicator = document.createElement("div");
+    let kickButton = document.createElement("i");
 
     userWhiteboard.src = e.val().board;
     userWhiteboard.onclick = (e) => { _wb_host.CHAT.clickHandler(e); };
     userName.textContent = e.val().name;
     userNode.id = e.key;
     messageIndicator.style.display = "none";
+    kickButton.className = "material-icons-round";
+    kickButton.textContent = "clear";
+    kickButton.onclick = (e) => { _wb_host.HOST.kickUser(e); };
 
+    userName.appendChild(kickButton);
     userNode.appendChild(userWhiteboard);
     userNode.appendChild(userName);
     userNode.appendChild(messageIndicator);
@@ -155,6 +160,29 @@ class Host {
     delete this.userCache[e.key];
 
     if (document.querySelector("div.whiteboards").innerHTML === "") document.querySelector("div.whiteboards").textContent = "Waiting for people to connect...";
+  }
+
+  /**
+   * Kicks a user from the room.
+   * Called as an `onclick` callback from the kick button.
+   */
+  kickUser(e) {
+    let userToKick: string = e.target.parentElement.parentElement.id;
+    let username: string = e.target.parentElement.childNodes[0].textContent.trim();
+
+    Swal.fire({
+      title: `Kick ${username}?`,
+      text: `Are you sure you want to kick ${username}? This will also remove their board contents.`,
+      icon: "warning",
+      showDenyButton: true,
+      confirmButtonText: "Yes, kick them",
+      denyButtonText: "No",
+      background: "var(--background)"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.database.ref(`rooms/${this.roomId}/users/${userToKick}/kicked`).set(true);
+      }
+    });
   }
 
   /**

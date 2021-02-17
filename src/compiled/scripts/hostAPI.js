@@ -55,11 +55,16 @@ var Host = (function () {
         var userWhiteboard = document.createElement("img");
         var userName = document.createElement("span");
         var messageIndicator = document.createElement("div");
+        var kickButton = document.createElement("i");
         userWhiteboard.src = e.val().board;
         userWhiteboard.onclick = function (e) { _wb_host.CHAT.clickHandler(e); };
         userName.textContent = e.val().name;
         userNode.id = e.key;
         messageIndicator.style.display = "none";
+        kickButton.className = "material-icons-round";
+        kickButton.textContent = "clear";
+        kickButton.onclick = function (e) { _wb_host.HOST.kickUser(e); };
+        userName.appendChild(kickButton);
         userNode.appendChild(userWhiteboard);
         userNode.appendChild(userName);
         userNode.appendChild(messageIndicator);
@@ -101,6 +106,24 @@ var Host = (function () {
         delete this.userCache[e.key];
         if (document.querySelector("div.whiteboards").innerHTML === "")
             document.querySelector("div.whiteboards").textContent = "Waiting for people to connect...";
+    };
+    Host.prototype.kickUser = function (e) {
+        var _this = this;
+        var userToKick = e.target.parentElement.parentElement.id;
+        var username = e.target.parentElement.childNodes[0].textContent.trim();
+        Swal.fire({
+            title: "Kick " + username + "?",
+            text: "Are you sure you want to kick " + username + "? This will also remove their board contents.",
+            icon: "warning",
+            showDenyButton: true,
+            confirmButtonText: "Yes, kick them",
+            denyButtonText: "No",
+            background: "var(--background)"
+        }).then(function (result) {
+            if (result.isConfirmed) {
+                _this.database.ref("rooms/" + _this.roomId + "/users/" + userToKick + "/kicked").set(true);
+            }
+        });
     };
     Host.prototype.closeRoom = function (force) {
         var _this = this;

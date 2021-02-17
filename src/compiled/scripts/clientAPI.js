@@ -31,6 +31,7 @@ var Client = (function () {
         this.roomId = window.location.search.substr(1);
         this.lastStrokeUpdate = -1;
         this.maximised = false;
+        this.kicked = false;
         this.allowedNotifications = false;
         this.messageCache = {
             read: 0,
@@ -43,10 +44,6 @@ var Client = (function () {
         this.ref = this.database.ref("rooms/" + this.roomId + "/users");
         this.titleRef.on("value", this.firstConnection);
         document.querySelector("input#messageInput").onkeyup = function (e) { _wb.CHAT.sendMessage(e); };
-        window.addEventListener("beforeunload", function () {
-            _wb.CLIENT.analytics.logEvent("leave", { roomId: _wb.CLIENT.roomId, username: _wb.CLIENT.username });
-            return _wb.CLIENT.userRef.remove().then(function () { return; });
-        });
     };
     Client.prototype.firstConnection = function (e) {
         var data = e.val();
@@ -87,14 +84,23 @@ var Client = (function () {
                         name: this.username,
                         board: this.graphics.exportImage(400, 300),
                         maximised: false,
+                        kicked: false,
                         messages: []
                     });
                     this.messageRef = this.database.ref("rooms/" + this.roomId + "/users/" + this.userId + "/messages");
                     this.maximisedRef = this.database.ref("rooms/" + this.roomId + "/users/" + this.userId + "/maximised");
+                    this.kickRef = this.database.ref("rooms/" + this.roomId + "/users/" + this.userId + "/kicked");
                     this.messageRef.on("value", function (e) { _this.chat.messageHandler(e); });
                     this.maximisedRef.on("value", function (e) { _this.updateMaximised(e); });
+                    this.kickRef.on("value", function (e) { _this.kickCallback(e); });
                     Notification.requestPermission().then(function (result) {
                         _this.allowedNotifications = result === "granted";
+                    });
+                    window.addEventListener("beforeunload", function () {
+                        if (!_wb.CLIENT.kicked) {
+                            _wb.CLIENT.analytics.logEvent("leave", { roomId: _wb.CLIENT.roomId, username: _wb.CLIENT.username });
+                            return _wb.CLIENT.userRef.remove().then(function () { return; });
+                        }
                     });
                     window.setTimeout(function () { _wb.CLIENT.updateBoard(); }, 5000);
                 }
@@ -126,6 +132,28 @@ var Client = (function () {
         this.maximised = e.val();
         if (this.maximised) {
             this.updateBoard(true);
+        }
+    };
+    Client.prototype.kickCallback = function (e) {
+        if (e.val() === true) {
+            this.userRef.off();
+            this.maximisedRef.off();
+            this.messageRef.off();
+            this.titleRef.off();
+            this.kickRef.off();
+            this.ref.off();
+            this.kicked = true;
+            window.clearTimeout();
+            this.userRef.remove();
+            Swal.fire({
+                title: "You have been kicked.",
+                text: "You have been kicked from the room by the host.",
+                icon: "error",
+                background: "var(--background)",
+                allowOutsideClick: false
+            }).then(function () {
+                window.location.href = "/";
+            });
         }
     };
     return Client;

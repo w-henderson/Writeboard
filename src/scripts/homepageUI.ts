@@ -55,13 +55,21 @@ class HomepageUI {
       background: "var(--background)",
       showLoaderOnConfirm: true,
       allowOutsideClick: true,
-      preConfirm: (id: string) => {
+      preConfirm: async (id: string) => {
         let regex = new RegExp("^[a-zA-Z]{6}$")
         if (!regex.test(id)) {
           Swal.showValidationMessage("Room ID should be six letters.");
           return false;
         } else {
-          return id.toUpperCase();
+          let valid = false;
+          await this.database.ref(`rooms/${id.toUpperCase()}`).once("value", (snapshot) => {
+            if (snapshot.val() !== null) {
+              valid = true;
+            }
+          });
+
+          if (!valid) Swal.showValidationMessage("Room cannot be found.");
+          return valid ? id.toUpperCase() : false;
         }
       },
     }).then((result) => {
