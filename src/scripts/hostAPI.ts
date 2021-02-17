@@ -1,5 +1,5 @@
 var Swal: any;
-var firebase: any;
+var firebase: FirebaseNamespace;
 
 /** Variable to hold all the class instances to prevent cluttering up globals. */
 let _wb_host: {
@@ -23,16 +23,16 @@ window.onload = initHost;
  * Chat is managed in `HostChat`.
  */
 class Host {
-  database: any;
+  database: FirebaseDatabase;
   analytics: any;
 
   roomId: string;
   maximisedUser: string;
   userCache: any;
 
-  ref: any;
-  titleRef: any;
-  maximisedRef: any;
+  ref: Reference;
+  titleRef: Reference;
+  maximisedRef: Reference;
 
   allowedNotifications: boolean;
 
@@ -89,7 +89,7 @@ class Host {
    * Adds a whiteboard to the room.
    * The whiteboard is then cached so it can be easily accessed if maximised.
    */
-  addWhiteboard(e) {
+  addWhiteboard(e: DataSnapshot) {
     let whiteboards = document.querySelector("div.whiteboards");
     if (whiteboards.textContent.trim() === "Waiting for people to connect...") whiteboards.innerHTML = "";
 
@@ -121,7 +121,7 @@ class Host {
   }
 
   /** Updates a whiteboard already in the room. */
-  updateWhiteboard(e) {
+  updateWhiteboard(e: DataSnapshot) {
     let data = e.val();
     let userNode = document.querySelector(`div.whiteboards div#${e.key}`);
     userNode.querySelector("img").src = data.board;
@@ -151,7 +151,7 @@ class Host {
   }
 
   /** Removes a whiteboard from the room. */
-  removeWhiteboard(e) {
+  removeWhiteboard(e: DataSnapshot) {
     let userNode = document.querySelector(`div.whiteboards div#${e.key}`);
     userNode.remove();
 

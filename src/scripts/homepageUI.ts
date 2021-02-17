@@ -1,5 +1,5 @@
 var Swal: any;
-var firebase: any;
+var firebase: FirebaseNamespace;
 
 /** Variable to hold all the class instances to prevent cluttering up globals. */
 let _wb_home: {
@@ -18,7 +18,7 @@ window.onload = initHome;
  * This involves scrolling to anchors as well as room management.
  */
 class HomepageUI {
-  database: any;
+  database: FirebaseDatabase;
 
   constructor() {
     this.database = firebase.database();
