@@ -70,10 +70,7 @@ class Host {
     }
 
     (<HTMLInputElement>document.querySelector("input#messageInput")).onkeyup = (e) => { _wb_host.CHAT.sendMessage(e); };
-    window.addEventListener("beforeunload", () => {
-      _wb_host.HOST.analytics.logEvent("closeRoom", { roomId: _wb_host.HOST.roomId });
-      return _wb_host.HOST.database.ref(`rooms/${_wb_host.HOST.roomId}`).remove().then(() => { return });
-    });
+    window.addEventListener("beforeunload", () => { _wb_host.HOST.closeRoom(true); });
   }
 
   /**
@@ -158,6 +155,34 @@ class Host {
     delete this.userCache[e.key];
 
     if (document.querySelector("div.whiteboards").innerHTML === "") document.querySelector("div.whiteboards").textContent = "Waiting for people to connect...";
+  }
+
+  /**
+   * Closes the room and removes all users.
+   * By default, asks the user to confirm the action.
+   * 
+   * @param {Boolean} force - whether to close without asking the user to confirm.
+   */
+  closeRoom(force: boolean = false) {
+    if (!force) {
+      Swal.fire({
+        title: "Close this room?",
+        text: "This action cannot be undone and will delete all users' boards.",
+        icon: "warning",
+        showDenyButton: true,
+        confirmButtonText: "Yes, close the room",
+        denyButtonText: "No",
+        background: "var(--background)"
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.closeRoom(true);
+        }
+      })
+    } else {
+      _wb_host.HOST.analytics.logEvent("closeRoom", { roomId: _wb_host.HOST.roomId });
+      _wb_host.HOST.database.ref(`rooms/${_wb_host.HOST.roomId}`).remove();
+      window.location.href = "/";
+    }
   }
 }
 
