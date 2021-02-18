@@ -61,15 +61,20 @@ class HomepageUI {
           Swal.showValidationMessage("Room ID should be six letters.");
           return false;
         } else {
-          let valid = false;
+          let valid = "invalid";
           await this.database.ref(`rooms/${id.toUpperCase()}`).once("value", (snapshot) => {
             if (snapshot.val() !== null) {
-              valid = true;
+              if (snapshot.val().authLevel === 0) {
+                valid = "valid";
+              } else {
+                valid = "locked";
+              }
             }
           });
 
-          if (!valid) Swal.showValidationMessage("Room cannot be found.");
-          return valid ? id.toUpperCase() : false;
+          if (valid === "invalid") Swal.showValidationMessage("Room cannot be found.");
+          if (valid === "locked") Swal.showValidationMessage("Room is locked.");
+          return valid === "valid" ? id.toUpperCase() : false;
         }
       },
     }).then((result) => {
@@ -119,8 +124,18 @@ class HomepageUI {
           });
         }
 
+        /**
+         * Auth levels are as follows:
+         * 
+         * 0 - no authentication at all, public
+         * 1 - waiting room, **not implemented**
+         * 2 - requires login, **not implemented**
+         * 3 - requires login and waiting room, **not implemented**
+         * 4 - locked completely, nobody new can join
+         */
         this.database.ref(`rooms/${code}`).set({
           name: roomName,
+          authLevel: 0,
           users: {}
         }).then(() => {
           window.localStorage.setItem("writeboardTempId", code);

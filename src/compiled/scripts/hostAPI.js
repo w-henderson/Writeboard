@@ -15,6 +15,7 @@ var Host = (function () {
         this.roomId = window.localStorage.getItem("writeboardTempId");
         this.userCache = {};
         this.allowedNotifications = false;
+        this.locked = false;
         if (!this.roomId) {
             Swal.fire({
                 title: "Error 404",
@@ -106,6 +107,24 @@ var Host = (function () {
         delete this.userCache[e.key];
         if (document.querySelector("div.whiteboards").innerHTML === "")
             document.querySelector("div.whiteboards").textContent = "Waiting for people to connect...";
+    };
+    Host.prototype.toggleLock = function () {
+        var _this = this;
+        Swal.fire({
+            title: (this.locked ? "Unlock" : "Lock") + " this room?",
+            text: "Are you sure you want to " + (this.locked ? "unlock" : "lock") + " this room?",
+            icon: "warning",
+            showDenyButton: true,
+            confirmButtonText: "Yes",
+            denyButtonText: "No",
+            background: "var(--background)"
+        }).then(function (result) {
+            if (result.isConfirmed) {
+                _this.locked = !_this.locked;
+                document.querySelector("i#lockIcon").textContent = _this.locked ? "lock" : "lock_open";
+                _this.database.ref("rooms/" + _this.roomId + "/authLevel").set(_this.locked ? 4 : 0);
+            }
+        });
     };
     Host.prototype.kickUser = function (e) {
         var _this = this;

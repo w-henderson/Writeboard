@@ -65,14 +65,14 @@ div.main {
         h1 {
             margin: 0;
             float: left;
-            width: calc(100% - 21vh);
+            width: calc(100% - 28vh);
             text-align: left;
         }
 
         div {
             float: right;
             display: flex;
-            width: 21vh;
+            width: 28vh;
             height: 100%;
             place-items: center;
             user-select: none;
@@ -192,17 +192,17 @@ div.main {
         overflow: hidden auto;
         filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.25));
 
-        &.zoom1 div { width: calc(20% - 12.67px) !important; }
-        &.zoom2 div { width: calc(25% - 12.67px) !important; }
-        &.zoom3 div { width: calc(33.3% - 12.67px) !important; }
-        &.zoom4 div { width: calc(50% - 12.67px) !important; }
+        &.zoom1 div { width: calc(20% - 12.67px); }
+        &.zoom2 div { width: calc(25% - 12.67px); }
+        &.zoom3 div { width: calc(33.3% - 12.67px); }
+        &.zoom4 div { width: calc(50% - 12.67px); }
         
         div {
             position: relative;
             width: calc(33% - 12.67px);
             transition: width 250ms;
             box-sizing: border-box;
-            margin: 0 10px 10px 0;
+            margin: 10px 10px 0 0;
             display: inline-block;
             border-radius: 15px;
             background: var(--canvas);
@@ -240,7 +240,7 @@ div.main {
                 position: absolute;
                 background-color: var(--accent-color);
                 z-index: 3;
-                width: 40px;
+                width: 40px !important;
                 height: 40px;
                 top: -10px;
                 right: -10px;

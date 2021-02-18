@@ -67,8 +67,8 @@ class Client {
   userRef: Reference;
   maximisedRef: Reference;
   messageRef: Reference;
-  titleRef: Reference;
   kickRef: Reference;
+  initRef: Reference;
   ref: Reference;
 
   messageCache: {
@@ -105,10 +105,10 @@ class Client {
    */
   init(chat: Chat) {
     this.chat = chat;
-    this.titleRef = this.database.ref(`rooms/${this.roomId}/name`);
+    this.initRef = this.database.ref(`rooms/${this.roomId}/name`);
     this.ref = this.database.ref(`rooms/${this.roomId}/users`);
 
-    this.titleRef.on("value", this.firstConnection);
+    this.initRef.on("value", this.firstConnection);
     (<HTMLInputElement>document.querySelector("input#messageInput")).onkeyup = (e) => { _wb.CHAT.sendMessage(e); };
   }
 
@@ -117,10 +117,11 @@ class Client {
    * If it is successful, ask the user for a username, check it's not taken, then register all the database event handlers.
    * If it's not successful, alert the user that the room is invalid or closed, and redirect back to the homepage.
    */
-  firstConnection(e: DataSnapshot) {
+  async firstConnection(e: DataSnapshot) {
     let data = e.val();
+    let authLevel = await _wb.CLIENT.database.ref(`rooms/${_wb.CLIENT.roomId}/authLevel`).once("value").then(v => v.val());
 
-    if (data !== null) {
+    if (authLevel === 0) {
       document.querySelector("h1").textContent = "Writeboard: " + data;
       document.title = data + " - Writeboard";
 
@@ -182,9 +183,19 @@ class Client {
           window.setTimeout(() => { _wb.CLIENT.updateBoard() }, 5000);
         }
       }).bind(_wb.CLIENT));
+    } else if (data !== null) {
+      Swal.fire({
+        title: "Whiteboard is locked.",
+        text: "The owner of this room has opted to lock the room, so no new members can join.",
+        icon: "error",
+        background: "var(--background)"
+      }).then(() => {
+        _wb.CLIENT.analytics.logEvent("failJoin", { roomId: _wb.CLIENT.roomId });
+        window.location.href = "/";
+      });
     } else {
       Swal.fire({
-        title: "Whiteboard Doesn't Exist",
+        title: "Whiteboard doesn't exist.",
         text: "This could be due to a bad link, or the room host may have closed their browser.",
         icon: "error",
         background: "var(--background)"
@@ -227,7 +238,6 @@ class Client {
       this.userRef.off();
       this.maximisedRef.off();
       this.messageRef.off();
-      this.titleRef.off();
       this.kickRef.off();
       this.ref.off();
       this.kicked = true;

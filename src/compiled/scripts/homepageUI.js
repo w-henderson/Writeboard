@@ -80,17 +80,24 @@ var HomepageUI = (function () {
                             Swal.showValidationMessage("Room ID should be six letters.");
                             return [2, false];
                         case 1:
-                            valid_1 = false;
+                            valid_1 = "invalid";
                             return [4, this.database.ref("rooms/" + id.toUpperCase()).once("value", function (snapshot) {
                                     if (snapshot.val() !== null) {
-                                        valid_1 = true;
+                                        if (snapshot.val().authLevel === 0) {
+                                            valid_1 = "valid";
+                                        }
+                                        else {
+                                            valid_1 = "locked";
+                                        }
                                     }
                                 })];
                         case 2:
                             _a.sent();
-                            if (!valid_1)
+                            if (valid_1 === "invalid")
                                 Swal.showValidationMessage("Room cannot be found.");
-                            return [2, valid_1 ? id.toUpperCase() : false];
+                            if (valid_1 === "locked")
+                                Swal.showValidationMessage("Room is locked.");
+                            return [2, valid_1 === "valid" ? id.toUpperCase() : false];
                     }
                 });
             }); }
@@ -154,6 +161,7 @@ var HomepageUI = (function () {
                             case 3:
                                 this.database.ref("rooms/" + code_1).set({
                                     name: roomName,
+                                    authLevel: 0,
                                     users: {}
                                 }).then(function () {
                                     window.localStorage.setItem("writeboardTempId", code_1);

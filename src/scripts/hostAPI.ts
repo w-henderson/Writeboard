@@ -29,6 +29,7 @@ class Host {
   roomId: string;
   maximisedUser: string;
   userCache: any;
+  locked: boolean;
 
   ref: Reference;
   titleRef: Reference;
@@ -42,6 +43,7 @@ class Host {
     this.roomId = window.localStorage.getItem("writeboardTempId");
     this.userCache = {};
     this.allowedNotifications = false;
+    this.locked = false;
 
     if (!this.roomId) {
       Swal.fire({
@@ -77,7 +79,7 @@ class Host {
    * Updates the title of the board and logs the host event.
    * This is called once when the room is created.
    */
-  updateTitle(e) {
+  updateTitle(e: DataSnapshot) {
     let data = e.val();
     document.title = `${data} - Writeboard`;
     document.querySelector("h1").textContent = `${data} (${this.roomId})`;
@@ -160,6 +162,25 @@ class Host {
     delete this.userCache[e.key];
 
     if (document.querySelector("div.whiteboards").innerHTML === "") document.querySelector("div.whiteboards").textContent = "Waiting for people to connect...";
+  }
+
+  /** Toggles whether the room is locked or not. */
+  toggleLock() {
+    Swal.fire({
+      title: `${this.locked ? "Unlock" : "Lock"} this room?`,
+      text: `Are you sure you want to ${this.locked ? "unlock" : "lock"} this room?`,
+      icon: "warning",
+      showDenyButton: true,
+      confirmButtonText: "Yes",
+      denyButtonText: "No",
+      background: "var(--background)"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.locked = !this.locked;
+        document.querySelector("i#lockIcon").textContent = this.locked ? "lock" : "lock_open";
+        this.database.ref(`rooms/${this.roomId}/authLevel`).set(this.locked ? 4 : 0);
+      }
+    });
   }
 
   /**
