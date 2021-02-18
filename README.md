@@ -10,6 +10,7 @@ Here at Writeboard, we believe that everyone should have a top-quality collabora
 - Support for pen pressure and pens with erasers
 - Instant two-way messaging between the host and the client
 - Less than five seconds image latency, reduced to one when the board is maximised
+- Secure rooms: ability to lock rooms and kick disruptive users
 - Committed to privacy: all your board data is deleted as soon as the room is closed
 - Completely free for everyone
 

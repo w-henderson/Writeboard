@@ -1,5 +1,5 @@
 var Swal: any;
-var firebase: any;
+var firebase: FirebaseNamespace;
 
 /** Variable to hold all the class instances to prevent cluttering up globals. */
 let _wb_home: {
@@ -18,7 +18,7 @@ window.onload = initHome;
  * This involves scrolling to anchors as well as room management.
  */
 class HomepageUI {
-  database: any;
+  database: FirebaseDatabase;
 
   constructor() {
     this.database = firebase.database();
@@ -55,13 +55,26 @@ class HomepageUI {
       background: "var(--background)",
       showLoaderOnConfirm: true,
       allowOutsideClick: true,
-      preConfirm: (id: string) => {
+      preConfirm: async (id: string) => {
         let regex = new RegExp("^[a-zA-Z]{6}$")
         if (!regex.test(id)) {
           Swal.showValidationMessage("Room ID should be six letters.");
           return false;
         } else {
-          return id.toUpperCase();
+          let valid = "invalid";
+          await this.database.ref(`rooms/${id.toUpperCase()}`).once("value", (snapshot) => {
+            if (snapshot.val() !== null) {
+              if (snapshot.val().authLevel === 0) {
+                valid = "valid";
+              } else {
+                valid = "locked";
+              }
+            }
+          });
+
+          if (valid === "invalid") Swal.showValidationMessage("Room cannot be found.");
+          if (valid === "locked") Swal.showValidationMessage("Room is locked.");
+          return valid === "valid" ? id.toUpperCase() : false;
         }
       },
     }).then((result) => {
@@ -111,8 +124,18 @@ class HomepageUI {
           });
         }
 
+        /**
+         * Auth levels are as follows:
+         * 
+         * 0 - no authentication at all, public
+         * 1 - waiting room, **not implemented**
+         * 2 - requires login, **not implemented**
+         * 3 - requires login and waiting room, **not implemented**
+         * 4 - locked completely, nobody new can join
+         */
         this.database.ref(`rooms/${code}`).set({
           name: roomName,
+          authLevel: 0,
           users: {}
         }).then(() => {
           window.localStorage.setItem("writeboardTempId", code);

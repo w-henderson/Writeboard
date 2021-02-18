@@ -1,3 +1,5 @@
+/* CLIPBOARD TYPES */
+
 interface Clipboard {
   read(): Promise<ClipboardItem[]>;
   write(data: ClipboardItem[]): Promise<void>;

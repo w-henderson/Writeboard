@@ -11,12 +11,9 @@
         ],
         "removeComments": true
     },
-    "files": [
-        "src/scripts/types.d.ts",
-        "src/vendor/smooth.ts",
-        "src/scripts/clientAPI.ts",
-        "src/scripts/hostAPI.ts",
-        "src/scripts/homepageUI.ts",
-        "src/scripts/whiteboard.ts"
-    ]
+    "include": [
+        "src/scripts/*.ts",
+        "src/vendor/*.ts",
+        "src/vendor/types/*.d.ts"
+    ],
 }

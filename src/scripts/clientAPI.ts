@@ -1,4 +1,4 @@
-var firebase;
+var firebase: FirebaseNamespace;
 var Swal;
 
 /** Variable to hold every class instance to prevent cluttering up globals. */
@@ -56,7 +56,7 @@ window.onload = initClient;
  * @param {Graphics} graphics - graphics object for canvas export
  */
 class Client {
-  database: any;
+  database: FirebaseDatabase;
   analytics: any;
   graphics: Graphics;
   chat: Chat;
@@ -64,11 +64,12 @@ class Client {
   roomId: string;
   username: string;
   userId: string;
-  userRef: any;
-  maximisedRef: any;
-  messageRef: any;
-  titleRef: any;
-  ref: any;
+  userRef: Reference;
+  maximisedRef: Reference;
+  messageRef: Reference;
+  kickRef: Reference;
+  initRef: Reference;
+  ref: Reference;
 
   messageCache: {
     read: number,
@@ -77,6 +78,7 @@ class Client {
 
   lastStrokeUpdate: number;
   maximised: boolean;
+  kicked: boolean;
 
   allowedNotifications: boolean;
 
@@ -87,6 +89,7 @@ class Client {
     this.roomId = window.location.search.substr(1);
     this.lastStrokeUpdate = -1;
     this.maximised = false;
+    this.kicked = false;
     this.allowedNotifications = false;
 
     this.messageCache = {
@@ -102,16 +105,11 @@ class Client {
    */
   init(chat: Chat) {
     this.chat = chat;
-    this.titleRef = this.database.ref(`rooms/${this.roomId}/name`);
+    this.initRef = this.database.ref(`rooms/${this.roomId}/name`);
     this.ref = this.database.ref(`rooms/${this.roomId}/users`);
 
-    this.titleRef.on("value", this.firstConnection);
+    this.initRef.on("value", this.firstConnection);
     (<HTMLInputElement>document.querySelector("input#messageInput")).onkeyup = (e) => { _wb.CHAT.sendMessage(e); };
-
-    window.addEventListener("beforeunload", () => {
-      _wb.CLIENT.analytics.logEvent("leave", { roomId: _wb.CLIENT.roomId, username: _wb.CLIENT.username });
-      return _wb.CLIENT.userRef.remove().then(() => { return });
-    });
   }
 
   /**
@@ -119,10 +117,11 @@ class Client {
    * If it is successful, ask the user for a username, check it's not taken, then register all the database event handlers.
    * If it's not successful, alert the user that the room is invalid or closed, and redirect back to the homepage.
    */
-  firstConnection(e) {
+  async firstConnection(e: DataSnapshot) {
     let data = e.val();
+    let authLevel = await _wb.CLIENT.database.ref(`rooms/${_wb.CLIENT.roomId}/authLevel`).once("value").then(v => v.val());
 
-    if (data !== null) {
+    if (authLevel === 0) {
       document.querySelector("h1").textContent = "Writeboard: " + data;
       document.title = data + " - Writeboard";
 
@@ -159,24 +158,44 @@ class Client {
             name: this.username,
             board: this.graphics.exportImage(400, 300),
             maximised: false,
+            kicked: false,
             messages: []
           });
 
           this.messageRef = this.database.ref(`rooms/${this.roomId}/users/${this.userId}/messages`);
           this.maximisedRef = this.database.ref(`rooms/${this.roomId}/users/${this.userId}/maximised`);
+          this.kickRef = this.database.ref(`rooms/${this.roomId}/users/${this.userId}/kicked`);
           this.messageRef.on("value", (e) => { this.chat.messageHandler(e); });
           this.maximisedRef.on("value", (e) => { this.updateMaximised(e); });
+          this.kickRef.on("value", (e) => { this.kickCallback(e); });
 
           Notification.requestPermission().then((result: NotificationPermission) => {
             this.allowedNotifications = result === "granted";
           });
 
+          window.addEventListener("beforeunload", () => {
+            if (!_wb.CLIENT.kicked) {
+              _wb.CLIENT.analytics.logEvent("leave", { roomId: _wb.CLIENT.roomId, username: _wb.CLIENT.username });
+              return _wb.CLIENT.userRef.remove().then(() => { return });
+            }
+          });
+
           window.setTimeout(() => { _wb.CLIENT.updateBoard() }, 5000);
         }
       }).bind(_wb.CLIENT));
+    } else if (data !== null) {
+      Swal.fire({
+        title: "Whiteboard is locked.",
+        text: "The owner of this room has opted to lock the room, so no new members can join.",
+        icon: "error",
+        background: "var(--background)"
+      }).then(() => {
+        _wb.CLIENT.analytics.logEvent("failJoin", { roomId: _wb.CLIENT.roomId });
+        window.location.href = "/";
+      });
     } else {
       Swal.fire({
-        title: "Whiteboard Doesn't Exist",
+        title: "Whiteboard doesn't exist.",
         text: "This could be due to a bad link, or the room host may have closed their browser.",
         icon: "error",
         background: "var(--background)"
@@ -206,10 +225,35 @@ class Client {
   }
 
   /** Event handler for the board's maximisation state changing. */
-  updateMaximised(e) {
+  updateMaximised(e: DataSnapshot) {
     this.maximised = e.val();
     if (this.maximised) {
       this.updateBoard(true);
+    }
+  }
+
+  /** Event handler for the `kicked` database field changing. */
+  kickCallback(e: DataSnapshot) {
+    if (e.val() === true) {
+      this.userRef.off();
+      this.maximisedRef.off();
+      this.messageRef.off();
+      this.kickRef.off();
+      this.ref.off();
+      this.kicked = true;
+      window.clearTimeout();
+
+      this.userRef.remove();
+
+      Swal.fire({
+        title: "You have been kicked.",
+        text: "You have been kicked from the room by the host.",
+        icon: "error",
+        background: "var(--background)",
+        allowOutsideClick: false
+      }).then(() => {
+        window.location.href = "/";
+      });
     }
   }
 }
@@ -296,7 +340,7 @@ class Chat {
    * Event handler for incoming messages.
    * Caches the messages to save data, then updates them from the cache.
    */
-  messageHandler(e) {
+  messageHandler(e: DataSnapshot) {
     _wb.CLIENT.messageCache.data = e.val();
     _wb.CHAT.updateMessages();
   }

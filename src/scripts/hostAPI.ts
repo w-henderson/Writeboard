@@ -1,16 +1,18 @@
 var Swal: any;
-var firebase: any;
+var firebase: FirebaseNamespace;
 
 /** Variable to hold all the class instances to prevent cluttering up globals. */
 let _wb_host: {
   HOST?: Host,
-  CHAT?: HostChat
+  CHAT?: HostChat,
+  UI?: HostUI
 } = {};
 
 /** Initialises the host and the chat. */
 function initHost() {
   _wb_host.HOST = new Host();
   _wb_host.CHAT = new HostChat(_wb_host.HOST);
+  _wb_host.UI = new HostUI();
 }
 
 window.onload = initHost;
@@ -21,16 +23,17 @@ window.onload = initHost;
  * Chat is managed in `HostChat`.
  */
 class Host {
-  database: any;
+  database: FirebaseDatabase;
   analytics: any;
 
   roomId: string;
   maximisedUser: string;
   userCache: any;
+  locked: boolean;
 
-  ref: any;
-  titleRef: any;
-  maximisedRef: any;
+  ref: Reference;
+  titleRef: Reference;
+  maximisedRef: Reference;
 
   allowedNotifications: boolean;
 
@@ -40,6 +43,7 @@ class Host {
     this.roomId = window.localStorage.getItem("writeboardTempId");
     this.userCache = {};
     this.allowedNotifications = false;
+    this.locked = false;
 
     if (!this.roomId) {
       Swal.fire({
@@ -68,17 +72,14 @@ class Host {
     }
 
     (<HTMLInputElement>document.querySelector("input#messageInput")).onkeyup = (e) => { _wb_host.CHAT.sendMessage(e); };
-    window.addEventListener("beforeunload", () => {
-      _wb_host.HOST.analytics.logEvent("closeRoom", { roomId: _wb_host.HOST.roomId });
-      return _wb_host.HOST.database.ref(`rooms/${_wb_host.HOST.roomId}`).remove().then(() => { return });
-    });
+    window.addEventListener("beforeunload", () => { _wb_host.HOST.closeRoom(true); });
   }
 
   /**
    * Updates the title of the board and logs the host event.
    * This is called once when the room is created.
    */
-  updateTitle(e) {
+  updateTitle(e: DataSnapshot) {
     let data = e.val();
     document.title = `${data} - Writeboard`;
     document.querySelector("h1").textContent = `${data} (${this.roomId})`;
@@ -90,7 +91,7 @@ class Host {
    * Adds a whiteboard to the room.
    * The whiteboard is then cached so it can be easily accessed if maximised.
    */
-  addWhiteboard(e) {
+  addWhiteboard(e: DataSnapshot) {
     let whiteboards = document.querySelector("div.whiteboards");
     if (whiteboards.textContent.trim() === "Waiting for people to connect...") whiteboards.innerHTML = "";
 
@@ -98,13 +99,18 @@ class Host {
     let userWhiteboard = document.createElement("img");
     let userName = document.createElement("span");
     let messageIndicator = document.createElement("div");
+    let kickButton = document.createElement("i");
 
     userWhiteboard.src = e.val().board;
     userWhiteboard.onclick = (e) => { _wb_host.CHAT.clickHandler(e); };
     userName.textContent = e.val().name;
     userNode.id = e.key;
     messageIndicator.style.display = "none";
+    kickButton.className = "material-icons-round";
+    kickButton.textContent = "clear";
+    kickButton.onclick = (e) => { _wb_host.HOST.kickUser(e); };
 
+    userName.appendChild(kickButton);
     userNode.appendChild(userWhiteboard);
     userNode.appendChild(userName);
     userNode.appendChild(messageIndicator);
@@ -117,7 +123,7 @@ class Host {
   }
 
   /** Updates a whiteboard already in the room. */
-  updateWhiteboard(e) {
+  updateWhiteboard(e: DataSnapshot) {
     let data = e.val();
     let userNode = document.querySelector(`div.whiteboards div#${e.key}`);
     userNode.querySelector("img").src = data.board;
@@ -125,7 +131,7 @@ class Host {
 
     this.userCache[e.key].data = e.val();
 
-    let messageKeys = Object.keys(this.userCache[e.key].data.messages);
+    let messageKeys = Object.keys(this.userCache[e.key].data.messages ?? {});
 
     if (e.key === this.maximisedUser) _wb_host.CHAT.updateMaximised();
     else if (this.allowedNotifications && data.messages && messageKeys.length > this.userCache[e.key].seenMessages && document.hidden) {
@@ -147,7 +153,7 @@ class Host {
   }
 
   /** Removes a whiteboard from the room. */
-  removeWhiteboard(e) {
+  removeWhiteboard(e: DataSnapshot) {
     let userNode = document.querySelector(`div.whiteboards div#${e.key}`);
     userNode.remove();
 
@@ -156,6 +162,76 @@ class Host {
     delete this.userCache[e.key];
 
     if (document.querySelector("div.whiteboards").innerHTML === "") document.querySelector("div.whiteboards").textContent = "Waiting for people to connect...";
+  }
+
+  /** Toggles whether the room is locked or not. */
+  toggleLock() {
+    Swal.fire({
+      title: `${this.locked ? "Unlock" : "Lock"} this room?`,
+      text: `Are you sure you want to ${this.locked ? "unlock" : "lock"} this room?`,
+      icon: "warning",
+      showDenyButton: true,
+      confirmButtonText: "Yes",
+      denyButtonText: "No",
+      background: "var(--background)"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.locked = !this.locked;
+        document.querySelector("i#lockIcon").textContent = this.locked ? "lock" : "lock_open";
+        this.database.ref(`rooms/${this.roomId}/authLevel`).set(this.locked ? 4 : 0);
+      }
+    });
+  }
+
+  /**
+   * Kicks a user from the room.
+   * Called as an `onclick` callback from the kick button.
+   */
+  kickUser(e) {
+    let userToKick: string = e.target.parentElement.parentElement.id;
+    let username: string = e.target.parentElement.childNodes[0].textContent.trim();
+
+    Swal.fire({
+      title: `Kick ${username}?`,
+      text: `Are you sure you want to kick ${username}? This will also remove their board contents.`,
+      icon: "warning",
+      showDenyButton: true,
+      confirmButtonText: "Yes, kick them",
+      denyButtonText: "No",
+      background: "var(--background)"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.database.ref(`rooms/${this.roomId}/users/${userToKick}/kicked`).set(true);
+      }
+    });
+  }
+
+  /**
+   * Closes the room and removes all users.
+   * By default, asks the user to confirm the action.
+   * 
+   * @param {Boolean} force - whether to close without asking the user to confirm.
+   */
+  closeRoom(force: boolean = false) {
+    if (!force) {
+      Swal.fire({
+        title: "Close this room?",
+        text: "This action cannot be undone and will delete all users' boards.",
+        icon: "warning",
+        showDenyButton: true,
+        confirmButtonText: "Yes, close the room",
+        denyButtonText: "No",
+        background: "var(--background)"
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.closeRoom(true);
+        }
+      })
+    } else {
+      _wb_host.HOST.analytics.logEvent("closeRoom", { roomId: _wb_host.HOST.roomId });
+      _wb_host.HOST.database.ref(`rooms/${_wb_host.HOST.roomId}`).remove();
+      window.location.href = "/";
+    }
   }
 }
 
@@ -265,4 +341,31 @@ class HostChat {
   closeClickHandler(e) {
     if (e.target.className === "maximised shown") this.hideMaximised();
   }
+}
+
+/**
+ * Class to manage the UI of the host page.
+ * This includes zooming in and out of the boards as well as other buttons.
+ */
+class HostUI {
+  zoomLevel: number;
+  whiteboards: HTMLDivElement;
+
+  constructor() {
+    this.zoomLevel = 3;
+    this.whiteboards = document.querySelector("div.whiteboards");
+  }
+
+  /**
+   * Sets the zoom level to the specified number.
+   * Does not validate, this must be done in `zoomIn()` and `zoomOut()`.
+   * @param {Number} zoomLevel - the zoom level to set
+   */
+  setZoomLevel(zoomLevel: number) {
+    this.zoomLevel = zoomLevel;
+    this.whiteboards.className = `whiteboards zoom${zoomLevel}`;
+  }
+
+  zoomIn() { if (this.zoomLevel < 4) this.setZoomLevel(this.zoomLevel + 1); }
+  zoomOut() { if (this.zoomLevel > 1) this.setZoomLevel(this.zoomLevel - 1); }
 }
