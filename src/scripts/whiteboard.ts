@@ -13,7 +13,7 @@ class WhiteboardHistory {
   ui: ClientUI;
 
   constructor() {
-    this.limit = 10;
+    this.limit = 20;
     this.items = [];
     this.strokes = 0;
     this.location = 0;
@@ -33,6 +33,7 @@ class WhiteboardHistory {
     this.items.splice(this.items.length - this.location);
     this.location = 0;
     this.items.push(...items);
+    if (this.items.length > this.limit) this.items.splice(0, this.items.length - this.limit);
   }
 
   /** Step back one stage in history without changing it. */

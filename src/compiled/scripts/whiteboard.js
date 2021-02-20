@@ -37,7 +37,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 var Swal;
 var WhiteboardHistory = (function () {
     function WhiteboardHistory() {
-        this.limit = 10;
+        this.limit = 20;
         this.items = [];
         this.strokes = 0;
         this.location = 0;
@@ -57,6 +57,8 @@ var WhiteboardHistory = (function () {
         this.items.splice(this.items.length - this.location);
         this.location = 0;
         (_a = this.items).push.apply(_a, items);
+        if (this.items.length > this.limit)
+            this.items.splice(0, this.items.length - this.limit);
     };
     WhiteboardHistory.prototype.undo = function () {
         var _this = this;
