@@ -1,0 +1,21 @@
+{
+  "rules": {
+    "rooms": {
+      "$room": {
+        ".read": true,
+        ".write": "!data.exists() || !newData.exists()",
+        "name": {
+          ".write": true
+        },
+        "authLevel": {
+          ".write": true
+        },
+        "users": {
+          "$user": {
+            ".write": "data.parent().parent().child('authLevel').val() === 0 || data.exists()"
+          }
+        }
+      }
+    }
+  }
+}
