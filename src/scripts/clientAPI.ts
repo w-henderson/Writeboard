@@ -1,4 +1,5 @@
 var firebase: FirebaseNamespace;
+var MathJax;
 var Swal;
 
 /** Variable to hold every class instance to prevent cluttering up globals. */
@@ -275,6 +276,18 @@ class Chat {
     this.visible = false;
   }
 
+  /** Detects whether a string contains maths, e.g. "x^2 + 3x + 4" will return true */
+  detectMaths(message: string): boolean {
+    if (message.includes("\\(") && message.includes("\\)")) return false;
+    return message.includes("x^") || message.trim().includes("y=") || message.trim().includes("dy/dx");
+  }
+
+  /** Sets a message as maths. */
+  setAsMaths(e) {
+    let id = e.target.parentElement.parentElement.id.replace("message_", "");
+    this.client.database.ref(`rooms/${this.client.roomId}/users/${this.client.userId}/messages/${id}/maths`).set(true);
+  }
+
   /**
    * Message send handler, called when user presses return in the chat box.
    * Sends the message to the server.
@@ -289,7 +302,8 @@ class Chat {
 
     this.client.messageRef.push().set({
       sender: "user",
-      content: messageText
+      content: messageText,
+      maths: false
     });
   }
 
@@ -309,8 +323,28 @@ class Chat {
           let outerSpan = document.createElement("span");
           let innerSpan = document.createElement("span");
           outerSpan.className = this.client.messageCache.data[messageId].sender + "Message";
-          innerSpan.textContent = this.client.messageCache.data[messageId].content;
+          outerSpan.id = "message_" + messageId;
           outerSpan.appendChild(innerSpan);
+
+          if (this.client.messageCache.data[messageId].maths) {
+            innerSpan.textContent = "\\(" + this.client.messageCache.data[messageId].content + "\\)";
+          } else if (this.detectMaths(this.client.messageCache.data[messageId].content)) {
+            innerSpan.textContent = this.client.messageCache.data[messageId].content;
+
+            let hintP = document.createElement("p");
+            let br = document.createElement("br");
+            let u = document.createElement("u");
+            hintP.textContent = "This looks like maths, ";
+            u.textContent = "style as such?";
+            u.onclick = (e) => { _wb.CHAT.setAsMaths(e); };
+
+            hintP.appendChild(u);
+            outerSpan.appendChild(br);
+            outerSpan.appendChild(hintP);
+          } else {
+            innerSpan.textContent = this.client.messageCache.data[messageId].content;
+          }
+
           messagesDiv.appendChild(outerSpan);
         }
 
@@ -318,6 +352,8 @@ class Chat {
           (<HTMLSpanElement>messagesDiv.lastChild).scrollIntoView();
         }
         this.client.messageCache.read = messageKeys.length;
+
+        MathJax.typeset();
       }
     } else if (this.client.allowedNotifications && document.hidden) {
       new Notification(

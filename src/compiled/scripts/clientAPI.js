@@ -35,6 +35,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 var firebase;
+var MathJax;
 var Swal;
 var _wb = {};
 function initClient() {
@@ -221,6 +222,15 @@ var Chat = (function () {
         this.client = client;
         this.visible = false;
     }
+    Chat.prototype.detectMaths = function (message) {
+        if (message.includes("\\(") && message.includes("\\)"))
+            return false;
+        return message.includes("x^") || message.trim().includes("y=") || message.trim().includes("dy/dx");
+    };
+    Chat.prototype.setAsMaths = function (e) {
+        var id = e.target.parentElement.parentElement.id.replace("message_", "");
+        this.client.database.ref("rooms/" + this.client.roomId + "/users/" + this.client.userId + "/messages/" + id + "/maths").set(true);
+    };
     Chat.prototype.sendMessage = function (e) {
         e.preventDefault();
         if (e.keyCode !== 13)
@@ -230,7 +240,8 @@ var Chat = (function () {
         input.value = "";
         this.client.messageRef.push().set({
             sender: "user",
-            content: messageText
+            content: messageText,
+            maths: false
         });
     };
     Chat.prototype.updateMessages = function () {
@@ -244,14 +255,33 @@ var Chat = (function () {
                     var outerSpan = document.createElement("span");
                     var innerSpan = document.createElement("span");
                     outerSpan.className = this.client.messageCache.data[messageId].sender + "Message";
-                    innerSpan.textContent = this.client.messageCache.data[messageId].content;
+                    outerSpan.id = "message_" + messageId;
                     outerSpan.appendChild(innerSpan);
+                    if (this.client.messageCache.data[messageId].maths) {
+                        innerSpan.textContent = "\\(" + this.client.messageCache.data[messageId].content + "\\)";
+                    }
+                    else if (this.detectMaths(this.client.messageCache.data[messageId].content)) {
+                        innerSpan.textContent = this.client.messageCache.data[messageId].content;
+                        var hintP = document.createElement("p");
+                        var br = document.createElement("br");
+                        var u = document.createElement("u");
+                        hintP.textContent = "This looks like maths, ";
+                        u.textContent = "style as such?";
+                        u.onclick = function (e) { _wb.CHAT.setAsMaths(e); };
+                        hintP.appendChild(u);
+                        outerSpan.appendChild(br);
+                        outerSpan.appendChild(hintP);
+                    }
+                    else {
+                        innerSpan.textContent = this.client.messageCache.data[messageId].content;
+                    }
                     messagesDiv.appendChild(outerSpan);
                 }
                 if (messagesDiv.getBoundingClientRect().right === window.innerWidth) {
                     messagesDiv.lastChild.scrollIntoView();
                 }
                 this.client.messageCache.read = messageKeys.length;
+                MathJax.typeset();
             }
         }
         else if (this.client.allowedNotifications && document.hidden) {

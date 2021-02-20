@@ -1,5 +1,6 @@
-var Swal;
 var firebase;
+var MathJax;
+var Swal;
 var _wb_host = {};
 function initHost() {
     _wb_host.HOST = new Host();
@@ -175,6 +176,15 @@ var HostChat = (function () {
         this.seenMessages = {};
         this.host = host;
     }
+    HostChat.prototype.detectMaths = function (message) {
+        if (message.includes("\\(") && message.includes("\\)"))
+            return false;
+        return message.includes("x^") || message.trim().includes("y=") || message.trim().includes("dy/dx");
+    };
+    HostChat.prototype.setAsMaths = function (e) {
+        var id = e.target.parentElement.parentElement.id.replace("message_", "");
+        this.host.database.ref("rooms/" + this.host.roomId + "/users/" + this.host.maximisedUser + "/messages/" + id + "/maths").set(true);
+    };
     HostChat.prototype.showMaximisedBoard = function (id) {
         var div = document.querySelector("div.maximised");
         div.querySelector("img").src = document.querySelector("div#" + id + " img").src;
@@ -198,10 +208,29 @@ var HostChat = (function () {
                 var outerSpan = document.createElement("span");
                 var innerSpan = document.createElement("span");
                 outerSpan.className = this.host.userCache[this.host.maximisedUser].data.messages[messageId].sender + "Message";
-                innerSpan.textContent = this.host.userCache[this.host.maximisedUser].data.messages[messageId].content;
                 outerSpan.appendChild(innerSpan);
+                outerSpan.id = "message_" + messageId;
+                if (this.host.userCache[this.host.maximisedUser].data.messages[messageId].maths) {
+                    innerSpan.textContent = "\\(" + this.host.userCache[this.host.maximisedUser].data.messages[messageId].content + "\\)";
+                }
+                else if (this.detectMaths(this.host.userCache[this.host.maximisedUser].data.messages[messageId].content)) {
+                    innerSpan.textContent = this.host.userCache[this.host.maximisedUser].data.messages[messageId].content;
+                    var hintP = document.createElement("p");
+                    var br = document.createElement("br");
+                    var u = document.createElement("u");
+                    hintP.textContent = "This looks like maths, ";
+                    u.textContent = "style as such?";
+                    u.onclick = function (e) { _wb_host.CHAT.setAsMaths(e); };
+                    hintP.appendChild(u);
+                    outerSpan.appendChild(br);
+                    outerSpan.appendChild(hintP);
+                }
+                else {
+                    innerSpan.textContent = this.host.userCache[this.host.maximisedUser].data.messages[messageId].content;
+                }
                 messagesDiv.appendChild(outerSpan);
             }
+            MathJax.typeset();
             messagesDiv.lastChild.scrollIntoView();
             this.host.userCache[this.host.maximisedUser].seenMessages = Object.keys(this.host.userCache[this.host.maximisedUser].data.messages).length;
         }
@@ -238,7 +267,8 @@ var HostChat = (function () {
         var messagesRef = this.host.database.ref("rooms/" + this.host.roomId + "/users/" + this.host.maximisedUser + "/messages").push();
         messagesRef.set({
             sender: "host",
-            content: messageText
+            content: messageText,
+            maths: false
         });
     };
     HostChat.prototype.clickHandler = function (e) {

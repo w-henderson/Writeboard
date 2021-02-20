@@ -1,5 +1,6 @@
-var Swal: any;
 var firebase: FirebaseNamespace;
+var MathJax;
+var Swal;
 
 /** Variable to hold all the class instances to prevent cluttering up globals. */
 let _wb_host: {
@@ -251,6 +252,18 @@ class HostChat {
     this.host = host;
   }
 
+  /** Detects whether a string contains maths, e.g. "x^2 + 3x + 4" will return true */
+  detectMaths(message: string): boolean {
+    if (message.includes("\\(") && message.includes("\\)")) return false;
+    return message.includes("x^") || message.trim().includes("y=") || message.trim().includes("dy/dx");
+  }
+
+  /** Sets a message as maths. */
+  setAsMaths(e) {
+    let id = e.target.parentElement.parentElement.id.replace("message_", "");
+    this.host.database.ref(`rooms/${this.host.roomId}/users/${this.host.maximisedUser}/messages/${id}/maths`).set(true);
+  }
+
   /** Toggles the specified user ID's board to become maximised. */
   showMaximisedBoard(id: string) {
     let div: HTMLElement = document.querySelector("div.maximised");
@@ -282,10 +295,33 @@ class HostChat {
         let outerSpan = document.createElement("span");
         let innerSpan = document.createElement("span");
         outerSpan.className = this.host.userCache[this.host.maximisedUser].data.messages[messageId].sender + "Message";
-        innerSpan.textContent = this.host.userCache[this.host.maximisedUser].data.messages[messageId].content;
         outerSpan.appendChild(innerSpan);
+
+        outerSpan.id = "message_" + messageId;
+
+        if (this.host.userCache[this.host.maximisedUser].data.messages[messageId].maths) {
+          innerSpan.textContent = "\\(" + this.host.userCache[this.host.maximisedUser].data.messages[messageId].content + "\\)";
+        } else if (this.detectMaths(this.host.userCache[this.host.maximisedUser].data.messages[messageId].content)) {
+          innerSpan.textContent = this.host.userCache[this.host.maximisedUser].data.messages[messageId].content;
+
+          let hintP = document.createElement("p");
+          let br = document.createElement("br");
+          let u = document.createElement("u");
+          hintP.textContent = "This looks like maths, ";
+          u.textContent = "style as such?";
+          u.onclick = (e) => { _wb_host.CHAT.setAsMaths(e); };
+
+          hintP.appendChild(u);
+          outerSpan.appendChild(br);
+          outerSpan.appendChild(hintP);
+        } else {
+          innerSpan.textContent = this.host.userCache[this.host.maximisedUser].data.messages[messageId].content;
+        }
+
         messagesDiv.appendChild(outerSpan);
       }
+
+      MathJax.typeset();
 
       (<HTMLSpanElement>messagesDiv.lastChild).scrollIntoView();
       this.host.userCache[this.host.maximisedUser].seenMessages = Object.keys(this.host.userCache[this.host.maximisedUser].data.messages).length;
@@ -328,7 +364,8 @@ class HostChat {
     let messagesRef = this.host.database.ref(`rooms/${this.host.roomId}/users/${this.host.maximisedUser}/messages`).push();
     messagesRef.set({
       sender: "host",
-      content: messageText
+      content: messageText,
+      maths: false
     });
   }
 

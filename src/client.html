@@ -48,6 +48,10 @@
 
     <div class="clientChat">
         <h2>Chat</h2>
+        <div class="chatHelp">
+            Send and receive messages with the room host here! You can use TeX to style any maths by surrounding it with <code>\(...\)</code>, or just type some maths and Writeboard will try to detect it.
+        </div>
+
         <div class="messages"></div>
         <input type="text" placeholder="Message" id="messageInput">
 
@@ -68,6 +72,7 @@
     <!-- Vendor Scripts -->
     <script src="compiled/vendor/smooth.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
     <!-- Main Scripts -->
     <script src="compiled/scripts/whiteboard.js"></script>

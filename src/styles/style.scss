@@ -361,6 +361,12 @@ div.maximised {
             font-size: 1.8em;
         }
 
+        div.chatHelp {
+            box-sizing: border-box;
+            padding: 0 25px;
+            margin-bottom: 25px;
+        }
+
         div.messages {
             flex: 1;
             overflow: hidden auto;
@@ -396,6 +402,22 @@ div.maximised {
                     padding: 10px;
                     max-width: 80%;
                     word-break: break-word;
+                }
+
+                p {
+                    margin-top: 5px;
+                    font-weight: 200;
+                    color: rgba(255, 255, 255, 0.3);
+                    font-size: 0.8em;
+    
+                    u {
+                        cursor: pointer;
+                        transition: color 250ms;
+                        
+                        &:hover {
+                            color: rgba(255, 255, 255, 0.7);
+                        }
+                    }
                 }
 
                 &.hostMessage {
@@ -467,6 +489,12 @@ div.clientChat {
         transition: margin 500ms;
     }
 
+    div.chatHelp {
+        box-sizing: border-box;
+        padding: 0 25px;
+        margin-bottom: 25px;
+    }
+
     div.messages {
         flex: 1;
         overflow: hidden auto;
@@ -502,6 +530,22 @@ div.clientChat {
                 padding: 10px;
                 max-width: 80%;
                 word-break: break-word;
+            }
+
+            p {
+                margin-top: 5px;
+                font-weight: 200;
+                color: rgba(255, 255, 255, 0.3);
+                font-size: 0.8em;
+
+                u {
+                    cursor: pointer;
+                    transition: color 250ms;
+                    
+                    &:hover {
+                        color: rgba(255, 255, 255, 0.7);
+                    }
+                }
             }
 
             &.userMessage {
