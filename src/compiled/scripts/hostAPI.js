@@ -173,8 +173,9 @@ var Host = (function () {
 }());
 var HostChat = (function () {
     function HostChat(host) {
-        this.seenMessages = {};
         this.host = host;
+        this.seenMessages = {};
+        this.sentMessages = 0;
     }
     HostChat.prototype.detectMaths = function (message) {
         if (message.includes("\\(") && message.includes("\\)"))
@@ -231,6 +232,9 @@ var HostChat = (function () {
                 messagesDiv.appendChild(outerSpan);
             }
             MathJax.typeset();
+            if (this.sentMessages > 0) {
+                document.querySelector("div.chatHelp").className = "chatHelp overrideHidden";
+            }
             messagesDiv.lastChild.scrollIntoView();
             this.host.userCache[this.host.maximisedUser].seenMessages = Object.keys(this.host.userCache[this.host.maximisedUser].data.messages).length;
         }
@@ -264,6 +268,7 @@ var HostChat = (function () {
         var input = document.querySelector("input#messageInput");
         var messageText = input.value;
         input.value = "";
+        this.sentMessages++;
         var messagesRef = this.host.database.ref("rooms/" + this.host.roomId + "/users/" + this.host.maximisedUser + "/messages").push();
         messagesRef.set({
             sender: "host",

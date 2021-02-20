@@ -270,10 +270,12 @@ class Client {
 class Chat {
   client: Client;
   visible: boolean;
+  sentMessages: number;
 
   constructor(client: Client) {
     this.client = client;
     this.visible = false;
+    this.sentMessages = 0;
   }
 
   /** Detects whether a string contains maths, e.g. "x^2 + 3x + 4" will return true */
@@ -300,6 +302,7 @@ class Chat {
     let messageText = input.value;
     input.value = "";
 
+    this.sentMessages++;
     this.client.messageRef.push().set({
       sender: "user",
       content: messageText,
@@ -348,6 +351,9 @@ class Chat {
           messagesDiv.appendChild(outerSpan);
         }
 
+        if (this.sentMessages > 0) {
+          document.querySelector("div.chatHelp").className = "chatHelp overrideHidden";
+        }
         if (messagesDiv.getBoundingClientRect().right === window.innerWidth) {
           (<HTMLSpanElement>messagesDiv.lastChild).scrollIntoView();
         }

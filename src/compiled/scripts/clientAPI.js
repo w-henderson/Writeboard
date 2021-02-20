@@ -221,6 +221,7 @@ var Chat = (function () {
     function Chat(client) {
         this.client = client;
         this.visible = false;
+        this.sentMessages = 0;
     }
     Chat.prototype.detectMaths = function (message) {
         if (message.includes("\\(") && message.includes("\\)"))
@@ -238,6 +239,7 @@ var Chat = (function () {
         var input = document.querySelector("input#messageInput");
         var messageText = input.value;
         input.value = "";
+        this.sentMessages++;
         this.client.messageRef.push().set({
             sender: "user",
             content: messageText,
@@ -276,6 +278,9 @@ var Chat = (function () {
                         innerSpan.textContent = this.client.messageCache.data[messageId].content;
                     }
                     messagesDiv.appendChild(outerSpan);
+                }
+                if (this.sentMessages > 0) {
+                    document.querySelector("div.chatHelp").className = "chatHelp overrideHidden";
                 }
                 if (messagesDiv.getBoundingClientRect().right === window.innerWidth) {
                     messagesDiv.lastChild.scrollIntoView();

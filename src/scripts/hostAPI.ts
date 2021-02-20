@@ -244,12 +244,14 @@ class Host {
  * @param {Host} host - host instance to connect to
  */
 class HostChat {
-  seenMessages: any;
   host: Host;
+  seenMessages: any;
+  sentMessages: number;
 
   constructor(host: Host) {
-    this.seenMessages = {};
     this.host = host;
+    this.seenMessages = {};
+    this.sentMessages = 0;
   }
 
   /** Detects whether a string contains maths, e.g. "x^2 + 3x + 4" will return true */
@@ -323,6 +325,10 @@ class HostChat {
 
       MathJax.typeset();
 
+      if (this.sentMessages > 0) {
+        document.querySelector("div.chatHelp").className = "chatHelp overrideHidden";
+      }
+
       (<HTMLSpanElement>messagesDiv.lastChild).scrollIntoView();
       this.host.userCache[this.host.maximisedUser].seenMessages = Object.keys(this.host.userCache[this.host.maximisedUser].data.messages).length;
     }
@@ -361,6 +367,7 @@ class HostChat {
     let messageText = input.value;
     input.value = "";
 
+    this.sentMessages++;
     let messagesRef = this.host.database.ref(`rooms/${this.host.roomId}/users/${this.host.maximisedUser}/messages`).push();
     messagesRef.set({
       sender: "host",
