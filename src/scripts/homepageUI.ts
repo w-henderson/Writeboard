@@ -224,6 +224,7 @@ class HomepageUI {
           let date = document.createTextNode(commitDateString);
           a.href = commit.html_url;
           a.target = "_blank";
+          a.rel = "noopener";
           a.textContent = commitMessage;
           li.appendChild(date);
           li.appendChild(a);
