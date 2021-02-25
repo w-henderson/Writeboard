@@ -233,7 +233,7 @@ class Host {
         background: "var(--background)"
       }).then((result) => {
         if (result.isConfirmed) {
-          this.closeRoom(true);
+          _wb_host.HOST.closeRoom(true);
         }
       })
     } else {

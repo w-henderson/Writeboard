@@ -152,7 +152,6 @@ var Host = (function () {
         });
     };
     Host.prototype.closeRoom = function (force) {
-        var _this = this;
         if (force === void 0) { force = false; }
         if (!force) {
             Swal.fire({
@@ -165,7 +164,7 @@ var Host = (function () {
                 background: "var(--background)"
             }).then(function (result) {
                 if (result.isConfirmed) {
-                    _this.closeRoom(true);
+                    _wb_host.HOST.closeRoom(true);
                 }
             });
         }
