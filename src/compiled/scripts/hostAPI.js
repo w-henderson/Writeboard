@@ -13,10 +13,16 @@ var Host = (function () {
         var _this = this;
         this.database = firebase.database();
         this.analytics = firebase.analytics();
-        this.roomId = window.localStorage.getItem("writeboardTempId");
         this.userCache = {};
         this.allowedNotifications = false;
         this.locked = false;
+        this.homepage = (window.location.hostname === "localhost" || window.location.hostname === "192.168.1.1") ? "/" : "//writeboard.ga/";
+        if (this.homepage === "/")
+            this.roomId = window.localStorage.getItem("writeboardTempId");
+        else {
+            var cookieRegex = new RegExp(/writeboardTempId=[A-Z]{6}/);
+            this.roomId = document.cookie.match(cookieRegex)[0].split("=")[1];
+        }
         if (!this.roomId) {
             Swal.fire({
                 title: "Error 404",
@@ -25,7 +31,7 @@ var Host = (function () {
                 background: "var(--background)"
             }).then(function () {
                 _this.analytics.logEvent("failHost", {});
-                window.location.href = "/";
+                window.location.href = _this.homepage;
             });
         }
         else {
@@ -166,7 +172,7 @@ var Host = (function () {
         else {
             _wb_host.HOST.analytics.logEvent("closeRoom", { roomId: _wb_host.HOST.roomId });
             _wb_host.HOST.database.ref("rooms/" + _wb_host.HOST.roomId).remove();
-            window.location.href = "/";
+            window.location.href = _wb_host.HOST.homepage;
         }
     };
     return Host;

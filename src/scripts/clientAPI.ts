@@ -72,6 +72,8 @@ class Client {
   initRef: Reference;
   ref: Reference;
 
+  homepage: string;
+
   messageCache: {
     read: number,
     data: any
@@ -92,6 +94,7 @@ class Client {
     this.maximised = false;
     this.kicked = false;
     this.allowedNotifications = false;
+    this.homepage = (window.location.hostname === "localhost" || window.location.hostname === "192.168.1.1") ? "/" : "//writeboard.ga/";
 
     this.messageCache = {
       read: 0,
@@ -192,7 +195,7 @@ class Client {
         background: "var(--background)"
       }).then(() => {
         _wb.CLIENT.analytics.logEvent("failJoin", { roomId: _wb.CLIENT.roomId });
-        window.location.href = "/";
+        window.location.href = _wb.CLIENT.homepage;
       });
     } else {
       Swal.fire({
@@ -202,7 +205,7 @@ class Client {
         background: "var(--background)"
       }).then(() => {
         _wb.CLIENT.analytics.logEvent("failJoin", { roomId: _wb.CLIENT.roomId });
-        window.location.href = "/";
+        window.location.href = _wb.CLIENT.homepage;
       });
     }
   }
@@ -253,7 +256,7 @@ class Client {
         background: "var(--background)",
         allowOutsideClick: false
       }).then(() => {
-        window.location.href = "/";
+        window.location.href = this.homepage;
       });
     }
   }

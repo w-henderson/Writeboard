@@ -70,6 +70,7 @@ var Client = (function () {
         this.maximised = false;
         this.kicked = false;
         this.allowedNotifications = false;
+        this.homepage = (window.location.hostname === "localhost" || window.location.hostname === "192.168.1.1") ? "/" : "//writeboard.ga/";
         this.messageCache = {
             read: 0,
             data: null
@@ -159,7 +160,7 @@ var Client = (function () {
                                 background: "var(--background)"
                             }).then(function () {
                                 _wb.CLIENT.analytics.logEvent("failJoin", { roomId: _wb.CLIENT.roomId });
-                                window.location.href = "/";
+                                window.location.href = _wb.CLIENT.homepage;
                             });
                         }
                         else {
@@ -170,7 +171,7 @@ var Client = (function () {
                                 background: "var(--background)"
                             }).then(function () {
                                 _wb.CLIENT.analytics.logEvent("failJoin", { roomId: _wb.CLIENT.roomId });
-                                window.location.href = "/";
+                                window.location.href = _wb.CLIENT.homepage;
                             });
                         }
                         return [2];
@@ -195,6 +196,7 @@ var Client = (function () {
         }
     };
     Client.prototype.kickCallback = function (e) {
+        var _this = this;
         if (e.val() === true) {
             this.userRef.off();
             this.maximisedRef.off();
@@ -211,7 +213,7 @@ var Client = (function () {
                 background: "var(--background)",
                 allowOutsideClick: false
             }).then(function () {
-                window.location.href = "/";
+                window.location.href = _this.homepage;
             });
         }
     };

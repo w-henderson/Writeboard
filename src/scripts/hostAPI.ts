@@ -32,6 +32,8 @@ class Host {
   userCache: any;
   locked: boolean;
 
+  homepage: string;
+
   ref: Reference;
   titleRef: Reference;
   maximisedRef: Reference;
@@ -41,10 +43,16 @@ class Host {
   constructor() {
     this.database = firebase.database();
     this.analytics = firebase.analytics();
-    this.roomId = window.localStorage.getItem("writeboardTempId");
     this.userCache = {};
     this.allowedNotifications = false;
     this.locked = false;
+    this.homepage = (window.location.hostname === "localhost" || window.location.hostname === "192.168.1.1") ? "/" : "//writeboard.ga/";
+
+    if (this.homepage === "/") this.roomId = window.localStorage.getItem("writeboardTempId");
+    else {
+      let cookieRegex: RegExp = new RegExp(/writeboardTempId=[A-Z]{6}/);
+      this.roomId = document.cookie.match(cookieRegex)[0].split("=")[1];
+    }
 
     if (!this.roomId) {
       Swal.fire({
@@ -54,7 +62,7 @@ class Host {
         background: "var(--background)"
       }).then(() => {
         this.analytics.logEvent("failHost", {});
-        window.location.href = "/";
+        window.location.href = this.homepage;
       });
     } else {
       this.ref = this.database.ref(`rooms/${this.roomId}/users`);
@@ -231,7 +239,7 @@ class Host {
     } else {
       _wb_host.HOST.analytics.logEvent("closeRoom", { roomId: _wb_host.HOST.roomId });
       _wb_host.HOST.database.ref(`rooms/${_wb_host.HOST.roomId}`).remove();
-      window.location.href = "/";
+      window.location.href = _wb_host.HOST.homepage;
     }
   }
 }

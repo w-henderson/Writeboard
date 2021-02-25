@@ -44,15 +44,16 @@ window.onload = initHome;
 var HomepageUI = (function () {
     function HomepageUI() {
         this.database = firebase.database();
+        this.local = window.location.hostname === "localhost" || window.location.hostname === "192.168.1.1";
         this.updateSizing();
         this.updateLatestUpdates();
         window.onresize = function () { _wb_home.UI.updateSizing(); };
     }
     HomepageUI.prototype.route = function (r) {
-        if (window.location.hostname !== "localhost" && window.location.hostname !== "192.168.1.1")
-            return r;
-        else
-            return r + ".html";
+        if (r === "client")
+            return this.local ? "//localhost/client.html" : "//app.writeboard.ga/";
+        else if (r === "host")
+            return this.local ? "//localhost/host.html" : "//host.writeboard.ga/";
     };
     HomepageUI.prototype.scrollToAnchor = function (name) {
         document.querySelector(".navigation").className = "navigation";
@@ -104,7 +105,7 @@ var HomepageUI = (function () {
         }).then(function (result) {
             if (result.isConfirmed) {
                 var roomId = result.value;
-                window.location.href = "/" + _this.route("client") + "?" + roomId;
+                window.location.href = _this.route("client") + "?" + roomId;
             }
         });
     };
@@ -164,8 +165,11 @@ var HomepageUI = (function () {
                                     authLevel: 0,
                                     users: {}
                                 }).then(function () {
-                                    window.localStorage.setItem("writeboardTempId", code_1);
-                                    window.location.href = "/" + _this.route("host");
+                                    if (!_this.local)
+                                        document.cookie = "writeboardTempId=" + code_1 + ";domain=.writeboard.ga";
+                                    else
+                                        window.localStorage.setItem("writeboardTempId", code_1);
+                                    window.location.href = _this.route("host");
                                 })["catch"](function () {
                                     Swal.fire({
                                         title: "An error occurred.",

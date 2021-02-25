@@ -19,22 +19,24 @@ window.onload = initHome;
  */
 class HomepageUI {
   database: FirebaseDatabase;
+  local: boolean;
 
   constructor() {
     this.database = firebase.database();
+    this.local = window.location.hostname === "localhost" || window.location.hostname === "192.168.1.1";
     this.updateSizing();
     this.updateLatestUpdates();
     window.onresize = () => { _wb_home.UI.updateSizing(); };
   }
 
   /**
-   * Netlify's asset optimisation means the user doesn't need the `.html` at the end of the URL.
-   * On my local development server, I do need this.
+   * When hosted on Netlify, the `/client.html` is at the `app` subdomain and the same for `/host.html` and `host`.
+   * On my local development server, this won't work.
    * This is basically a janky workaround.
    */
   route(r: string) {
-    if (window.location.hostname !== "localhost" && window.location.hostname !== "192.168.1.1") return r;
-    else return `${r}.html`;
+    if (r === "client") return this.local ? "//localhost/client.html" : "//app.writeboard.ga/";
+    else if (r === "host") return this.local ? "//localhost/host.html" : "//host.writeboard.ga/";
   }
 
   /** Scrolls smoothly to an anchor on the page and updates the URL without reloading. */
@@ -80,7 +82,7 @@ class HomepageUI {
     }).then((result) => {
       if (result.isConfirmed) {
         let roomId = result.value;
-        window.location.href = `/${this.route("client")}?${roomId}`;
+        window.location.href = `${this.route("client")}?${roomId}`;
       }
     });
   }
@@ -138,8 +140,9 @@ class HomepageUI {
           authLevel: 0,
           users: {}
         }).then(() => {
-          window.localStorage.setItem("writeboardTempId", code);
-          window.location.href = "/" + this.route("host");
+          if (!this.local) document.cookie = `writeboardTempId=${code};domain=.writeboard.ga`;
+          else window.localStorage.setItem("writeboardTempId", code);
+          window.location.href = this.route("host");
         }).catch(() => {
           Swal.fire({
             title: "An error occurred.",

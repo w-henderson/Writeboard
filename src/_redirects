@@ -1,0 +1,7 @@
+# Redirect app subdomain to client page
+http://app.writeboard.ga/ http://writeboard.ga/client 200!
+https://app.writeboard.ga/ https://writeboard.ga/client 200!
+
+# Redirect host subdomain to host page
+http://host.writeboard.ga/ http://writeboard.ga/host 200!
+https://host.writeboard.ga/ https://writeboard.ga/host 200!
