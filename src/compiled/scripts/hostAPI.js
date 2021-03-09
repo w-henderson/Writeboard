@@ -41,10 +41,10 @@ var Host = (function () {
             this.ref.on("child_added", function (e) { _wb_host.HOST.addWhiteboard(e); });
             this.ref.on("child_changed", function (e) { _wb_host.HOST.updateWhiteboard(e); });
             this.ref.on("child_removed", function (e) { _wb_host.HOST.removeWhiteboard(e); });
+            window.localStorage.removeItem("writeboardTempId");
             Notification.requestPermission().then(function (result) {
                 _this.allowedNotifications = result === "granted";
             });
-            window.localStorage.removeItem("writeboardTempId");
         }
         document.querySelector("input#messageInput").onkeyup = function (e) { _wb_host.CHAT.sendMessage(e); };
         window.addEventListener("beforeunload", function () { _wb_host.HOST.closeRoom(true); });

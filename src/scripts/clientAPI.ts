@@ -173,10 +173,6 @@ class Client {
           this.maximisedRef.on("value", (e) => { this.updateMaximised(e); });
           this.kickRef.on("value", (e) => { this.kickCallback(e); });
 
-          Notification.requestPermission().then((result: NotificationPermission) => {
-            this.allowedNotifications = result === "granted";
-          });
-
           window.addEventListener("beforeunload", () => {
             if (!_wb.CLIENT.kicked) {
               _wb.CLIENT.analytics.logEvent("leave", { roomId: _wb.CLIENT.roomId, username: _wb.CLIENT.username });
@@ -185,6 +181,10 @@ class Client {
           });
 
           window.setTimeout(() => { _wb.CLIENT.updateBoard() }, 5000);
+
+          Notification.requestPermission().then((result: NotificationPermission) => {
+            this.allowedNotifications = result === "granted";
+          });
         }
       }).bind(_wb.CLIENT));
     } else if (data !== null) {

@@ -73,11 +73,11 @@ class Host {
       this.ref.on("child_changed", (e) => { _wb_host.HOST.updateWhiteboard(e); });
       this.ref.on("child_removed", (e) => { _wb_host.HOST.removeWhiteboard(e); });
 
+      window.localStorage.removeItem("writeboardTempId");
+
       Notification.requestPermission().then((result: NotificationPermission) => {
         this.allowedNotifications = result === "granted";
       });
-
-      window.localStorage.removeItem("writeboardTempId");
     }
 
     (<HTMLInputElement>document.querySelector("input#messageInput")).onkeyup = (e) => { _wb_host.CHAT.sendMessage(e); };

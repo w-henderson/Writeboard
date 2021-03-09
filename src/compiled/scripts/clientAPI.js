@@ -139,9 +139,6 @@ var Client = (function () {
                                     this.messageRef.on("value", function (e) { _this.chat.messageHandler(e); });
                                     this.maximisedRef.on("value", function (e) { _this.updateMaximised(e); });
                                     this.kickRef.on("value", function (e) { _this.kickCallback(e); });
-                                    Notification.requestPermission().then(function (result) {
-                                        _this.allowedNotifications = result === "granted";
-                                    });
                                     window.addEventListener("beforeunload", function () {
                                         if (!_wb.CLIENT.kicked) {
                                             _wb.CLIENT.analytics.logEvent("leave", { roomId: _wb.CLIENT.roomId, username: _wb.CLIENT.username });
@@ -149,6 +146,9 @@ var Client = (function () {
                                         }
                                     });
                                     window.setTimeout(function () { _wb.CLIENT.updateBoard(); }, 5000);
+                                    Notification.requestPermission().then(function (result) {
+                                        _this.allowedNotifications = result === "granted";
+                                    });
                                 }
                             }).bind(_wb.CLIENT));
                         }
