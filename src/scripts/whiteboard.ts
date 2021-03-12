@@ -125,7 +125,7 @@ class Graphics {
    */
   replaceWithLine(stroke: number[][]) {
     let imageToDraw = new Image();
-    imageToDraw.src = this.history[this.history.items.length - 1 - this.history.location];
+    imageToDraw.src = this.history.items[this.history.items.length - 1 - this.history.location];
     imageToDraw.onload = () => {
       this.context.drawImage(imageToDraw, 0, 0);
       this.context.beginPath();

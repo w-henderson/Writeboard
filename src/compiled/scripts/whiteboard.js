@@ -127,7 +127,7 @@ var Graphics = (function () {
     Graphics.prototype.replaceWithLine = function (stroke) {
         var _this = this;
         var imageToDraw = new Image();
-        imageToDraw.src = this.history[this.history.items.length - 1 - this.history.location];
+        imageToDraw.src = this.history.items[this.history.items.length - 1 - this.history.location];
         imageToDraw.onload = function () {
             _this.context.drawImage(imageToDraw, 0, 0);
             _this.context.beginPath();
