@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Writeboard</title>
+
+    <meta name="description" content="The simple yet stylish whiteboard app, available now for free.">
+
+    <link rel="icon" href="images/logo.png">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="compiled/base.css">
+</head>
+
+<body>
+    <header>
+        <img src="images/logo.png" class="logo">
+        <h1>Writeboard</h1>
+        
+        <div>
+            <i class="material-icons-round">notifications_none</i>
+            <img src="images/avatar.png">
+            <span>Guest User</span>
+            <i class="material-icons-round">arrow_drop_down</i>
+        </div>
+    </header>
+
+    <nav>
+        <a href="#">
+            <i class="material-icons-round">home</i>
+            <span>Home</span>
+        </a>
+        <a href="#" class="selectedLink">
+            <i class="material-icons-round">menu_book</i>
+            <span>Student</span>
+        </a>
+        <a href="#">
+            <i class="material-icons-round">school</i>
+            <span>Teacher</span>
+        </a>
+        
+        <a href="#">
+            <i class="material-icons-round">settings</i>
+            <span>Settings</span>
+        </a>
+    </nav>
+
+    <main>
+        <section class="board">
+            <canvas width=1600 height=1200></canvas>
+
+            <div class="toolbar brush">
+                <div class="brushMenu hidden">
+                    <i class="material-icons-round"
+                    onclick="_wb.TOOLS.selectColor();"
+                    id="colorIcon"
+                    title="Change pen colour">opacity</i>
+                    <i class="material-icons-round"
+                    onclick="_wb.TOOLS.toggleLineWidth();"
+                    style="transform:scale(0.8);"
+                    id="widthIcon"
+                    title="Switch between line widths">line_weight</i>
+                    <i class="material-icons-round"
+                    onclick="_wb.TOOLS.toggleStraightLine();"
+                    id="straightIcon"
+                    title="Straight line tool"
+                    style="opacity:.2">straighten</i>
+                </div>
+                
+                <i class="material-icons-round" onclick="_wb.HISTORY.undo();" title="Undo">undo</i>
+                <i class="material-icons-round" onclick="_wb.HISTORY.redo();" title="Redo">redo</i>
+                <i class="material-icons-round" onclick="_wb.TOOLS.clearBoard();" title="Clear board">clear</i>
+                
+                <i class="material-icons-round mainButton brushButton" onclick="_wb.UI.openBrushMenu();" title="Brush">brush</i>
+
+                <img src="images/eraser.svg" onclick="_wb.TOOLS.selectEraser();" title="Eraser">
+                <i class="material-icons-round disabledOnMobile" onclick="_wb.EVENTS.forceCopy();" title="Copy board">copy</i>
+                <i class="material-icons-round disabledOnMobile" onclick="_wb.EVENTS.forcePaste();" title="Paste onto board">paste</i>
+            </div>
+        </section>
+
+        <section class="chat">
+            <h1>Chat with <span>Teacher</span></h1>
+            <div class="messages">
+                <span class="localMessage" id="message_-MVg_6fTC2U4A0YKuNpB"><span>abcacac</span></span>
+                <span class="remoteMessage" id="message_-MVg_6fTC2U4A0YKuNpB">
+                    <img src="images/avatar.png">
+                    <span>a b c eawkjfhb ofeb aefba efkhjba lkab lkahfb</span>
+                </span>
+                <span class="localMessage" id="message_-MVg_6fTC2U4A0YKuNpB">
+                    <span>abcacac</span>
+                    <p>This looks like maths, <u>style as such?</u></p>
+                </span>
+                <span class="localMessage" id="message_-MVg_6fTC2U4A0YKuNpB"><span>abcacac</span></span>
+            </div>
+
+            <input type="text" placeholder="Message">
+            <i class="material-icons-round">send</i>
+        </section>
+    </main>
+</body>
+
+</html>

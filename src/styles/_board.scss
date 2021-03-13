@@ -1,0 +1,124 @@
+section.board {
+    flex: 4;
+    box-sizing: border-box;
+    padding: 48px;
+
+    background-color: var(--background-lighter);
+    box-shadow: inset var(--shadow);
+    border-radius: 48px 48px 0 0;
+    margin-right: 50px;
+
+    display: flex;
+    flex-direction: column;
+    place-items: center;
+
+    max-width: calc(100% - 25px);
+
+    canvas {
+        background-color: var(--background);
+        box-shadow: var(--shadow);
+        border-radius: 32px;
+        max-width: 100%;
+        max-height: calc(100vh - 328px);
+    }
+
+    div.toolbar {
+        margin-top: 40px;
+        min-width: 75%;
+        display: flex;
+        place-items: center;
+        place-content: center;
+        text-align: center;
+
+        & > i, img {
+            display: block !important;
+            background-color: var(--background);
+
+            height: 40px;
+            width: 40px;
+            font-size: 40px;
+            margin: 0 auto;
+            border-radius: 40px;
+            padding: 8px;
+            cursor: pointer;
+
+            &.mainButton {
+                font-size: 64px;
+                height: 64px;
+                width: 64px;
+                background-color: var(--accent-color);
+                z-index: 1;
+            }
+        }
+
+        div.brushMenu {
+            position: absolute;
+            transform: translateY(-100px);
+            background-color: var(--alternate-accent);
+            color: var(--darkest);
+            height: 135px;
+            width: 40px;
+            padding: 8px;
+            border-radius: 16px 16px 0 0;
+            transition: transform 500ms, height 500ms;
+            overflow: hidden;
+
+            &.hidden {
+                height: 0px;
+                transform: translateY(0);
+            }
+
+            i {
+                font-size: 40px;
+                cursor: pointer;
+            }
+        }
+    }
+
+    @media only screen and (min-width: 1500px) {
+        flex: none;
+    }
+
+    @media only screen and (max-width: 1100px) {
+        margin-right: 25px;
+        border-radius: 48px;
+        
+        canvas {
+            max-height: calc(100vh - 428px);
+        }
+    }
+
+    @media only screen and (max-width: 600px) {
+        padding: 16px;
+
+        canvas {
+            max-height: calc(100vh - 328px);
+        }
+
+        div.toolbar {
+            flex: 1;
+            position: relative;
+            margin: 20px 0 8px;
+
+            i, img {
+                height: 4vh;
+                width: 4vh;
+                font-size: 4vh;
+            }
+
+            i.mainButton {
+                height: 4vh;
+                width: 4vh;
+                font-size: 4vh;
+            }
+
+            i.brushButton {
+                order: -1;
+            }
+
+            i.disabledOnMobile {
+                display: none !important;
+            }
+        }
+    }
+}

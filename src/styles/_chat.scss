@@ -1,0 +1,122 @@
+section.chat {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    margin: 0 50px 50px 0;
+
+    h1 {
+        margin: 0 20px 20px 0;
+        font-size: 1.8em;
+
+        span {
+            color: var(--accent-color);
+        }
+    }
+
+    div.messages {
+        flex: 1;
+        padding: 0 20px 0 0;
+        overflow: hidden auto;
+        box-sizing: border-box;
+
+        &::-webkit-scrollbar {
+            width: 8px;
+        }
+           
+        &::-webkit-scrollbar-track { 
+            background-color: var(--canvas);
+            border-radius: 4px;
+        }
+           
+        &::-webkit-scrollbar-thumb {
+            background-color: var(--background-lighter);
+            border-radius: 4px;
+
+            &:hover {
+                background-color: var(--light-line);
+            }
+        }
+
+        span.localMessage, span.remoteMessage {
+            display: block;
+            margin-bottom: 10px;
+
+            span {
+                display: inline-block;
+                background-color: var(--background-lighter);
+                border-radius: 15px 15px 15px 0;
+                padding: 10px;
+                max-width: calc(80% - 40px);
+                word-break: break-word;
+            }
+
+            p {
+                margin-top: 5px;
+                font-weight: 200;
+                color: rgba(255, 255, 255, 0.3);
+                font-size: 0.8em;
+
+                u {
+                    cursor: pointer;
+                    transition: color 250ms;
+                    
+                    &:hover {
+                        color: rgba(255, 255, 255, 0.7);
+                    }
+                }
+            }
+
+            &.localMessage {
+                text-align: right;
+
+                span {
+                    border-radius: 15px 15px 0 15px;
+                    background-color: var(--accent-color-darker);
+                    text-align: left;
+                }
+            }
+
+            &.remoteMessage {
+                img {
+                    display: inline-block;
+                    vertical-align: middle;
+                    margin-right: 16px;
+                    height: calc(1em + 20px);
+                    clip-path: circle(50%);
+                }
+            }
+
+            &:last-child {
+                margin-bottom: 20px;
+            }
+        }
+    }
+
+    input {
+        box-sizing: border-box;
+        height: 48px;
+        border: none;
+        padding: 0 20px;
+        font-family: Gilroy;
+        font-size: 18px;
+        outline: none !important;
+        color: var(--text-color);
+        background-color: var(--background-lighter);
+        border-radius: 10px;
+        transition: background-color 100ms;
+
+        &:hover, &:active, &:focus {
+            background-color: var(--background-lighter-still);
+        }
+    }
+
+    & > i {
+        position: absolute;
+        bottom: 61px;
+        right: 60px;
+    }
+
+    @media (max-width: 1500px) {
+        display: none;
+    }
+}
