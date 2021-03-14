@@ -3,6 +3,7 @@ section.chat {
     display: flex;
     flex-direction: column;
     margin: 0 50px 50px 0;
+    z-index: 2;
 
     h1 {
         margin: 0 20px 20px 0;
@@ -114,9 +115,37 @@ section.chat {
         position: absolute;
         bottom: 61px;
         right: 60px;
+        cursor: pointer;
     }
 
-    @media (max-width: 1500px) {
-        display: none;
+    @media only screen and (max-width: 1500px) {
+        position: fixed;
+        top: 120px;
+        right: -50px;
+        background-color: var(--darkest);
+        padding: 20px;
+        box-sizing: border-box;
+        width: 300px;
+        height: 500px;
+        border-radius: 0 0 20px 20px;
+        transition: transform 250ms;
+        transform: translateY(-500px);
+        box-shadow: var(--shadow);
+
+        & > i {
+            bottom: 32px;
+            right: 30px;
+        }
+
+        &.visible {
+            transform: translateY(0px);
+        }
+    }
+
+    @media only screen and (max-width: 1100px) {
+        right: -25px;
+        width: calc(100% - 50px);
+        height: calc(100% - 220px);
+        border-radius: 25px;
     }
 }

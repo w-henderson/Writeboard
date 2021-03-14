@@ -26,9 +26,11 @@ section.board {
         margin-top: 40px;
         min-width: 75%;
         display: flex;
+        flex-wrap: wrap;
         place-items: center;
         place-content: center;
         text-align: center;
+        filter: drop-shadow(var(--shadow));
 
         & > i, img {
             display: block !important;
@@ -62,6 +64,8 @@ section.board {
             border-radius: 16px 16px 0 0;
             transition: transform 500ms, height 500ms;
             overflow: hidden;
+            line-height: 40px !important;
+            font-size: 40px !important;
 
             &.hidden {
                 height: 0px;
@@ -70,7 +74,12 @@ section.board {
 
             i {
                 font-size: 40px;
+                vertical-align: top;
                 cursor: pointer;
+
+                &#widthIcon {
+                    line-height: 40px;
+                }
             }
         }
     }
@@ -99,11 +108,45 @@ section.board {
             flex: 1;
             position: relative;
             margin: 20px 0 8px;
+            filter: none;
 
             i, img {
                 height: 4vh;
                 width: 4vh;
                 font-size: 4vh;
+                border-radius: 40px;
+                padding: 8px;
+                background-color: var(--background);
+            }
+
+            div.brushMenu {
+                position: unset;
+                transform: unset;
+                order: 1;
+                flex-basis: 100%;
+                height: unset;
+                background-color: unset;
+                color: var(--text-color);
+                line-height: 4vh !important;
+                font-size: 4vh !important;
+
+                i {
+                    font-size: 1em;
+                    vertical-align: top;
+                    line-height: 4vh;
+                    margin: 0 2px;
+
+                    transition: font-size 250ms;
+
+                    &#widthIcon {
+                        line-height: unset;
+                    }
+                }
+
+                &.hidden {
+                    height: unset;
+                    transform: unset;
+                }
             }
 
             i.mainButton {
