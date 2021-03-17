@@ -14,14 +14,25 @@ header {
     }
 
     h1 {
+        margin: 0;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3;
+        text-overflow: ellipsis;
+        overflow: hidden;
+    }
+
+    div.title {
+        max-width: calc(100% - 220px);
         position: absolute;
         left: 250px;
-        display: inline-block;
-        line-height: 120px;
+        display: inline-flex;
+        place-items: center;
+        height: 120px;
         margin: 0;
     }
 
-    div {
+    div:not(div.title) {
         float: right;
         display: flex;
         place-items: center;
@@ -45,7 +56,7 @@ header {
 
     @media only screen and (max-width: 1100px) {
         img.logo          { display: none; }
-        h1                { left: 50px; }
+        div.title         { left: 50px; }
         div i             { display: none !important; }
         div i:first-child { display: inline-block !important; }
         div img           { height: 48px; }

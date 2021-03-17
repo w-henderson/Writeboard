@@ -39,8 +39,6 @@ function initClient() {
 
   document.onpaste = (e) => { _wb.EVENTS.handlePasteHotkey(e); };
   document.oncopy = () => { _wb.EVENTS.forceCopy(); };
-  window.onresize = () => { _wb.UI.placeToolbar(); };
-  _wb.UI.placeToolbar();
 
   _wb.CANVAS.onpointermove = (e) => { _wb.EVENTS.handlePointerMove(e); };
   _wb.CANVAS.onpointerup = (e) => { _wb.EVENTS.handlePointerUp(e); };
@@ -277,7 +275,7 @@ class Chat {
 
   constructor(client: Client) {
     this.client = client;
-    this.visible = false;
+    this.visible = window.innerWidth > 1300 || window.innerWidth / window.innerHeight < 5 / 3;
     this.sentMessages = 0;
   }
 
@@ -297,9 +295,11 @@ class Chat {
    * Message send handler, called when user presses return in the chat box.
    * Sends the message to the server.
    */
-  sendMessage(e) {
-    e.preventDefault();
-    if (e.keyCode !== 13) return;
+  sendMessage(e = null) {
+    if (e != null) {
+      e.preventDefault();
+      if (e.keyCode !== 13) return;
+    }
 
     let input: HTMLInputElement = document.querySelector("input#messageInput");
     let messageText = input.value;
@@ -328,9 +328,15 @@ class Chat {
         for (let messageId in this.client.messageCache.data) {
           let outerSpan = document.createElement("span");
           let innerSpan = document.createElement("span");
-          outerSpan.className = this.client.messageCache.data[messageId].sender + "Message";
+          outerSpan.className = this.client.messageCache.data[messageId].sender === "host" ? "remoteMessage" : "localMessage";
           outerSpan.id = "message_" + messageId;
           outerSpan.appendChild(innerSpan);
+
+          if (outerSpan.className === "remoteMessage") {
+            let avatar = document.createElement("img");
+            avatar.src = "images/avatar.png"; // TODO: Replace with user avatar
+            outerSpan.prepend(avatar);
+          }
 
           if (this.client.messageCache.data[messageId].maths) {
             innerSpan.textContent = "\\(" + this.client.messageCache.data[messageId].content + "\\)";
@@ -354,9 +360,6 @@ class Chat {
           messagesDiv.appendChild(outerSpan);
         }
 
-        if (this.sentMessages > 0) {
-          document.querySelector("div.chatHelp").className = "chatHelp overrideHidden";
-        }
         if (messagesDiv.getBoundingClientRect().right === window.innerWidth) {
           (<HTMLSpanElement>messagesDiv.lastChild).scrollIntoView();
         }
@@ -371,13 +374,11 @@ class Chat {
       );
     }
 
-    let notification: HTMLDivElement = document.querySelector("div.notification");
+    let notification: HTMLDivElement = document.querySelector("i.notification");
     if (this.client.messageCache.data && Object.keys(this.client.messageCache.data).length > this.client.messageCache.read) {
-      let unread = Object.keys(this.client.messageCache.data).length - this.client.messageCache.read;
-      notification.style.display = "block";
-      notification.textContent = unread.toString();
+      notification.innerHTML = "mark_chat_unread";
     } else {
-      notification.style.display = "none";
+      notification.innerHTML = "chat_bubble";
     }
   }
 
@@ -392,29 +393,18 @@ class Chat {
 
   /** Manipulate the UI to show the chat, then update the messages. */
   showChat() {
-    document.querySelector("div.main").className = "main chatShown";
-    document.querySelector("div.clientChat").className = "clientChat chatShown";
-    document.querySelector("div.clientChat i").textContent = "clear";
-    (<HTMLDivElement>document.querySelector("div.clientChat div.toggle")).onclick = () => { _wb.CHAT.hideChat(); };
+    document.querySelector("section.chat").className = "chat visible";
+    (<HTMLElement>document.querySelector("i.notification")).onclick = () => { _wb.CHAT.hideChat(); };
     this.visible = true;
     this.updateMessages();
-    this.toolbarTransition();
   }
 
   /** Manipulate the UI to hide the chat. */
   hideChat() {
-    document.querySelector("div.main").className = "main";
-    document.querySelector("div.clientChat").className = "clientChat";
-    document.querySelector("div.clientChat i").textContent = "message";
-    (<HTMLDivElement>document.querySelector("div.clientChat div.toggle")).onclick = () => { _wb.CHAT.showChat(); };
-    this.visible = false;
-    this.toolbarTransition();
-  }
-
-  /** Animate the toolbar positioning for 30 frames over 500ms as the chat animates out. */
-  toolbarTransition() {
-    window.setInterval(() => { _wb.UI.placeToolbar(); }, 16.7);
-    window.setTimeout(window.clearInterval, 500);
+    document.querySelector("section.chat").className = "chat";
+    (<HTMLElement>document.querySelector("i.notification")).onclick = () => { _wb.CHAT.showChat(); };
+    this.visible = window.innerWidth > 1300 || window.innerWidth / window.innerHeight < 5 / 3;
+    this.updateMessages();
   }
 }
 

@@ -48,3 +48,8 @@ main {
         height: unset;
     }
 }
+
+i, img {
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
