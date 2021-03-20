@@ -8,54 +8,95 @@
 
     <link rel="icon" href="images/logo.png">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    <link rel="stylesheet" href="compiled/style.css">
+    <link rel="stylesheet" href="compiled/base.css">
 </head>
 
 <body>
-    <div class="main hostMain">
-        <div class="controls">
-            <h1>Loading Writeboard...</h1>
-            <div class="controlIcons">
-                <i class="material-icons-round" onclick="_wb_host.HOST.toggleLock();" title="Lock room" id="lockIcon">lock_open</i>
-                <i class="material-icons-round" onclick="_wb_host.UI.zoomIn();" title="Zoom in">add_circle_outline</i>
-                <i class="material-icons-round" onclick="_wb_host.UI.zoomOut();" title="Zoom out">remove_circle_outline</i>
-                <i class="material-icons-round" onclick="_wb_host.HOST.closeRoom();" title="Close room">cancel</i>
+    <header>
+        <img src="images/logo.png" class="logo">
+        <div class="title">
+            <h1>Writeboard</h1>
+        </div>
+        
+        <div>
+            <i class="material-icons-round notification" onclick="_wb.CHAT.showChat();">chat_bubble</i>
+            <img src="images/avatar.png">
+            <span>Guest User</span>
+            <i class="material-icons-round">arrow_drop_down</i>
+        </div>
+    </header>
+
+    <nav>
+        <a href="#">
+            <i class="material-icons-round">home</i>
+            <span>Home</span>
+        </a>
+        <a href="#">
+            <i class="material-icons-round">menu_book</i>
+            <span>Student</span>
+        </a>
+        <a href="#" class="selectedLink">
+            <i class="material-icons-round">school</i>
+            <span>Teacher</span>
+        </a>
+        
+        <a href="#">
+            <i class="material-icons-round">settings</i>
+            <span>Settings</span>
+        </a>
+    </nav>
+
+    <main>
+        <section class="board host">
+            <div>
+                <img src="http://via.placeholder.com/400x300.png?text=Some Board">
+                <span>User Name</span>
             </div>
-        </div>
-        <div class="whiteboards zoom3">
-            Waiting for people to connect...
-        </div>
-    </div>
-
-    <div class="maximised">
-        <div class="board">
-            <img src="">
-            <span></span>
-        </div>
-
-        <div class="chat">
-            <h2>Chat</h2>
-            <div class="chatHelp">
-                Send and receive messages with this user here! You can use TeX to style any maths by surrounding it with <code>\(...\)</code>, or just type some maths and Writeboard will try to detect it.
+            <div>
+                <img src="http://via.placeholder.com/400x300.png?text=Some Board">
+                <span>User Name</span>
             </div>
+            <div>
+                <img src="http://via.placeholder.com/400x300.png?text=Some Board">
+                <span>User Name</span>
+            </div>
+            <div>
+                <img src="http://via.placeholder.com/400x300.png?text=Some Board">
+                <span>User Name</span>
+            </div>
+            <div>
+                <img src="http://via.placeholder.com/400x300.png?text=Some Board">
+                <span>User Name</span>
+            </div>
+            <div>
+                <img src="http://via.placeholder.com/400x300.png?text=Some Board">
+                <span>User Name</span>
+            </div>
+        </section>
 
+        <section class="chat host">
+            <img src="images/maximised_placeholder.jpg">
+            <h1>Chat with <span>Student Name</span></h1>
             <div class="messages"></div>
-            <input type="text" placeholder="Message" id="messageInput">
-        </div>
-    </div>
 
-    <!-- Firebase Scripts -->
+            <input type="text" placeholder="Message" id="messageInput">
+            <i class="material-icons-round" onclick="_wb.CHAT.sendMessage();">send</i>
+        </section>
+    </main>
+
+    <!-- Firebase Scripts
     <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-analytics.js"></script>
     <script src="compiled/scripts/firebaseInit.js"></script>
 
-    <!-- Vendor Scripts -->
+    <!-- Vendor Scripts - ->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
-    <!-- Main Scripts -->
+    <!-- Main Scripts - ->
     <script src="compiled/scripts/hostAPI.js"></script>
+    -->
 </body>
 
 </html>
