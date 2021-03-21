@@ -220,8 +220,11 @@ var Client = (function () {
 var Chat = (function () {
     function Chat(client) {
         this.client = client;
-        this.visible = window.innerWidth > 1300 || window.innerWidth / window.innerHeight < 5 / 3;
+        this.visible = window.innerWidth > 1300 || (window.innerWidth > 1100 && window.innerWidth / window.innerHeight < 5 / 3);
         this.sentMessages = 0;
+        window.addEventListener("resize", function () {
+            _wb.CHAT.hideChat();
+        });
     }
     Chat.prototype.detectMaths = function (message) {
         if (message.includes("\\(") && message.includes("\\)"))
@@ -318,7 +321,7 @@ var Chat = (function () {
     Chat.prototype.hideChat = function () {
         document.querySelector("section.chat").className = "chat";
         document.querySelector("i.notification").onclick = function () { _wb.CHAT.showChat(); };
-        this.visible = window.innerWidth > 1300 || window.innerWidth / window.innerHeight < 5 / 3;
+        this.visible = window.innerWidth > 1300 || (window.innerWidth > 1100 && window.innerWidth / window.innerHeight < 5 / 3);
         this.updateMessages();
     };
     return Chat;

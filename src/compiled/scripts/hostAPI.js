@@ -56,7 +56,7 @@ var Host = (function () {
         this.analytics.logEvent("host", { roomId: this.roomId, title: data });
     };
     Host.prototype.addWhiteboard = function (e) {
-        var whiteboards = document.querySelector("div.whiteboards");
+        var whiteboards = document.querySelector("section.board");
         if (whiteboards.textContent.trim() === "Waiting for people to connect...")
             whiteboards.innerHTML = "";
         var userNode = document.createElement("div");
@@ -85,7 +85,7 @@ var Host = (function () {
     Host.prototype.updateWhiteboard = function (e) {
         var _a;
         var data = e.val();
-        var userNode = document.querySelector("div.whiteboards div#" + e.key);
+        var userNode = document.querySelector("section.board div#" + e.key);
         userNode.querySelector("img").src = data.board;
         userNode.querySelector("span").firstChild.textContent = data.name;
         this.userCache[e.key].data = e.val();
@@ -107,13 +107,13 @@ var Host = (function () {
         }
     };
     Host.prototype.removeWhiteboard = function (e) {
-        var userNode = document.querySelector("div.whiteboards div#" + e.key);
+        var userNode = document.querySelector("section.board div#" + e.key);
         userNode.remove();
         if (e.key === this.maximisedUser)
             _wb_host.CHAT.hideMaximised(true);
         delete this.userCache[e.key];
-        if (document.querySelector("div.whiteboards").innerHTML === "")
-            document.querySelector("div.whiteboards").textContent = "Waiting for people to connect...";
+        if (document.querySelector("section.board").innerHTML === "")
+            document.querySelector("section.board").textContent = "Waiting for people to connect...";
     };
     Host.prototype.toggleLock = function () {
         var _this = this;
@@ -181,6 +181,10 @@ var HostChat = (function () {
         this.host = host;
         this.seenMessages = {};
         this.sentMessages = 0;
+        this.visible = window.innerWidth > 1300 || (window.innerWidth > 1100 && window.innerWidth / window.innerHeight < 5 / 3);
+        window.addEventListener("resize", function () {
+            _wb.CHAT.hideChat();
+        });
     }
     HostChat.prototype.detectMaths = function (message) {
         if (message.includes("\\(") && message.includes("\\)"))
@@ -192,11 +196,10 @@ var HostChat = (function () {
         this.host.database.ref("rooms/" + this.host.roomId + "/users/" + this.host.maximisedUser + "/messages/" + id + "/maths").set(true);
     };
     HostChat.prototype.showMaximisedBoard = function (id) {
-        var div = document.querySelector("div.maximised");
-        div.querySelector("img").src = document.querySelector("div#" + id + " img").src;
-        div.querySelector("span").textContent = document.querySelector("div#" + id + " span").firstChild.textContent;
-        div.onclick = function (e) { _wb_host.CHAT.closeClickHandler(e); };
-        div.className = "maximised shown";
+        var img = document.querySelector("img#maximisedImage");
+        img.src = document.querySelector("div#" + id + " img").src;
+        document.querySelector("h1#chatHeader").innerHTML = "Chat with <span id=\"maximisedName\">" + document.querySelector("div#" + id + " span").firstChild.textContent + "</span>";
+        document.querySelector("input").disabled = false;
         this.host.maximisedUser = id;
         this.updateMaximised();
         this.host.maximisedRef = this.host.database.ref("rooms/" + this.host.roomId + "/users/" + this.host.maximisedUser);
@@ -205,16 +208,29 @@ var HostChat = (function () {
         });
     };
     HostChat.prototype.updateMaximised = function () {
-        var div = document.querySelector("div.maximised");
-        div.querySelector("img").src = this.host.userCache[this.host.maximisedUser].data.board;
+        var img = document.querySelector("img#maximisedImage");
+        if (this.host.maximisedUser == undefined) {
+            img.src = "images/maximised_placeholder.jpg";
+            document.querySelector("h1#chatHeader").innerHTML = "Select a <span id=\"maximisedName\">Student</span>";
+            document.querySelector("div.messages").innerHTML = "";
+            document.querySelector("input").disabled = true;
+            return;
+        }
+        img.src = this.host.userCache[this.host.maximisedUser].data.board;
         var messagesDiv = document.querySelector("div.messages");
         messagesDiv.innerHTML = "";
         if (this.host.userCache[this.host.maximisedUser].data.messages) {
             for (var messageId in this.host.userCache[this.host.maximisedUser].data.messages) {
                 var outerSpan = document.createElement("span");
                 var innerSpan = document.createElement("span");
-                outerSpan.className = this.host.userCache[this.host.maximisedUser].data.messages[messageId].sender + "Message";
+                var sender = this.host.userCache[this.host.maximisedUser].data.messages[messageId].sender;
+                outerSpan.className = sender === "host" ? "localMessage" : "remoteMessage";
                 outerSpan.appendChild(innerSpan);
+                if (outerSpan.className === "remoteMessage") {
+                    var avatar = document.createElement("img");
+                    avatar.src = "images/avatar.png";
+                    outerSpan.prepend(avatar);
+                }
                 outerSpan.id = "message_" + messageId;
                 if (this.host.userCache[this.host.maximisedUser].data.messages[messageId].maths) {
                     innerSpan.textContent = "\\(" + this.host.userCache[this.host.maximisedUser].data.messages[messageId].content + "\\)";
@@ -237,18 +253,17 @@ var HostChat = (function () {
                 messagesDiv.appendChild(outerSpan);
             }
             MathJax.typeset();
-            if (this.sentMessages > 0) {
-                document.querySelector("div.chatHelp").className = "chatHelp overrideHidden";
-            }
             messagesDiv.lastChild.scrollIntoView();
             this.host.userCache[this.host.maximisedUser].seenMessages = Object.keys(this.host.userCache[this.host.maximisedUser].data.messages).length;
         }
     };
     HostChat.prototype.hideMaximised = function (deleted) {
         if (deleted === void 0) { deleted = false; }
-        var div = document.querySelector("div.maximised");
-        div.className = "maximised";
-        div.onclick = null;
+        var img = document.querySelector("img#maximisedImage");
+        img.src = "images/maximised_placeholder.jpg";
+        document.querySelector("h1#chatHeader").innerHTML = "Select a <span id=\"maximisedName\">Student</span>";
+        document.querySelector("div.messages").innerHTML = "";
+        document.querySelector("input").disabled = true;
         if (!deleted) {
             this.host.maximisedRef.update({
                 maximised: false
@@ -267,9 +282,14 @@ var HostChat = (function () {
         this.host.maximisedUser = undefined;
     };
     HostChat.prototype.sendMessage = function (e) {
-        e.preventDefault();
-        if (e.keyCode !== 13)
+        if (e === void 0) { e = null; }
+        if (this.host.maximisedUser === undefined)
             return;
+        if (e != null) {
+            e.preventDefault();
+            if (e.keyCode !== 13)
+                return;
+        }
         var input = document.querySelector("input#messageInput");
         var messageText = input.value;
         input.value = "";
@@ -284,16 +304,24 @@ var HostChat = (function () {
     HostChat.prototype.clickHandler = function (e) {
         this.showMaximisedBoard(e.target.parentNode.id);
     };
-    HostChat.prototype.closeClickHandler = function (e) {
-        if (e.target.className === "maximised shown")
-            this.hideMaximised();
+    HostChat.prototype.showChat = function () {
+        document.querySelector("section.chat").className = "chat host visible";
+        document.querySelector("i.notification").onclick = function () { _wb_host.CHAT.hideChat(); };
+        this.visible = true;
+        this.updateMaximised();
+    };
+    HostChat.prototype.hideChat = function () {
+        document.querySelector("section.chat").className = "chat host";
+        document.querySelector("i.notification").onclick = function () { _wb_host.CHAT.showChat(); };
+        this.visible = window.innerWidth > 1300 || (window.innerWidth > 1100 && window.innerWidth / window.innerHeight < 5 / 3);
+        this.updateMaximised();
     };
     return HostChat;
 }());
 var HostUI = (function () {
     function HostUI() {
         this.zoomLevel = 3;
-        this.whiteboards = document.querySelector("div.whiteboards");
+        this.whiteboards = document.querySelector("section.board");
     }
     HostUI.prototype.setZoomLevel = function (zoomLevel) {
         this.zoomLevel = zoomLevel;

@@ -275,8 +275,12 @@ class Chat {
 
   constructor(client: Client) {
     this.client = client;
-    this.visible = window.innerWidth > 1300 || window.innerWidth / window.innerHeight < 5 / 3;
+    this.visible = window.innerWidth > 1300 || (window.innerWidth > 1100 && window.innerWidth / window.innerHeight < 5 / 3);
     this.sentMessages = 0;
+
+    window.addEventListener("resize", () => {
+      _wb.CHAT.hideChat();
+    });
   }
 
   /** Detects whether a string contains maths, e.g. "x^2 + 3x + 4" will return true */
@@ -403,7 +407,7 @@ class Chat {
   hideChat() {
     document.querySelector("section.chat").className = "chat";
     (<HTMLElement>document.querySelector("i.notification")).onclick = () => { _wb.CHAT.showChat(); };
-    this.visible = window.innerWidth > 1300 || window.innerWidth / window.innerHeight < 5 / 3;
+    this.visible = window.innerWidth > 1300 || (window.innerWidth > 1100 && window.innerWidth / window.innerHeight < 5 / 3);
     this.updateMessages();
   }
 }

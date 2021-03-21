@@ -15,11 +15,11 @@
     <header>
         <img src="images/logo.png" class="logo">
         <div class="title">
-            <h1>Writeboard</h1>
+            <h1>Creating Writeboard...</h1>
         </div>
         
         <div>
-            <i class="material-icons-round notification" onclick="_wb.CHAT.showChat();">chat_bubble</i>
+            <i class="material-icons-round notification" onclick="_wb_host.CHAT.showChat();">chat_bubble</i>
             <img src="images/avatar.png">
             <span>Guest User</span>
             <i class="material-icons-round">arrow_drop_down</i>
@@ -48,55 +48,31 @@
 
     <main>
         <section class="board host">
-            <div>
-                <img src="http://via.placeholder.com/400x300.png?text=Some Board">
-                <span>User Name</span>
-            </div>
-            <div>
-                <img src="http://via.placeholder.com/400x300.png?text=Some Board">
-                <span>User Name</span>
-            </div>
-            <div>
-                <img src="http://via.placeholder.com/400x300.png?text=Some Board">
-                <span>User Name</span>
-            </div>
-            <div>
-                <img src="http://via.placeholder.com/400x300.png?text=Some Board">
-                <span>User Name</span>
-            </div>
-            <div>
-                <img src="http://via.placeholder.com/400x300.png?text=Some Board">
-                <span>User Name</span>
-            </div>
-            <div>
-                <img src="http://via.placeholder.com/400x300.png?text=Some Board">
-                <span>User Name</span>
-            </div>
+            Waiting for people to connect...
         </section>
 
         <section class="chat host">
-            <img src="images/maximised_placeholder.jpg">
-            <h1>Chat with <span>Student Name</span></h1>
+            <img src="images/maximised_placeholder.jpg" id="maximisedImage">
+            <h1 id="chatHeader">Select a <span id="maximisedName">Student</span></h1>
             <div class="messages"></div>
 
-            <input type="text" placeholder="Message" id="messageInput">
-            <i class="material-icons-round" onclick="_wb.CHAT.sendMessage();">send</i>
+            <input type="text" placeholder="Message" id="messageInput" disabled>
+            <i class="material-icons-round" onclick="_wb_host.CHAT.sendMessage();">send</i>
         </section>
     </main>
 
-    <!-- Firebase Scripts
+    <!-- Firebase Scripts -->
     <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-analytics.js"></script>
     <script src="compiled/scripts/firebaseInit.js"></script>
 
-    <!-- Vendor Scripts - ->
+    <!-- Vendor Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
-    <!-- Main Scripts - ->
+    <!-- Main Scripts -->
     <script src="compiled/scripts/hostAPI.js"></script>
-    -->
 </body>
 
 </html>

@@ -1,7 +1,8 @@
 section.board.host {
     display: block;
-    max-width: calc(100% - 500px);
+    width: calc(100% - 500px);
     overflow-y: auto;
+    text-align: center;
 
     &::-webkit-scrollbar {
         width: 8px;
@@ -23,7 +24,7 @@ section.board.host {
 
     div {
         position: relative;
-        max-width: calc(33% - 22.67px);
+        max-width: calc(25% - 22.67px);
         transition: width 250ms;
         box-sizing: border-box;
         margin: 10px;
@@ -62,6 +63,12 @@ section.board.host {
         }
     }
 
+    @media only screen and (max-width: 1500px) {
+        div {
+            max-width: calc(33% - 22.67px);
+        }
+    }
+
     @media only screen and (max-width: 1300px) { 
         max-width: unset;
     }
@@ -78,6 +85,7 @@ section.chat.host {
         width: min(100%, 50vh);
         margin-bottom: 16px;
         border-radius: 16px;
+        border: 2px solid var(--background-lighter-still);
     }
 
     @media only screen and (max-width: 1100px) {
