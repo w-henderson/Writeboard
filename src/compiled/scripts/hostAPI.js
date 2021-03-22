@@ -303,6 +303,7 @@ var HostChat = (function () {
     };
     HostChat.prototype.clickHandler = function (e) {
         this.showMaximisedBoard(e.target.parentNode.id);
+        this.showChat();
     };
     HostChat.prototype.showChat = function () {
         document.querySelector("section.chat").className = "chat host visible";

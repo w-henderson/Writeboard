@@ -153,8 +153,8 @@ section.chat {
     }
 }
 
-section.chat:not(.host) {
-    @media only screen and (max-width: 1300px), only screen and (max-aspect-ratio: 5/3) {
+@media only screen and (max-width: 1300px) and (min-width: 600px), only screen and (max-aspect-ratio: 5/3) and (min-width: 600px) {
+    section.chat:not(.host) {
         position: absolute;
         top: 0px;
         right: -50px;

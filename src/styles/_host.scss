@@ -22,7 +22,7 @@ section.board.host {
         }
     }
 
-    div {
+    & > div {
         position: relative;
         max-width: calc(25% - 22.67px);
         transition: width 250ms;
@@ -60,6 +60,20 @@ section.board.host {
                 margin-left: 8px;
                 transform: scale(1.3);
             }
+        }
+
+        div {
+            position: absolute;
+            top: 0px;
+            right: 0px;
+            background-color: var(--accent-color);
+            width: 36px;
+            height: 36px;
+            border-radius: 0 16px;
+            font-size: 22px;
+            line-height: 36px;
+            text-align: center;
+            pointer-events: none;
         }
     }
 

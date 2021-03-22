@@ -218,12 +218,12 @@ class Client {
   updateBoard(force = false) {
     if (this.lastStrokeUpdate !== this.graphics.history.strokes || force) {
       this.userRef.update({
-        board: this.maximised ? this.graphics.exportImage(800, 600, 0.8) : this.graphics.exportImage(400, 300)
+        board: this.maximised ? this.graphics.exportImage(800, 600, 0.6) : this.graphics.exportImage(400, 300)
       });
       this.lastStrokeUpdate = this.graphics.history.strokes;
     }
 
-    window.setTimeout(() => { _wb.CLIENT.updateBoard(); }, this.maximised ? 1000 : 5000); // update more frequently if maximised
+    window.setTimeout(() => { _wb.CLIENT.updateBoard(); }, this.maximised ? 2500 : 5000); // update more frequently if maximised
   }
 
   /** Event handler for the board's maximisation state changing. */

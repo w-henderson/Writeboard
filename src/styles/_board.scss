@@ -73,6 +73,10 @@ section.board {
                 transform: translateY(0);
             }
 
+            &.hiddenToolbarFix {
+                display: none;
+            }
+
             i {
                 font-size: 30px;
                 vertical-align: top;

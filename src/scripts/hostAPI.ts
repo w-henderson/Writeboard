@@ -412,6 +412,7 @@ class HostChat {
   /** Handles clicks on each board. */
   clickHandler(e) {
     this.showMaximisedBoard(e.target.parentNode.id);
+    this.showChat();
   }
 
   /** Manipulate the UI to show the chat, then update the messages. */

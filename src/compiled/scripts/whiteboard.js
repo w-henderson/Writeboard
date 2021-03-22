@@ -194,6 +194,7 @@ var ClientUI = (function () {
             this.graphics.tool = "brush";
             document.querySelector("i.brushButton").className = "material-icons-round mainButton brushButton";
             document.querySelector("div.toolbar img").className = "";
+            document.querySelector("div.brushMenu").classList.remove("hiddenToolbarFix");
         }
     };
     ClientUI.prototype.closeBrushMenu = function () {
@@ -215,6 +216,7 @@ var Tools = (function () {
         this.graphics.eraserAuto = false;
         document.querySelector("i.brushButton").className = "material-icons-round brushButton";
         document.querySelector("div.toolbar img").className = "mainButton";
+        document.querySelector("div.brushMenu").classList.add("hiddenToolbarFix");
     };
     Tools.prototype.selectColor = function () {
         var colorPicker = document.querySelector("input[type='color']");

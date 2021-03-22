@@ -181,11 +181,11 @@ var Client = (function () {
         if (force === void 0) { force = false; }
         if (this.lastStrokeUpdate !== this.graphics.history.strokes || force) {
             this.userRef.update({
-                board: this.maximised ? this.graphics.exportImage(800, 600, 0.8) : this.graphics.exportImage(400, 300)
+                board: this.maximised ? this.graphics.exportImage(800, 600, 0.6) : this.graphics.exportImage(400, 300)
             });
             this.lastStrokeUpdate = this.graphics.history.strokes;
         }
-        window.setTimeout(function () { _wb.CLIENT.updateBoard(); }, this.maximised ? 1000 : 5000);
+        window.setTimeout(function () { _wb.CLIENT.updateBoard(); }, this.maximised ? 2500 : 5000);
     };
     Client.prototype.updateMaximised = function (e) {
         this.maximised = e.val();
