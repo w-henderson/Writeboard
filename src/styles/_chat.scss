@@ -20,24 +20,6 @@ section.chat {
         overflow: hidden auto;
         box-sizing: border-box;
 
-        &::-webkit-scrollbar {
-            width: 8px;
-        }
-           
-        &::-webkit-scrollbar-track { 
-            background-color: var(--canvas);
-            border-radius: 4px;
-        }
-           
-        &::-webkit-scrollbar-thumb {
-            background-color: var(--background-lighter);
-            border-radius: 4px;
-
-            &:hover {
-                background-color: var(--light-line);
-            }
-        }
-
         span.localMessage, span.remoteMessage {
             display: block;
             margin-bottom: 10px;

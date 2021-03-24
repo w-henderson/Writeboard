@@ -16,6 +16,12 @@ nav {
         line-height: 30px;
         opacity: 0.5;
 
+        // Prevent ugly blue circle around on Android
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
+
         &.selectedLink {
             opacity: 1;
         }

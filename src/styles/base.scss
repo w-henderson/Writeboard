@@ -2,6 +2,7 @@
 @use "chat";
 @use "colours";
 @use "header";
+@use "home";
 @use "host";
 @use "nav";
 @use "swal";
@@ -53,4 +54,22 @@ main {
 i, img {
     user-select: none;
     -webkit-tap-highlight-color: transparent;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+   
+::-webkit-scrollbar-track { 
+    background-color: var(--darkest);
+    border-radius: 4px;
+}
+   
+::-webkit-scrollbar-thumb {
+    background-color: var(--background-lighter-still);
+    border-radius: 4px;
+
+    &:hover {
+        background-color: var(--light-line);
+    }
 }

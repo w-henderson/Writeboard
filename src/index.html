@@ -9,79 +9,93 @@
     <meta name="description" content="The simple yet stylish whiteboard app, available now for free.">
 
     <link rel="icon" href="images/logo.png">
-    <link rel="stylesheet" href="compiled/promo.css">
-
-    <link rel="preload" as="image" href="images/logo.png">
-    <link rel="preload" as="image" href="images/banner/mobile_landscape.png">
-    <link rel="preload" as="image" href="images/banner/mobile_portrait.png">
-    <link rel="preload" as="image" href="images/banner/tablet.png">
-    <link rel="preload" as="image" href="images/banner/laptop.png">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="compiled/base.css">
 </head>
 
 <body>
-    <div class="navigation">
-        <span><a href="/">Writeboard</a></span>
-        <a onclick="_wb_home.UI.scrollToAnchor('about')">About Us</a>
-        <a onclick="_wb_home.UI.scrollToAnchor('features')">Features</a>
-        <a onclick="_wb_home.UI.scrollToAnchor('updates')">Latest Updates</a>
-    </div>
-
-    <div class="hero">
-        <img src="images/logo.png" alt="Writeboard logo">
-        <h1>Writeboard</h1>
-        <span>
-            The simple yet stylish whiteboard app.<br>
-            Available now for free.
-        </span>
-
-        <div class="buttons">
-            <button onclick="_wb_home.UI.joinRoom();">Join Room</button>
-            <button onclick="_wb_home.UI.hostRoom();">Host Room</button>
+    <header>
+        <img src="images/logo.png" class="logo">
+        <div class="title">
+            <h1>Writeboard</h1>
         </div>
-    </div>
+        
+        <div>
+            <img src="images/avatar.png">
+            <span>Guest User</span>
+            <i class="material-icons-round">arrow_drop_down</i>
+        </div>
+    </header>
 
-    <div class="banner">
-        <img src="images/banner/mobile_landscape.png" alt="Landscape mobile mockup">
-        <img src="images/banner/mobile_portrait.png" alt="Portrait mobile mockup">
-        <img src="images/banner/tablet.png" alt="Tablet mockup">
-        <img src="images/banner/laptop.png" alt="Laptop mockup">
-    </div>
+    <nav>
+        <a href="#" class="selectedLink">
+            <i class="material-icons-round">home</i>
+            <span>Home</span>
+        </a>
+        <a href="#">
+            <i class="material-icons-round">menu_book</i>
+            <span>Student</span>
+        </a>
+        <a href="#">
+            <i class="material-icons-round">school</i>
+            <span>Teacher</span>
+        </a>
+        
+        <a href="#">
+            <i class="material-icons-round">settings</i>
+            <span>Settings</span>
+        </a>
+    </nav>
 
-    <a name="about"></a>
-    <section style="padding-top:max(15vh,12vw);animation: animateInSection 1500ms forwards;">
-        <h1>What is Writeboard?</h1>
-        Writeboard is a simple yet stylish whiteboard web app which allows any team to share their ideas easily and instantly. Brought to you by the developers of the critically-acclaimed education apps Sadlet and Kascreech, Writeboard offers a user-friendly and intuitive platform for collaboration and communication, powered by Google's Firebase backend system.
-    </section>
+    <main class="home">
+        <section class="hero">
+            <h1>Writeboard</h1>
+            <span>The simple yet stylish whiteboard app.</span>
+            <img src="images/mockups/ipadpro.png">
 
-    <a name="features"></a>
-    <section>
-        <h1>Features</h1>
-        Here at Writeboard, we believe that everyone should have a top-quality collaborative experience, which is why we built Writeboard from the ground up using state-of-the-art web technologies to optimise the user's experience. Here are just a few features of Writeboard which we believe makes it a true contender in the world of team software.
-        <ul>
-            <li>Intuitive whiteboard interface with numerous tools</li>
-            <li>Support for pen pressure and pens with erasers</li>
-            <li>Instant two-way messaging between the host and the client</li>
-            <li>Less than five seconds image latency, reduced to one when the board is maximised</li>
-            <li>Secure rooms: you can lock your room and kick disruptive users</li>
-            <li>Committed to privacy: all your board data is deleted as soon as the room is closed</li>
-            <li>Completely free for everyone</li>
-        </ul>
-    </section>
+            <div class="buttons">
+                <button>Join Room</button>
+                <button onclick="_wb_home.scrollToAnchor('about')">Learn More</button>
+            </div>
+        </section>
 
-    <a name="updates"></a>
-    <section>
-        <h1>Latest Updates</h1>
-        We're constantly updating Writeboard to bring you the best possible experience. This involves fixing bugs, adding new features, and more. Here are the latest few things we've changed!
-        <ul id="updateList">
-            <li>Loading...</li>
-        </ul>
-        Click <a href="https://github.com/w-henderson/Writeboard/commits">here</a> to see more.
-    </section>
+        <a name="about"></a>
+        <section>
+            <h1>What is Writeboard?</h1>
+            Writeboard is a simple yet stylish whiteboard app which allows any class or team to share their ideas quickly and easily. Built using the latest web technologies, Writeboard offers a user-friendly and intuitive platform for students to engage with lessons and make progress in today's online world.
+        </section>
 
-    <footer>
-        Writeboard &bull; <a href="mailto:william-henderson@outlook.com">Contact Us</a> &bull; <a onclick="_wb_home.UI.privacy();">Privacy Policy</a>
-        <span>&copy; William Henderson 2021</span>
-    </footer>
+        <a name="features"></a>
+        <section>
+            <h1>Features</h1>
+            Here at Writeboard, we believe that everyone should have a top-quality interactive learning experience, which is why we built Writeboard from the ground up using state-of-the-art web technologies to optimise the user's experience. Here are just a few features of Writeboard which we believe makes it a true contender in the world of online learning software.
+            <ul>
+                <li>Intuitive whiteboard interface with numerous tools</li>
+                <li>Support for pen pressure and pens with erasers</li>
+                <li>Instant two-way messaging between the teacher and the student</li>
+                <li>Near real-time streaming of the boards to the teacher</li>
+                <li>Secure rooms: you can lock your room and kick disruptive users</li>
+                <li>Committed to privacy (read our <a href="#" onclick="_wb_home.privacy()">privacy policy</a>)</li>
+                <li>Unlimited users so even the biggest classes can enjoy it</li>
+                <li><b>Completely free for everyone</b></li>
+            </ul>
+        </section>
+
+        <a name="updates"></a>
+        <section>
+            <h1>Latest Updates</h1>
+            We're constantly updating Writeboard to bring you the best possible experience. This involves fixing bugs, adding new features, and more. Here are the latest few things we've changed!
+            <ul id="updateList">
+                <li>Loading...</li>
+            </ul>
+            Click <a href="https://github.com/w-henderson/Writeboard/commits">here</a> to see more.
+        </section>
+
+        <footer>
+            <a href="#" onclick="_wb_home.privacy()">Privacy Policy</a><a> &bull; </a><a href="https://github.com/w-henderson/Writeboard">GitHub</a>
+            <span>&copy; William Henderson 2021</span>
+        </footer>
+    </main>
 
     <!-- Firebase Scripts -->
     <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-app.js"></script>
@@ -94,6 +108,7 @@
 
     <!-- Main Scripts -->
     <script src="compiled/scripts/homepageUI.js"></script>
+    <script src="compiled/scripts/navigation.js"></script>
 </body>
 
 </html>

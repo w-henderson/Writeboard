@@ -4,24 +4,6 @@ section.board.host {
     overflow-y: auto;
     text-align: center;
 
-    &::-webkit-scrollbar {
-        width: 8px;
-    }
-       
-    &::-webkit-scrollbar-track { 
-        background-color: var(--darkest);
-        border-radius: 4px;
-    }
-       
-    &::-webkit-scrollbar-thumb {
-        background-color: var(--background-lighter);
-        border-radius: 4px;
-
-        &:hover {
-            background-color: var(--light-line);
-        }
-    }
-
     & > div {
         position: relative;
         max-width: calc(25% - 22.67px);
