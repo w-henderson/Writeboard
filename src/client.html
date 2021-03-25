@@ -29,20 +29,20 @@
     </header>
 
     <nav>
-        <a href="#">
+        <a href="/">
             <i class="material-icons-round">home</i>
             <span>Home</span>
         </a>
-        <a href="#" class="selectedLink">
+        <a href="#" onclick="_wb_nav.NAVIGATION.joinRoom()" class="selectedLink">
             <i class="material-icons-round">menu_book</i>
             <span>Student</span>
         </a>
-        <a href="#">
+        <a href="#" onclick="_wb_nav.NAVIGATION.hostRoom()">
             <i class="material-icons-round">school</i>
             <span>Teacher</span>
         </a>
         
-        <a href="#">
+        <a href="#" onclick="_wb_nav.NAVIGATION.settings()">
             <i class="material-icons-round">settings</i>
             <span>Settings</span>
         </a>
@@ -107,6 +107,7 @@
     <!-- Main Scripts -->
     <script src="compiled/scripts/whiteboard.js"></script>
     <script src="compiled/scripts/clientAPI.js"></script>
+    <script src="compiled/scripts/navigation.js"></script>
 </body>
 
 </html>

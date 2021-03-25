@@ -28,20 +28,20 @@
     </header>
 
     <nav>
-        <a href="#" class="selectedLink">
+        <a href="/" class="selectedLink">
             <i class="material-icons-round">home</i>
             <span>Home</span>
         </a>
-        <a href="#">
+        <a href="#" onclick="_wb_nav.NAVIGATION.joinRoom()">
             <i class="material-icons-round">menu_book</i>
             <span>Student</span>
         </a>
-        <a href="#">
+        <a href="#" onclick="_wb_nav.NAVIGATION.hostRoom()">
             <i class="material-icons-round">school</i>
             <span>Teacher</span>
         </a>
         
-        <a href="#">
+        <a href="#" onclick="_wb_nav.NAVIGATION.settings()">
             <i class="material-icons-round">settings</i>
             <span>Settings</span>
         </a>
@@ -54,7 +54,7 @@
             <img src="images/mockups/ipadpro.png">
 
             <div class="buttons">
-                <button>Join Room</button>
+                <button onclick="_wb_nav.NAVIGATION.joinRoom()">Join Room</button>
                 <button onclick="_wb_home.scrollToAnchor('about')">Learn More</button>
             </div>
         </section>
