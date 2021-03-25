@@ -86,6 +86,8 @@ namespace _wb_home {
   }
 }
 
-window.addEventListener("load", _wb_home.updateLatestUpdates);
 window.addEventListener("resize", _wb_home.fixMobileScaling);
-_wb_home.fixMobileScaling();
+window.addEventListener("load", () => {
+  _wb_home.updateLatestUpdates();
+  _wb_home.fixMobileScaling();
+});
