@@ -244,6 +244,8 @@ var Chat = (function () {
         }
         var input = document.querySelector("input#messageInput");
         var messageText = input.value;
+        if (messageText.length === 0)
+            return;
         input.value = "";
         this.sentMessages++;
         this.client.messageRef.push().set({

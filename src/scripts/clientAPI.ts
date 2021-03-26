@@ -307,6 +307,9 @@ class Chat {
 
     let input: HTMLInputElement = document.querySelector("input#messageInput");
     let messageText = input.value;
+
+    if (messageText.length === 0) return;
+
     input.value = "";
 
     this.sentMessages++;

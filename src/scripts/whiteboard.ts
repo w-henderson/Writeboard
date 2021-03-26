@@ -388,17 +388,18 @@ class Events {
         this.graphics.eraserAuto = true;
         document.querySelector("i.brushButton").className = "material-icons-round brushButton";
         document.querySelector("div.toolbar img").className = "mainButton";
+        document.querySelector("div.brushMenu").classList.add("hiddenToolbarFix");
       } else if (this.graphics.eraserAuto) {
         this.graphics.tool = "brush";
         document.querySelector("i.brushButton").className = "material-icons-round mainButton brushButton";
         document.querySelector("div.toolbar img").className = "";
+        document.querySelector("div.brushMenu").classList.remove("hiddenToolbarFix");
       }
 
       if (e.pointerType === "pen" && navigator.userAgent.indexOf("Firefox") === -1 && e.pressure !== 0) {
         this.graphics.context.lineWidth = this.graphics.lineWidth * e.pressure * this.graphics.lineWidthMultiplier;
       } else this.graphics.context.lineWidth = this.graphics.lineWidth * this.graphics.lineWidthMultiplier;
       this.stroke.push(this.getCoords(e.pageX, e.pageY));
-      //if (stroke.length >= 5) stroke.splice(0, 1);
       this.graphics.update(this.stroke);
     }
   }

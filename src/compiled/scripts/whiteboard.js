@@ -304,11 +304,13 @@ var Events = (function () {
                 this.graphics.eraserAuto = true;
                 document.querySelector("i.brushButton").className = "material-icons-round brushButton";
                 document.querySelector("div.toolbar img").className = "mainButton";
+                document.querySelector("div.brushMenu").classList.add("hiddenToolbarFix");
             }
             else if (this.graphics.eraserAuto) {
                 this.graphics.tool = "brush";
                 document.querySelector("i.brushButton").className = "material-icons-round mainButton brushButton";
                 document.querySelector("div.toolbar img").className = "";
+                document.querySelector("div.brushMenu").classList.remove("hiddenToolbarFix");
             }
             if (e.pointerType === "pen" && navigator.userAgent.indexOf("Firefox") === -1 && e.pressure !== 0) {
                 this.graphics.context.lineWidth = this.graphics.lineWidth * e.pressure * this.graphics.lineWidthMultiplier;

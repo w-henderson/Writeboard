@@ -292,6 +292,8 @@ var HostChat = (function () {
         }
         var input = document.querySelector("input#messageInput");
         var messageText = input.value;
+        if (messageText.length === 0)
+            return;
         input.value = "";
         this.sentMessages++;
         var messagesRef = this.host.database.ref("rooms/" + this.host.roomId + "/users/" + this.host.maximisedUser + "/messages").push();
