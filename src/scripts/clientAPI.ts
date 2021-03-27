@@ -180,9 +180,13 @@ class Client {
 
           window.setTimeout(() => { _wb.CLIENT.updateBoard() }, 5000);
 
-          Notification.requestPermission().then((result: NotificationPermission) => {
-            this.allowedNotifications = result === "granted";
-          });
+          // Notification API is only partially supported on some browsers
+          // This ensures the rest of the application works even if notifications don't
+          try {
+            Notification.requestPermission().then((result: NotificationPermission) => {
+              this.allowedNotifications = result === "granted";
+            });
+          } catch (_) { }
         }
       }).bind(_wb.CLIENT));
     } else if (data !== null) {

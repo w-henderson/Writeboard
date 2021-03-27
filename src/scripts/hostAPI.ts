@@ -75,9 +75,13 @@ class Host {
 
       window.localStorage.removeItem("writeboardTempId");
 
-      Notification.requestPermission().then((result: NotificationPermission) => {
-        this.allowedNotifications = result === "granted";
-      });
+      // Notification API is only partially supported on some browsers
+      // This ensures the rest of the application works even if notifications don't
+      try {
+        Notification.requestPermission().then((result: NotificationPermission) => {
+          this.allowedNotifications = result === "granted";
+        });
+      } catch (_) { }
     }
 
     (<HTMLInputElement>document.querySelector("input#messageInput")).onkeyup = (e) => { _wb_host.CHAT.sendMessage(e); };

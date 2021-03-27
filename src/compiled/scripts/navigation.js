@@ -48,9 +48,9 @@ var Navigation = (function () {
     }
     Navigation.prototype.route = function (r) {
         if (r === "client")
-            return this.local ? "//localhost/client.html" : "//app.writeboard.ga/";
+            return this.local ? "/client.html" : "//app.writeboard.ga/";
         else if (r === "host")
-            return this.local ? "//localhost/host.html" : "//host.writeboard.ga/";
+            return this.local ? "/host.html" : "//host.writeboard.ga/";
     };
     Navigation.prototype.home = function () {
         window.location.href = this.local ? "/" : "https://writeboard.ga";

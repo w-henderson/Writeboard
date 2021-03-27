@@ -144,9 +144,12 @@ var Client = (function () {
                                         }
                                     });
                                     window.setTimeout(function () { _wb.CLIENT.updateBoard(); }, 5000);
-                                    Notification.requestPermission().then(function (result) {
-                                        _this.allowedNotifications = result === "granted";
-                                    });
+                                    try {
+                                        Notification.requestPermission().then(function (result) {
+                                            _this.allowedNotifications = result === "granted";
+                                        });
+                                    }
+                                    catch (_) { }
                                 }
                             }).bind(_wb.CLIENT));
                         }

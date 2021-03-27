@@ -32,8 +32,8 @@ class Navigation {
    * This is basically a janky workaround.
    */
   route(r: string) {
-    if (r === "client") return this.local ? "//localhost/client.html" : "//app.writeboard.ga/";
-    else if (r === "host") return this.local ? "//localhost/host.html" : "//host.writeboard.ga/";
+    if (r === "client") return this.local ? "/client.html" : "//app.writeboard.ga/";
+    else if (r === "host") return this.local ? "/host.html" : "//host.writeboard.ga/";
   }
 
   /** Returns to the homepage. */
