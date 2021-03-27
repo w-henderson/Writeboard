@@ -6,60 +6,90 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Writeboard</title>
 
+    <meta name="description" content="The simple yet stylish whiteboard app, available now for free.">
+
     <link rel="icon" href="images/logo.png">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    <link rel="stylesheet" href="compiled/style.css">
+    <link rel="stylesheet" href="compiled/base.css">
 </head>
 
 <body>
-    <div class="main">
-        <h1>Welcome to Writeboard</h1>
-        <canvas width=1600 height=1200></canvas>
+    <header>
+        <img src="images/logo.png" class="logo">
+        <div class="title">
+            <h1>Writeboard</h1>
+        </div>
         
-        <div class="toolbar brush">
-            <i class="material-icons-round" onclick="_wb.UI.openBrushMenu();" title="Brush">brush</i>
-            <div class="extended extendedBrush enlarged">
-                <i class="material-icons-round"
-                   onclick="_wb.TOOLS.selectColor();"
-                   id="colorIcon"
-                   title="Change pen colour">opacity</i>
-                <i class="material-icons-round"
-                   onclick="_wb.TOOLS.toggleLineWidth();"
-                   style="transform:scale(0.8);"
-                   id="widthIcon"
-                   title="Switch between line widths">line_weight</i>
-                <i class="material-icons-round"
-                   onclick="_wb.TOOLS.toggleStraightLine();"
-                   id="straightIcon"
-                   title="Straight line tool"
-                   style="opacity:.2">straighten</i>
+        <div>
+            <i class="material-icons-round notification" onclick="_wb.CHAT.showChat();">chat_bubble</i>
+            <img src="images/avatar.png">
+            <span>Guest User</span>
+            <i class="material-icons-round">arrow_drop_down</i>
+        </div>
+    </header>
+
+    <nav>
+        <a href="#" onclick="_wb_nav.NAVIGATION.home()">
+            <i class="material-icons-round">home</i>
+            <span>Home</span>
+        </a>
+        <a href="#" onclick="_wb_nav.NAVIGATION.joinRoom()" class="selectedLink">
+            <i class="material-icons-round">menu_book</i>
+            <span>Student</span>
+        </a>
+        <a href="#" onclick="_wb_nav.NAVIGATION.hostRoom()">
+            <i class="material-icons-round">school</i>
+            <span>Teacher</span>
+        </a>
+        
+        <a href="#" onclick="_wb_nav.NAVIGATION.settings()">
+            <i class="material-icons-round">settings</i>
+            <span>Settings</span>
+        </a>
+    </nav>
+
+    <main>
+        <section class="board">
+            <canvas width=1600 height=1200></canvas>
+
+            <div class="toolbar brush">
+                <div class="brushMenu hidden">
+                    <i class="material-icons-round"
+                        onclick="_wb.TOOLS.selectColor();"
+                        id="colorIcon"
+                        title="Change pen colour">opacity</i>
+                    <i class="material-icons-round"
+                        onclick="_wb.TOOLS.toggleLineWidth();"
+                        style="font-size:0.8em;transition:font-size 250ms;"
+                        id="widthIcon"
+                        title="Switch between line widths">line_weight</i>
+                    <i class="material-icons-round"
+                        onclick="_wb.TOOLS.toggleStraightLine();"
+                        id="straightIcon"
+                        title="Straight line tool"
+                        style="opacity:.2;transition:opacity 250ms;">straighten</i>
+                </div>
+                
+                <i class="material-icons-round" onclick="_wb.HISTORY.undo();" title="Undo">undo</i>
+                <i class="material-icons-round" onclick="_wb.HISTORY.redo();" title="Redo">redo</i>
+                <i class="material-icons-round" onclick="_wb.TOOLS.clearBoard();" title="Clear board">clear</i>
+                
+                <i class="material-icons-round mainButton brushButton" onclick="_wb.UI.openBrushMenu();" title="Brush">brush</i>
+
+                <img src="images/eraser.svg" onclick="_wb.TOOLS.selectEraser();" title="Eraser">
+                <i class="material-icons-round disabledOnMobile" onclick="_wb.EVENTS.forceCopy();" title="Copy board">copy</i>
+                <i class="material-icons-round disabledOnMobile" onclick="_wb.EVENTS.forcePaste();" title="Paste onto board">paste</i>
             </div>
+        </section>
 
-            <img src="images/eraser.svg" onclick="_wb.TOOLS.selectEraser();" title="Eraser">
+        <section class="chat">
+            <h1>Chat with <span>Teacher</span></h1>
+            <div class="messages"></div>
 
-            <i class="material-icons-round" onclick="_wb.HISTORY.undo();" title="Undo">undo</i>
-            <i class="material-icons-round" onclick="_wb.HISTORY.redo();" title="Redo">redo</i>
-            <i class="material-icons-round" onclick="_wb.TOOLS.clearBoard();" title="Clear board">clear</i>
-
-            <i class="material-icons-round smaller" onclick="_wb.EVENTS.forceCopy();" title="Copy board">copy</i>
-            <i class="material-icons-round smaller" onclick="_wb.EVENTS.forcePaste();" title="Paste onto board">paste</i>
-        </div>
-    </div>
-
-    <div class="clientChat">
-        <h2>Chat</h2>
-        <div class="chatHelp">
-            Send and receive messages with the room host here! You can use TeX to style any maths by surrounding it with <code>\(...\)</code>, or just type some maths and Writeboard will try to detect it.
-        </div>
-
-        <div class="messages"></div>
-        <input type="text" placeholder="Message" id="messageInput">
-
-        <div class="toggle" onclick="_wb.CHAT.showChat();" title="Show/hide chat">
-            <i class="material-icons-round">message</i>
-            <div class="notification" style="display:none"></div>
-        </div>
-    </div>
+            <input type="text" placeholder="Message" id="messageInput">
+            <i class="material-icons-round" onclick="_wb.CHAT.sendMessage();">send</i>
+        </section>
+    </main>
 
     <input type="color" value="#ffffff" onchange="_wb.TOOLS.updateStrokeStyle();">
 
@@ -77,6 +107,7 @@
     <!-- Main Scripts -->
     <script src="compiled/scripts/whiteboard.js"></script>
     <script src="compiled/scripts/clientAPI.js"></script>
+    <script src="compiled/scripts/navigation.js"></script>
 </body>
 
 </html>

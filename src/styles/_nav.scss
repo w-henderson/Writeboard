@@ -1,0 +1,71 @@
+nav {
+    position: absolute;
+    bottom: 0;
+    height: calc(100% - 120px);
+    width: 250px;
+    box-sizing: border-box;
+    padding: 64px 48px 32px;
+
+    a {
+        width: 100%;
+        text-decoration: none;
+        color: var(--text-color);
+        display: block;
+        font-size: 20px;
+        margin-bottom: 48px;
+        line-height: 30px;
+        opacity: 0.5;
+
+        // Prevent ugly blue circle around on Android
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
+
+        &.selectedLink {
+            opacity: 1;
+
+            i {
+                color: var(--accent-color);
+            }
+        }
+
+        i {
+            vertical-align: bottom;
+            font-size: 32px !important;
+            margin-right: 16px;
+        }
+
+        &:last-child {
+            position: absolute;
+            bottom: 0;
+        }
+    }
+
+    @media only screen and (max-width: 1100px) {
+        width: 100%;
+        height: 100px;
+        padding: 25px 28px;
+        display: flex;
+        flex-direction: row;
+
+        a {
+            flex: 1;
+            text-align: center;
+
+            i {
+                font-size: 48px !important;
+                margin-right: 0;
+            }
+
+            span {
+                display: none;
+            }
+
+            &:last-child {
+                position: unset;
+                bottom: unset;
+            }
+        }
+    }
+}

@@ -184,49 +184,23 @@ var ClientUI = (function () {
     };
     ClientUI.prototype.openBrushMenu = function () {
         if (this.graphics.tool === "brush") {
-            var extendedBrush = document.querySelector("div.extendedBrush");
-            if (extendedBrush.classList.contains("enlarged"))
-                extendedBrush.classList.remove("enlarged");
+            var brushMenu = document.querySelector("div.brushMenu");
+            if (!brushMenu.classList.contains("hidden"))
+                brushMenu.classList.add("hidden");
             else
-                extendedBrush.classList.add("enlarged");
+                brushMenu.classList.remove("hidden");
         }
         else {
             this.graphics.tool = "brush";
-            document.querySelector("div.toolbar").className = "toolbar brush";
+            document.querySelector("i.brushButton").className = "material-icons-round mainButton brushButton";
+            document.querySelector("div.toolbar img").className = "";
+            document.querySelector("div.brushMenu").classList.remove("hiddenToolbarFix");
         }
     };
     ClientUI.prototype.closeBrushMenu = function () {
-        var extendedBrush = document.querySelector("div.extendedBrush");
-        extendedBrush.classList.remove("enlarged");
-    };
-    ClientUI.prototype.placeToolbar = function () {
-        var toolbar = document.querySelector("div.toolbar");
-        var colorInput = document.querySelector("input[type='color']");
-        var extendedToolbar = document.querySelector("div.extended.extendedBrush");
-        var canvasRect = this.graphics.context.canvas.getBoundingClientRect();
-        if (window.matchMedia("(orientation: landscape)").matches && (!this.chat.visible || window.innerWidth > window.innerHeight * 1.5)) {
-            toolbar.style.top = canvasRect.y + 40 + "px";
-            colorInput.style.top = canvasRect.y + 80 + "px";
-            toolbar.style.left = canvasRect.x + canvasRect.width + "px";
-            colorInput.style.left = canvasRect.x + canvasRect.width + "px";
-            toolbar.style.height = "unset";
-            toolbar.style.width = "50px";
-            toolbar.style.borderRadius = "0 5px 5px 0";
-            extendedToolbar.classList.remove("portrait");
-        }
-        else {
-            toolbar.style.top = canvasRect.y + canvasRect.height + "px";
-            colorInput.style.top = canvasRect.y + canvasRect.height + "px";
-            toolbar.style.left = canvasRect.x + 30 + "px";
-            colorInput.style.left = canvasRect.x + 80 + "px";
-            toolbar.style.height = "35px";
-            toolbar.style.width = canvasRect.width - 60 + "px";
-            toolbar.style.borderRadius = "0 0 10px 10px";
-            toolbar.style.paddingTop = "8px";
-            extendedToolbar.classList.add("portrait");
-        }
-        var main = document.querySelector("div.main");
-        this.graphics.context.canvas.style.maxHeight = "min(1200px, " + main.clientWidth * 0.675 + "px)";
+        var brushMenu = document.querySelector("div.brushMenu");
+        if (!brushMenu.classList.contains("hidden"))
+            brushMenu.classList.add("hidden");
     };
     return ClientUI;
 }());
@@ -240,15 +214,20 @@ var Tools = (function () {
         this.ui.closeBrushMenu();
         this.graphics.tool = "eraser";
         this.graphics.eraserAuto = false;
-        document.querySelector("div.toolbar").className = "toolbar eraser";
+        document.querySelector("i.brushButton").className = "material-icons-round brushButton";
+        document.querySelector("div.toolbar img").className = "mainButton";
+        document.querySelector("div.brushMenu").classList.add("hiddenToolbarFix");
     };
     Tools.prototype.selectColor = function () {
-        document.querySelector("input[type='color']").click();
+        var colorPicker = document.querySelector("input[type='color']");
+        var buttonCoords = document.querySelector("i#colorIcon").getBoundingClientRect();
+        colorPicker.setAttribute("style", "\n      top: " + buttonCoords.top.toString() + "px;\n      left: " + buttonCoords.left.toString() + "px;\n    ");
+        window.setTimeout(function () { colorPicker.click(); }, 33);
     };
     Tools.prototype.updateStrokeStyle = function () {
-        var input = document.querySelector("input[type='color']");
-        document.querySelector("#colorIcon").style.color = input.value;
-        this.graphics.color = input.value;
+        var colorPicker = document.querySelector("input[type='color']");
+        document.querySelector("#colorIcon").style.color = colorPicker.value;
+        this.graphics.color = colorPicker.value;
     };
     Tools.prototype.toggleLineWidth = function () {
         if (this.graphics.lineWidthMultiplier !== 2)
@@ -256,7 +235,7 @@ var Tools = (function () {
         else
             this.graphics.lineWidthMultiplier = 0.5;
         var iconScale = 0.8 + (0.2 * Math.log2(this.graphics.lineWidthMultiplier));
-        document.querySelector("#widthIcon").style.transform = "scale(" + iconScale + ")";
+        document.querySelector("#widthIcon").style.fontSize = iconScale + "em";
     };
     Tools.prototype.toggleStraightLine = function () {
         this.graphics.straightLine = !this.graphics.straightLine;
@@ -323,11 +302,15 @@ var Events = (function () {
             if (e.buttons === 32) {
                 this.graphics.tool = "eraser";
                 this.graphics.eraserAuto = true;
-                document.querySelector("div.toolbar").className = "toolbar eraser";
+                document.querySelector("i.brushButton").className = "material-icons-round brushButton";
+                document.querySelector("div.toolbar img").className = "mainButton";
+                document.querySelector("div.brushMenu").classList.add("hiddenToolbarFix");
             }
             else if (this.graphics.eraserAuto) {
                 this.graphics.tool = "brush";
-                document.querySelector("div.toolbar").className = "toolbar brush";
+                document.querySelector("i.brushButton").className = "material-icons-round mainButton brushButton";
+                document.querySelector("div.toolbar img").className = "";
+                document.querySelector("div.brushMenu").classList.remove("hiddenToolbarFix");
             }
             if (e.pointerType === "pen" && navigator.userAgent.indexOf("Firefox") === -1 && e.pressure !== 0) {
                 this.graphics.context.lineWidth = this.graphics.lineWidth * e.pressure * this.graphics.lineWidthMultiplier;

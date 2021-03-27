@@ -53,8 +53,6 @@ function initClient() {
     _wb.CLIENT.init(_wb.CHAT);
     document.onpaste = function (e) { _wb.EVENTS.handlePasteHotkey(e); };
     document.oncopy = function () { _wb.EVENTS.forceCopy(); };
-    window.onresize = function () { _wb.UI.placeToolbar(); };
-    _wb.UI.placeToolbar();
     _wb.CANVAS.onpointermove = function (e) { _wb.EVENTS.handlePointerMove(e); };
     _wb.CANVAS.onpointerup = function (e) { _wb.EVENTS.handlePointerUp(e); };
     _wb.CANVAS.onpointerout = function (e) { _wb.EVENTS.handlePointerUp(e); };
@@ -183,11 +181,11 @@ var Client = (function () {
         if (force === void 0) { force = false; }
         if (this.lastStrokeUpdate !== this.graphics.history.strokes || force) {
             this.userRef.update({
-                board: this.maximised ? this.graphics.exportImage(800, 600, 0.8) : this.graphics.exportImage(400, 300)
+                board: this.maximised ? this.graphics.exportImage(800, 600, 0.6) : this.graphics.exportImage(400, 300)
             });
             this.lastStrokeUpdate = this.graphics.history.strokes;
         }
-        window.setTimeout(function () { _wb.CLIENT.updateBoard(); }, this.maximised ? 1000 : 5000);
+        window.setTimeout(function () { _wb.CLIENT.updateBoard(); }, this.maximised ? 2500 : 5000);
     };
     Client.prototype.updateMaximised = function (e) {
         this.maximised = e.val();
@@ -222,8 +220,11 @@ var Client = (function () {
 var Chat = (function () {
     function Chat(client) {
         this.client = client;
-        this.visible = false;
+        this.visible = window.innerWidth > 1300 || (window.innerWidth > 1100 && window.innerWidth / window.innerHeight < 5 / 3);
         this.sentMessages = 0;
+        window.addEventListener("resize", function () {
+            _wb.CHAT.hideChat();
+        });
     }
     Chat.prototype.detectMaths = function (message) {
         if (message.includes("\\(") && message.includes("\\)"))
@@ -235,11 +236,16 @@ var Chat = (function () {
         this.client.database.ref("rooms/" + this.client.roomId + "/users/" + this.client.userId + "/messages/" + id + "/maths").set(true);
     };
     Chat.prototype.sendMessage = function (e) {
-        e.preventDefault();
-        if (e.keyCode !== 13)
-            return;
+        if (e === void 0) { e = null; }
+        if (e != null) {
+            e.preventDefault();
+            if (e.keyCode !== 13)
+                return;
+        }
         var input = document.querySelector("input#messageInput");
         var messageText = input.value;
+        if (messageText.length === 0)
+            return;
         input.value = "";
         this.sentMessages++;
         this.client.messageRef.push().set({
@@ -258,9 +264,14 @@ var Chat = (function () {
                 for (var messageId in this.client.messageCache.data) {
                     var outerSpan = document.createElement("span");
                     var innerSpan = document.createElement("span");
-                    outerSpan.className = this.client.messageCache.data[messageId].sender + "Message";
+                    outerSpan.className = this.client.messageCache.data[messageId].sender === "host" ? "remoteMessage" : "localMessage";
                     outerSpan.id = "message_" + messageId;
                     outerSpan.appendChild(innerSpan);
+                    if (outerSpan.className === "remoteMessage") {
+                        var avatar = document.createElement("img");
+                        avatar.src = "images/avatar.png";
+                        outerSpan.prepend(avatar);
+                    }
                     if (this.client.messageCache.data[messageId].maths) {
                         innerSpan.textContent = "\\(" + this.client.messageCache.data[messageId].content + "\\)";
                     }
@@ -281,9 +292,6 @@ var Chat = (function () {
                     }
                     messagesDiv.appendChild(outerSpan);
                 }
-                if (this.sentMessages > 0) {
-                    document.querySelector("div.chatHelp").className = "chatHelp overrideHidden";
-                }
                 if (messagesDiv.getBoundingClientRect().right === window.innerWidth) {
                     messagesDiv.lastChild.scrollIntoView();
                 }
@@ -294,14 +302,12 @@ var Chat = (function () {
         else if (this.client.allowedNotifications && document.hidden) {
             new Notification("New Writeboard Message", { body: this.client.messageCache.data[messageKeys[messageKeys.length - 1]].content });
         }
-        var notification = document.querySelector("div.notification");
+        var notification = document.querySelector("i.notification");
         if (this.client.messageCache.data && Object.keys(this.client.messageCache.data).length > this.client.messageCache.read) {
-            var unread = Object.keys(this.client.messageCache.data).length - this.client.messageCache.read;
-            notification.style.display = "block";
-            notification.textContent = unread.toString();
+            notification.innerHTML = "mark_chat_unread";
         }
         else {
-            notification.style.display = "none";
+            notification.innerHTML = "chat_bubble";
         }
     };
     Chat.prototype.messageHandler = function (e) {
@@ -309,25 +315,16 @@ var Chat = (function () {
         _wb.CHAT.updateMessages();
     };
     Chat.prototype.showChat = function () {
-        document.querySelector("div.main").className = "main chatShown";
-        document.querySelector("div.clientChat").className = "clientChat chatShown";
-        document.querySelector("div.clientChat i").textContent = "clear";
-        document.querySelector("div.clientChat div.toggle").onclick = function () { _wb.CHAT.hideChat(); };
+        document.querySelector("section.chat").className = "chat visible";
+        document.querySelector("i.notification").onclick = function () { _wb.CHAT.hideChat(); };
         this.visible = true;
         this.updateMessages();
-        this.toolbarTransition();
     };
     Chat.prototype.hideChat = function () {
-        document.querySelector("div.main").className = "main";
-        document.querySelector("div.clientChat").className = "clientChat";
-        document.querySelector("div.clientChat i").textContent = "message";
-        document.querySelector("div.clientChat div.toggle").onclick = function () { _wb.CHAT.showChat(); };
-        this.visible = false;
-        this.toolbarTransition();
-    };
-    Chat.prototype.toolbarTransition = function () {
-        window.setInterval(function () { _wb.UI.placeToolbar(); }, 16.7);
-        window.setTimeout(window.clearInterval, 500);
+        document.querySelector("section.chat").className = "chat";
+        document.querySelector("i.notification").onclick = function () { _wb.CHAT.showChat(); };
+        this.visible = window.innerWidth > 1300 || (window.innerWidth > 1100 && window.innerWidth / window.innerHeight < 5 / 3);
+        this.updateMessages();
     };
     return Chat;
 }());

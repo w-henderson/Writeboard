@@ -1,0 +1,162 @@
+section.chat {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    margin: 0 50px 50px 0;
+    z-index: 2;
+
+    h1 {
+        margin: 0 20px 20px 0;
+        font-size: 1.8em;
+
+        span {
+            color: var(--accent-color);
+        }
+    }
+
+    div.messages {
+        flex: 1;
+        padding: 0 20px 0 0;
+        overflow: hidden auto;
+        box-sizing: border-box;
+
+        span.localMessage, span.remoteMessage {
+            display: block;
+            margin-bottom: 10px;
+
+            span {
+                display: inline-block;
+                background-color: var(--background-lighter);
+                border-radius: 15px 15px 15px 0;
+                padding: 10px;
+                max-width: calc(80% - 40px);
+                word-break: break-word;
+            }
+
+            p {
+                margin-top: 5px;
+                font-weight: 200;
+                color: rgba(255, 255, 255, 0.3);
+                font-size: 0.8em;
+
+                u {
+                    cursor: pointer;
+                    transition: color 250ms;
+                    
+                    &:hover {
+                        color: rgba(255, 255, 255, 0.7);
+                    }
+                }
+            }
+
+            &.localMessage {
+                text-align: right;
+
+                span {
+                    border-radius: 15px 15px 0 15px;
+                    background-color: var(--accent-color-darker);
+                    text-align: left;
+                }
+            }
+
+            &.remoteMessage {
+                img {
+                    display: inline-block;
+                    vertical-align: middle;
+                    margin-right: 16px;
+                    height: calc(1em + 20px);
+                    clip-path: circle(50%);
+                }
+            }
+
+            &:last-child {
+                margin-bottom: 20px;
+            }
+        }
+    }
+
+    input {
+        box-sizing: border-box;
+        height: 48px;
+        border: none;
+        padding: 0 48px 0 20px;
+        font-family: Gilroy;
+        font-size: 18px;
+        outline: none !important;
+        color: var(--text-color);
+        background-color: var(--background-lighter);
+        border-radius: 10px;
+        transition: background-color 100ms;
+
+        &:hover, &:active, &:focus {
+            background-color: var(--background-lighter-still);
+        }
+    }
+
+    & > i {
+        position: absolute;
+        bottom: 61px;
+        right: 60px;
+        cursor: pointer;
+    }
+
+    @media only screen and (max-width: 1100px) {
+        position: absolute;
+        top: 0px;
+        right: -50px;
+        background-color: var(--darkest);
+        padding: 20px;
+        box-sizing: border-box;
+        width: 300px;
+        height: 500px;
+        border-radius: 0 0 20px 20px;
+        transition: transform 250ms, top 250ms;
+        transform: translateY(calc(220px - 100vh));
+        box-shadow: var(--shadow);
+
+        & > i {
+            bottom: 32px;
+            right: 30px;
+        }
+
+        &.visible {
+            transform: translateY(0px);
+        }
+        
+        top: 0px;
+        right: -25px;
+        width: calc(100% - 25px);
+        height: calc(100vh - 220px);
+        border-radius: 25px;
+
+        &.visible {
+            top: 0px;
+        }
+    }
+}
+
+@media only screen and (max-width: 1300px) and (min-width: 600px), only screen and (max-aspect-ratio: 5/3) and (min-width: 600px) {
+    section.chat:not(.host) {
+        position: absolute;
+        top: 0px;
+        right: -50px;
+        background-color: var(--darkest);
+        padding: 20px;
+        box-sizing: border-box;
+        width: 300px;
+        height: 500px;
+        border-radius: 0 0 20px 20px;
+        transition: transform 250ms, top 250ms;
+        transform: translateY(calc(220px - 100vh));
+        box-shadow: var(--shadow);
+
+        & > i {
+            bottom: 32px;
+            right: 30px;
+        }
+
+        &.visible {
+            transform: translateY(0px);
+        }
+    }
+}

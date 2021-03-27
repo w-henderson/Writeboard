@@ -56,8 +56,8 @@ class Host {
 
     if (!this.roomId) {
       Swal.fire({
-        title: "Error 404",
-        text: "Writeboard Not Found",
+        title: "Room not found!",
+        text: "Click the teacher button in the page navigation to host a new room.",
         icon: "error",
         background: "var(--background)"
       }).then(() => {
@@ -101,7 +101,7 @@ class Host {
    * The whiteboard is then cached so it can be easily accessed if maximised.
    */
   addWhiteboard(e: DataSnapshot) {
-    let whiteboards = document.querySelector("div.whiteboards");
+    let whiteboards = document.querySelector("section.board");
     if (whiteboards.textContent.trim() === "Waiting for people to connect...") whiteboards.innerHTML = "";
 
     let userNode = document.createElement("div");
@@ -134,7 +134,7 @@ class Host {
   /** Updates a whiteboard already in the room. */
   updateWhiteboard(e: DataSnapshot) {
     let data = e.val();
-    let userNode = document.querySelector(`div.whiteboards div#${e.key}`);
+    let userNode = document.querySelector(`section.board div#${e.key}`);
     userNode.querySelector("img").src = data.board;
     userNode.querySelector("span").firstChild.textContent = data.name;
 
@@ -163,14 +163,14 @@ class Host {
 
   /** Removes a whiteboard from the room. */
   removeWhiteboard(e: DataSnapshot) {
-    let userNode = document.querySelector(`div.whiteboards div#${e.key}`);
+    let userNode = document.querySelector(`section.board div#${e.key}`);
     userNode.remove();
 
     if (e.key === this.maximisedUser) _wb_host.CHAT.hideMaximised(true);
 
     delete this.userCache[e.key];
 
-    if (document.querySelector("div.whiteboards").innerHTML === "") document.querySelector("div.whiteboards").textContent = "Waiting for people to connect...";
+    if (document.querySelector("section.board").innerHTML === "") document.querySelector("section.board").textContent = "Waiting for people to connect...";
   }
 
   /** Toggles whether the room is locked or not. */
@@ -253,6 +253,7 @@ class Host {
  */
 class HostChat {
   host: Host;
+  visible: boolean;
   seenMessages: any;
   sentMessages: number;
 
@@ -260,6 +261,11 @@ class HostChat {
     this.host = host;
     this.seenMessages = {};
     this.sentMessages = 0;
+    this.visible = window.innerWidth > 1300 || (window.innerWidth > 1100 && window.innerWidth / window.innerHeight < 5 / 3);
+
+    window.addEventListener("resize", () => {
+      _wb_host.CHAT.hideChat();
+    });
   }
 
   /** Detects whether a string contains maths, e.g. "x^2 + 3x + 4" will return true */
@@ -276,13 +282,12 @@ class HostChat {
 
   /** Toggles the specified user ID's board to become maximised. */
   showMaximisedBoard(id: string) {
-    let div: HTMLElement = document.querySelector("div.maximised");
+    let img: HTMLImageElement = document.querySelector("img#maximisedImage");
 
-    div.querySelector("img").src = (<HTMLImageElement>document.querySelector(`div#${id} img`)).src;
-    div.querySelector("span").textContent = document.querySelector(`div#${id} span`).firstChild.textContent;
-    div.onclick = (e) => { _wb_host.CHAT.closeClickHandler(e); };
+    img.src = (<HTMLImageElement>document.querySelector(`div#${id} img`)).src;
+    document.querySelector("h1#chatHeader").innerHTML = `Chat with <span id="maximisedName">${document.querySelector(`div#${id} span`).firstChild.textContent}</span>`;
+    document.querySelector("input").disabled = false;
 
-    div.className = "maximised shown";
     this.host.maximisedUser = id;
 
     this.updateMaximised();
@@ -295,8 +300,17 @@ class HostChat {
 
   /** Updates a maximised board. This also updates messages. */
   updateMaximised() {
-    let div: HTMLElement = document.querySelector("div.maximised");
-    div.querySelector("img").src = this.host.userCache[this.host.maximisedUser].data.board;
+    let img: HTMLImageElement = document.querySelector("img#maximisedImage");
+
+    if (this.host.maximisedUser == undefined) {
+      img.src = "images/maximised_placeholder.jpg";
+      document.querySelector("h1#chatHeader").innerHTML = `Select a <span id="maximisedName">Student</span>`;
+      document.querySelector("div.messages").innerHTML = "";
+      document.querySelector("input").disabled = true;
+      return;
+    }
+
+    img.src = this.host.userCache[this.host.maximisedUser].data.board;
 
     let messagesDiv = document.querySelector("div.messages");
     messagesDiv.innerHTML = "";
@@ -304,8 +318,17 @@ class HostChat {
       for (let messageId in this.host.userCache[this.host.maximisedUser].data.messages) {
         let outerSpan = document.createElement("span");
         let innerSpan = document.createElement("span");
-        outerSpan.className = this.host.userCache[this.host.maximisedUser].data.messages[messageId].sender + "Message";
+
+        let sender = this.host.userCache[this.host.maximisedUser].data.messages[messageId].sender;
+
+        outerSpan.className = sender === "host" ? "localMessage" : "remoteMessage";
         outerSpan.appendChild(innerSpan);
+
+        if (outerSpan.className === "remoteMessage") {
+          let avatar = document.createElement("img");
+          avatar.src = "images/avatar.png"; // TODO: Replace with user avatar
+          outerSpan.prepend(avatar);
+        }
 
         outerSpan.id = "message_" + messageId;
 
@@ -333,10 +356,6 @@ class HostChat {
 
       MathJax.typeset();
 
-      if (this.sentMessages > 0) {
-        document.querySelector("div.chatHelp").className = "chatHelp overrideHidden";
-      }
-
       (<HTMLSpanElement>messagesDiv.lastChild).scrollIntoView();
       this.host.userCache[this.host.maximisedUser].seenMessages = Object.keys(this.host.userCache[this.host.maximisedUser].data.messages).length;
     }
@@ -344,9 +363,11 @@ class HostChat {
 
   /** Hides the maximised board. If it was deleted, inform the host. */
   hideMaximised(deleted = false) {
-    let div: HTMLElement = document.querySelector("div.maximised");
-    div.className = "maximised";
-    div.onclick = null;
+    let img: HTMLImageElement = document.querySelector("img#maximisedImage");
+    img.src = "images/maximised_placeholder.jpg";
+    document.querySelector("h1#chatHeader").innerHTML = `Select a <span id="maximisedName">Student</span>`;
+    document.querySelector("div.messages").innerHTML = "";
+    document.querySelector("input").disabled = true;
 
     if (!deleted) {
       this.host.maximisedRef.update({
@@ -367,12 +388,19 @@ class HostChat {
   }
 
   /** Send a message to the client. This is called on pressing the return key in the message box. */
-  sendMessage(e) {
-    e.preventDefault();
-    if (e.keyCode !== 13) return;
+  sendMessage(e = null) {
+    if (this.host.maximisedUser === undefined) return;
+
+    if (e != null) {
+      e.preventDefault();
+      if (e.keyCode !== 13) return;
+    }
 
     let input: HTMLInputElement = document.querySelector("input#messageInput");
     let messageText = input.value;
+
+    if (messageText.length === 0) return;
+
     input.value = "";
 
     this.sentMessages++;
@@ -387,11 +415,23 @@ class HostChat {
   /** Handles clicks on each board. */
   clickHandler(e) {
     this.showMaximisedBoard(e.target.parentNode.id);
+    this.showChat();
   }
 
-  /** Handles clicks outside the maximised board. */
-  closeClickHandler(e) {
-    if (e.target.className === "maximised shown") this.hideMaximised();
+  /** Manipulate the UI to show the chat, then update the messages. */
+  showChat() {
+    document.querySelector("section.chat").className = "chat host visible";
+    (<HTMLElement>document.querySelector("i.notification")).onclick = () => { _wb_host.CHAT.hideChat(); };
+    this.visible = true;
+    this.updateMaximised();
+  }
+
+  /** Manipulate the UI to hide the chat. */
+  hideChat() {
+    document.querySelector("section.chat").className = "chat host";
+    (<HTMLElement>document.querySelector("i.notification")).onclick = () => { _wb_host.CHAT.showChat(); };
+    this.visible = window.innerWidth > 1300 || (window.innerWidth > 1100 && window.innerWidth / window.innerHeight < 5 / 3);
+    if (this.host.maximisedUser != undefined) this.hideMaximised();
   }
 }
 
@@ -405,7 +445,7 @@ class HostUI {
 
   constructor() {
     this.zoomLevel = 3;
-    this.whiteboards = document.querySelector("div.whiteboards");
+    this.whiteboards = document.querySelector("section.board");
   }
 
   /**

@@ -209,55 +209,21 @@ class ClientUI {
   /** Open the brush menu if the brush is already selected, or simply select the brush. */
   openBrushMenu() {
     if (this.graphics.tool === "brush") {
-      let extendedBrush: HTMLDivElement = document.querySelector("div.extendedBrush");
-      if (extendedBrush.classList.contains("enlarged")) extendedBrush.classList.remove("enlarged");
-      else extendedBrush.classList.add("enlarged");
+      let brushMenu: HTMLDivElement = document.querySelector("div.brushMenu");
+      if (!brushMenu.classList.contains("hidden")) brushMenu.classList.add("hidden");
+      else brushMenu.classList.remove("hidden");
     } else {
       this.graphics.tool = "brush";
-      document.querySelector("div.toolbar").className = "toolbar brush";
+      document.querySelector("i.brushButton").className = "material-icons-round mainButton brushButton";
+      document.querySelector("div.toolbar img").className = "";
+      document.querySelector("div.brushMenu").classList.remove("hiddenToolbarFix");
     }
   }
 
   /** Close the brush menu. */
   closeBrushMenu() {
-    let extendedBrush: HTMLDivElement = document.querySelector("div.extendedBrush");
-    extendedBrush.classList.remove("enlarged");
-  }
-
-  /**
-   * Place the whiteboard toolbar depending on screen size and orientation.
-   * This should probably be done with some advanced CSS but it's much easier to do it like this.
-   * This also allows for complete customisation and responsivity.
-   */
-  placeToolbar() {
-    let toolbar: HTMLDivElement = document.querySelector("div.toolbar");
-    let colorInput: HTMLInputElement = document.querySelector("input[type='color']");
-    let extendedToolbar: HTMLDivElement = document.querySelector("div.extended.extendedBrush");
-    let canvasRect = this.graphics.context.canvas.getBoundingClientRect();
-
-    if (window.matchMedia("(orientation: landscape)").matches && (!this.chat.visible || window.innerWidth > window.innerHeight * 1.5)) {
-      toolbar.style.top = `${canvasRect.y + 40}px`;
-      colorInput.style.top = `${canvasRect.y + 80}px`;
-      toolbar.style.left = `${canvasRect.x + canvasRect.width}px`;
-      colorInput.style.left = `${canvasRect.x + canvasRect.width}px`;
-      toolbar.style.height = "unset";
-      toolbar.style.width = "50px";
-      toolbar.style.borderRadius = "0 5px 5px 0";
-      extendedToolbar.classList.remove("portrait");
-    } else {
-      toolbar.style.top = `${canvasRect.y + canvasRect.height}px`;
-      colorInput.style.top = `${canvasRect.y + canvasRect.height}px`;
-      toolbar.style.left = `${canvasRect.x + 30}px`;
-      colorInput.style.left = `${canvasRect.x + 80}px`;
-      toolbar.style.height = "35px";
-      toolbar.style.width = `${canvasRect.width - 60}px`;
-      toolbar.style.borderRadius = "0 0 10px 10px";
-      toolbar.style.paddingTop = "8px";
-      extendedToolbar.classList.add("portrait");
-    }
-
-    let main: HTMLDivElement = document.querySelector("div.main");
-    this.graphics.context.canvas.style.maxHeight = `min(1200px, ${main.clientWidth * 0.675}px)`;
+    let brushMenu: HTMLDivElement = document.querySelector("div.brushMenu");
+    if (!brushMenu.classList.contains("hidden")) brushMenu.classList.add("hidden");
   }
 }
 
@@ -286,7 +252,9 @@ class Tools {
     this.ui.closeBrushMenu();
     this.graphics.tool = "eraser";
     this.graphics.eraserAuto = false;
-    document.querySelector("div.toolbar").className = "toolbar eraser";
+    document.querySelector("i.brushButton").className = "material-icons-round brushButton";
+    document.querySelector("div.toolbar img").className = "mainButton";
+    document.querySelector("div.brushMenu").classList.add("hiddenToolbarFix");
   }
 
   /**
@@ -295,14 +263,20 @@ class Tools {
    * However, this is a Chromium bug and we can't do anything about it.
    */
   selectColor() {
-    (<HTMLInputElement>document.querySelector("input[type='color']")).click();
+    let colorPicker: HTMLInputElement = document.querySelector("input[type='color']");
+    let buttonCoords = document.querySelector("i#colorIcon").getBoundingClientRect();
+    colorPicker.setAttribute("style", `
+      top: ${buttonCoords.top.toString()}px;
+      left: ${buttonCoords.left.toString()}px;
+    `);
+    window.setTimeout(() => { colorPicker.click(); }, 33);
   }
 
   /** Update the color of the stroke, and update the color tool to show. */
   updateStrokeStyle() {
-    let input = (<HTMLInputElement>document.querySelector("input[type='color']"));
-    (<HTMLElement>document.querySelector("#colorIcon")).style.color = input.value;
-    this.graphics.color = input.value;
+    let colorPicker: HTMLInputElement = document.querySelector("input[type='color']");
+    (<HTMLElement>document.querySelector("#colorIcon")).style.color = colorPicker.value;
+    this.graphics.color = colorPicker.value;
   }
 
   /**
@@ -314,7 +288,7 @@ class Tools {
     else this.graphics.lineWidthMultiplier = 0.5;
 
     let iconScale = 0.8 + (0.2 * Math.log2(this.graphics.lineWidthMultiplier));
-    (<HTMLElement>document.querySelector("#widthIcon")).style.transform = `scale(${iconScale})`;
+    (<HTMLElement>document.querySelector("#widthIcon")).style.fontSize = `${iconScale}em`;
   }
 
   /** Toggle the straight line tool and update the UI to show. */
@@ -412,17 +386,20 @@ class Events {
       if (e.buttons === 32) {
         this.graphics.tool = "eraser";
         this.graphics.eraserAuto = true;
-        document.querySelector("div.toolbar").className = "toolbar eraser";
+        document.querySelector("i.brushButton").className = "material-icons-round brushButton";
+        document.querySelector("div.toolbar img").className = "mainButton";
+        document.querySelector("div.brushMenu").classList.add("hiddenToolbarFix");
       } else if (this.graphics.eraserAuto) {
         this.graphics.tool = "brush";
-        document.querySelector("div.toolbar").className = "toolbar brush";
+        document.querySelector("i.brushButton").className = "material-icons-round mainButton brushButton";
+        document.querySelector("div.toolbar img").className = "";
+        document.querySelector("div.brushMenu").classList.remove("hiddenToolbarFix");
       }
 
       if (e.pointerType === "pen" && navigator.userAgent.indexOf("Firefox") === -1 && e.pressure !== 0) {
         this.graphics.context.lineWidth = this.graphics.lineWidth * e.pressure * this.graphics.lineWidthMultiplier;
       } else this.graphics.context.lineWidth = this.graphics.lineWidth * this.graphics.lineWidthMultiplier;
       this.stroke.push(this.getCoords(e.pageX, e.pageY));
-      //if (stroke.length >= 5) stroke.splice(0, 1);
       this.graphics.update(this.stroke);
     }
   }
