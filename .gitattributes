@@ -1,4 +1,4 @@
 # Auto detect text files and perform LF normalization
 * text=auto
-src/compiled/* linguist-generated
+src/compiled/scripts/* linguist-generated
 src/vendor/* linguist-vendored

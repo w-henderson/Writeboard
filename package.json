@@ -1,7 +1,7 @@
 {
   "name": "writeboard",
-  "version": "0.0.1",
-  "description": "A simple whiteboard system to help with remote learning.",
+  "version": "1.0.0",
+  "description": "The simple yet stylish whiteboard app.",
   "scripts": {
     "build": "npm run build-sass && npm run build-ts",
     "dev-build-sass": "sass src/styles:src/compiled --no-source-map --style compressed --watch",
