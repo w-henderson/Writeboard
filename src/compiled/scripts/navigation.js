@@ -52,6 +52,9 @@ var Navigation = (function () {
         else if (r === "host")
             return this.local ? "//localhost/host.html" : "//host.writeboard.ga/";
     };
+    Navigation.prototype.home = function () {
+        window.location.href = this.local ? "/" : "https://writeboard.ga";
+    };
     Navigation.prototype.joinRoom = function () {
         var _this = this;
         Swal.fire({

@@ -36,6 +36,11 @@ class Navigation {
     else if (r === "host") return this.local ? "//localhost/host.html" : "//host.writeboard.ga/";
   }
 
+  /** Returns to the homepage. */
+  home() {
+    window.location.href = this.local ? "/" : "https://writeboard.ga";
+  }
+
   /** Starts and manages the join room flow with `sweetalert2`. */
   joinRoom() {
     Swal.fire({
