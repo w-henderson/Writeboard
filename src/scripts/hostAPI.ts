@@ -56,8 +56,8 @@ class Host {
 
     if (!this.roomId) {
       Swal.fire({
-        title: "Error 404",
-        text: "Writeboard Not Found",
+        title: "Room not found!",
+        text: "Click the teacher button in the page navigation to host a new room.",
         icon: "error",
         background: "var(--background)"
       }).then(() => {
@@ -264,7 +264,7 @@ class HostChat {
     this.visible = window.innerWidth > 1300 || (window.innerWidth > 1100 && window.innerWidth / window.innerHeight < 5 / 3);
 
     window.addEventListener("resize", () => {
-      _wb.CHAT.hideChat();
+      _wb_host.CHAT.hideChat();
     });
   }
 
@@ -431,7 +431,7 @@ class HostChat {
     document.querySelector("section.chat").className = "chat host";
     (<HTMLElement>document.querySelector("i.notification")).onclick = () => { _wb_host.CHAT.showChat(); };
     this.visible = window.innerWidth > 1300 || (window.innerWidth > 1100 && window.innerWidth / window.innerHeight < 5 / 3);
-    this.updateMaximised();
+    if (this.host.maximisedUser != undefined) this.hideMaximised();
   }
 }
 

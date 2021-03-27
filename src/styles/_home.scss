@@ -97,6 +97,8 @@ main.home {
 
         section.hero {
             height: calc(100vh - 220px);
+            box-sizing: border-box;
+            padding: 0 20px;
 
             img {
                 width: 100%;

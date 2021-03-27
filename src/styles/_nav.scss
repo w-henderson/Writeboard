@@ -24,6 +24,10 @@ nav {
 
         &.selectedLink {
             opacity: 1;
+
+            i {
+                color: var(--accent-color);
+            }
         }
 
         i {

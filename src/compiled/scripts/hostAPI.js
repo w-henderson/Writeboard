@@ -25,8 +25,8 @@ var Host = (function () {
         }
         if (!this.roomId) {
             Swal.fire({
-                title: "Error 404",
-                text: "Writeboard Not Found",
+                title: "Room not found!",
+                text: "Click the teacher button in the page navigation to host a new room.",
                 icon: "error",
                 background: "var(--background)"
             }).then(function () {
@@ -183,7 +183,7 @@ var HostChat = (function () {
         this.sentMessages = 0;
         this.visible = window.innerWidth > 1300 || (window.innerWidth > 1100 && window.innerWidth / window.innerHeight < 5 / 3);
         window.addEventListener("resize", function () {
-            _wb.CHAT.hideChat();
+            _wb_host.CHAT.hideChat();
         });
     }
     HostChat.prototype.detectMaths = function (message) {
@@ -317,7 +317,8 @@ var HostChat = (function () {
         document.querySelector("section.chat").className = "chat host";
         document.querySelector("i.notification").onclick = function () { _wb_host.CHAT.showChat(); };
         this.visible = window.innerWidth > 1300 || (window.innerWidth > 1100 && window.innerWidth / window.innerHeight < 5 / 3);
-        this.updateMaximised();
+        if (this.host.maximisedUser != undefined)
+            this.hideMaximised();
     };
     return HostChat;
 }());

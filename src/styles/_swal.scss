@@ -1,4 +1,5 @@
 body.swal2-shown.swal2-height-auto { height: 100% !important; }
+div.swal2-popup { box-shadow: 0 0 100px black; }
 h2.swal2-title, div.swal2-html-container, input.swal2-input, div.swal2-validation-message { color: var(--text-color) !important; }
 div.swal2-validation-message { background-color: var(--background-lighter) !important; }
 button.swal2-styled.swal2-confirm { background-color: var(--accent-color) !important; }
