@@ -76,6 +76,10 @@ section.board.host {
     }
 }
 
+i#lockIcon {
+    margin-right: 16px;
+}
+
 section.chat.host {
     & > img {
         width: min(100%, 50vh);

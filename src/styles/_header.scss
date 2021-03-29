@@ -55,24 +55,20 @@ header {
     }
 
     @media only screen and (max-width: 1100px) {
-        img.logo          { display: none; }
-        div i             { display: none !important; }
-        div i:first-child { display: inline-block !important; }
-        div img           { height: 48px; }
-        div span          { display: none; }
+        img.logo               { display: none; }
+        div i                  { display: none !important; }
+        div i:not(:last-child) { display: inline-block !important; }
+        div img                { height: 48px; }
+        div span               { display: none; }
+        div.title              { left: 50px; }
+    }
 
-        div.title {
-            left: 50px;
-        }
+    @media only screen and (max-width: 450px) {
+        div i#lockIcon { display: none !important; }
     }
 
     @media only screen and (max-width: 350px) {
-        div.title {
-            max-width: calc(100% - 100px);
-        }
-
-        div:not(div.title) {
-            display: none;
-        }
+        div.title { max-width: calc(100% - 100px); }
+        div:not(div.title) { display: none; }
     }
 }
