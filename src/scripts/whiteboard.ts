@@ -17,6 +17,16 @@ class WhiteboardHistory {
     this.items = [];
     this.strokes = 0;
     this.location = 0;
+
+    // Initialise keyboard listeners
+    document.onkeydown = (e) => {
+      if (e.ctrlKey) {
+        switch (e.code) {
+          case "KeyZ": _wb.HISTORY.undo(); break;
+          case "KeyY": _wb.HISTORY.redo(); break;
+        }
+      }
+    }
   }
 
   /** Link the canvas context and UI to the history because the history object must be instantiated first. */

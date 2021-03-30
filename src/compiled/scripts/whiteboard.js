@@ -41,6 +41,18 @@ var WhiteboardHistory = (function () {
         this.items = [];
         this.strokes = 0;
         this.location = 0;
+        document.onkeydown = function (e) {
+            if (e.ctrlKey) {
+                switch (e.code) {
+                    case "KeyZ":
+                        _wb.HISTORY.undo();
+                        break;
+                    case "KeyY":
+                        _wb.HISTORY.redo();
+                        break;
+                }
+            }
+        };
     }
     WhiteboardHistory.prototype.linkCtx = function (context, ui) {
         this.context = context;
