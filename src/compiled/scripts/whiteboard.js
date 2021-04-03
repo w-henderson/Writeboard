@@ -138,6 +138,8 @@ var Graphics = (function () {
     };
     Graphics.prototype.replaceWithLine = function (stroke) {
         var _this = this;
+        var oldPenWidth = this.context.lineWidth;
+        this.context.lineWidth = this.lineWidth * this.lineWidthMultiplier;
         var imageToDraw = new Image();
         imageToDraw.src = this.history.items[this.history.items.length - 1 - this.history.location];
         imageToDraw.onload = function () {
@@ -146,6 +148,7 @@ var Graphics = (function () {
             _this.context.moveTo(stroke[0][0], stroke[0][1]);
             _this.context.lineTo(stroke[stroke.length - 1][0], stroke[stroke.length - 1][1]);
             _this.context.stroke();
+            _this.context.lineWidth = oldPenWidth;
             _this.history.push(_this.context.canvas.toDataURL());
         };
     };
@@ -259,7 +262,7 @@ var Tools = (function () {
         Swal.fire({
             icon: "question",
             title: "Are you sure you want to clear your board?",
-            text: "This cannot be undone.",
+            text: "This can be undone by pressing the undo button.",
             showDenyButton: true,
             confirmButtonText: "Clear",
             denyButtonText: "Don't clear",

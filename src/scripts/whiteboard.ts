@@ -134,6 +134,8 @@ class Graphics {
    * Updates the history to forget the preview line.
    */
   replaceWithLine(stroke: number[][]) {
+    let oldPenWidth = this.context.lineWidth;
+    this.context.lineWidth = this.lineWidth * this.lineWidthMultiplier;
     let imageToDraw = new Image();
     imageToDraw.src = this.history.items[this.history.items.length - 1 - this.history.location];
     imageToDraw.onload = () => {
@@ -142,6 +144,7 @@ class Graphics {
       this.context.moveTo(stroke[0][0], stroke[0][1]);
       this.context.lineTo(stroke[stroke.length - 1][0], stroke[stroke.length - 1][1]);
       this.context.stroke();
+      this.context.lineWidth = oldPenWidth;
 
       this.history.push(this.context.canvas.toDataURL());
     }
@@ -316,7 +319,7 @@ class Tools {
     Swal.fire({
       icon: "question",
       title: "Are you sure you want to clear your board?",
-      text: "This cannot be undone.",
+      text: "This can be undone by pressing the undo button.",
       showDenyButton: true,
       confirmButtonText: `Clear`,
       denyButtonText: `Don't clear`,
